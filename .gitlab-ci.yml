@@ -1,0 +1,54 @@
+image: node:22-bookworm
+
+stages:
+  - install
+  - lint
+  - typecheck
+  - test
+  - build
+
+variables:
+  PNPM_HOME: /root/.local/share/pnpm
+  PATH: "$PNPM_HOME:$PATH"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .pnpm-store
+
+before_script:
+  - corepack enable
+  - corepack prepare pnpm@10.6.5 --activate
+
+install:
+  stage: install
+  script:
+    - pnpm install --frozen-lockfile --store-dir .pnpm-store
+
+lint:
+  stage: lint
+  script:
+    - pnpm install --frozen-lockfile --store-dir .pnpm-store
+    - pnpm lint
+
+typecheck:
+  stage: typecheck
+  script:
+    - pnpm install --frozen-lockfile --store-dir .pnpm-store
+    - pnpm typecheck
+
+test:
+  stage: test
+  script:
+    - pnpm install --frozen-lockfile --store-dir .pnpm-store
+    - pnpm test
+
+build:
+  stage: build
+  script:
+    - pnpm install --frozen-lockfile --store-dir .pnpm-store
+    - pnpm build
+  artifacts:
+    expire_in: 7 days
+    paths:
+      - dist/
