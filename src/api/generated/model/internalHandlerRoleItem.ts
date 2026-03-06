@@ -6,11 +6,10 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface ZvasPkgAuthAuthUser {
+export interface InternalHandlerRoleItem {
+  code?: string;
+  description?: string;
   id?: string;
+  is_builtin?: boolean;
   name?: string;
-  permissions?: string[];
-  role?: string;
-  roles?: string[];
-  username?: string;
 }

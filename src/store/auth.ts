@@ -1,26 +1,38 @@
 import { create } from 'zustand'
 
+import type { AuthUserView } from '@/types/auth'
+
 interface AuthState {
   token: string
-  setToken: (token: string) => void
-  clearToken: () => void
+  currentUser: AuthUserView | null
+  setSession: (token: string, user: AuthUserView | null) => void
+  setCurrentUser: (user: AuthUserView | null) => void
+  clearSession: () => void
 }
 
-const STORAGE_KEY = 'zvas.console.auth.token'
+const TOKEN_STORAGE_KEY = 'zvas.console.auth.token'
+const USER_STORAGE_KEY = 'zvas.console.auth.user'
 
 /**
- * useAuthStore 管理当前控制台使用的 Bearer Token。
+ * useAuthStore 管理当前控制台登录态。
  */
 export const useAuthStore = create<AuthState>((set) => ({
   token: readToken(),
-  setToken: (token) => {
+  currentUser: readUser(),
+  setSession: (token, user) => {
     const normalized = token.trim()
     writeToken(normalized)
-    set({ token: normalized })
+    writeUser(user)
+    set({ token: normalized, currentUser: user })
   },
-  clearToken: () => {
+  setCurrentUser: (user) => {
+    writeUser(user)
+    set((state) => ({ ...state, currentUser: user }))
+  },
+  clearSession: () => {
     removeToken()
-    set({ token: '' })
+    removeUser()
+    set({ token: '', currentUser: null })
   },
 }))
 
@@ -28,19 +40,53 @@ function readToken() {
   if (typeof window === 'undefined' || !window.localStorage) {
     return ''
   }
-  return window.localStorage.getItem(STORAGE_KEY) || ''
+  return window.localStorage.getItem(TOKEN_STORAGE_KEY) || ''
 }
 
 function writeToken(token: string) {
   if (typeof window === 'undefined' || !window.localStorage) {
     return
   }
-  window.localStorage.setItem(STORAGE_KEY, token)
+  window.localStorage.setItem(TOKEN_STORAGE_KEY, token)
 }
 
 function removeToken() {
   if (typeof window === 'undefined' || !window.localStorage) {
     return
   }
-  window.localStorage.removeItem(STORAGE_KEY)
+  window.localStorage.removeItem(TOKEN_STORAGE_KEY)
+}
+
+function readUser() {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null
+  }
+  const raw = window.localStorage.getItem(USER_STORAGE_KEY)
+  if (!raw) {
+    return null
+  }
+  try {
+    return JSON.parse(raw) as AuthUserView
+  } catch {
+    window.localStorage.removeItem(USER_STORAGE_KEY)
+    return null
+  }
+}
+
+function writeUser(user: AuthUserView | null) {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return
+  }
+  if (!user) {
+    window.localStorage.removeItem(USER_STORAGE_KEY)
+    return
+  }
+  window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+}
+
+function removeUser() {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return
+  }
+  window.localStorage.removeItem(USER_STORAGE_KEY)
 }

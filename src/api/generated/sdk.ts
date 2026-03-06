@@ -6,29 +6,563 @@
  * OpenAPI spec version: 1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  GetUsersParams,
+  InternalHandlerChangePasswordRequest,
+  InternalHandlerCreateUserRequest,
+  InternalHandlerCurrentUserResponse,
   InternalHandlerErrorResponse,
+  InternalHandlerLoginRequest,
+  InternalHandlerLoginResponse,
+  InternalHandlerLogoutResponse,
+  InternalHandlerRoleListResponse,
   InternalHandlerSystemHealthResponse,
   InternalHandlerSystemSettingsResponse,
-  InternalHandlerSystemVersionResponse
+  InternalHandlerSystemVersionResponse,
+  InternalHandlerUserCreateResponse,
+  InternalHandlerUserListResponse
 } from './model';
 
 import { apiClient } from '../client';
 import type { ErrorType } from '../client';
+/**
+ * @summary 修改当前用户密码
+ */
+export type postAuthChangePasswordResponse200 = {
+  data: InternalHandlerLogoutResponse
+  status: 200
+}
+
+export type postAuthChangePasswordResponse400 = {
+  data: InternalHandlerErrorResponse
+  status: 400
+}
+
+export type postAuthChangePasswordResponse401 = {
+  data: InternalHandlerErrorResponse
+  status: 401
+}
+
+export type postAuthChangePasswordResponseSuccess = (postAuthChangePasswordResponse200) & {
+  headers: Headers;
+};
+export type postAuthChangePasswordResponseError = (postAuthChangePasswordResponse400 | postAuthChangePasswordResponse401) & {
+  headers: Headers;
+};
+
+export type postAuthChangePasswordResponse = (postAuthChangePasswordResponseSuccess | postAuthChangePasswordResponseError)
+
+export const getPostAuthChangePasswordUrl = () => {
+
+
+  
+
+  return `/auth/change-password`
+}
+
+export const postAuthChangePassword = async (internalHandlerChangePasswordRequest: InternalHandlerChangePasswordRequest, options?: RequestInit): Promise<postAuthChangePasswordResponse> => {
+  
+  return apiClient<postAuthChangePasswordResponse>(getPostAuthChangePasswordUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      internalHandlerChangePasswordRequest,)
+  }
+);}
+  
+
+
+
+export const getPostAuthChangePasswordMutationOptions = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthChangePassword>>, TError,{data: InternalHandlerChangePasswordRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthChangePassword>>, TError,{data: InternalHandlerChangePasswordRequest}, TContext> => {
+
+const mutationKey = ['postAuthChangePassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthChangePassword>>, {data: InternalHandlerChangePasswordRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthChangePassword(data,)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthChangePassword>>>
+    export type PostAuthChangePasswordMutationBody = InternalHandlerChangePasswordRequest
+    export type PostAuthChangePasswordMutationError = ErrorType<InternalHandlerErrorResponse>
+
+    /**
+ * @summary 修改当前用户密码
+ */
+export const usePostAuthChangePassword = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthChangePassword>>, TError,{data: InternalHandlerChangePasswordRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthChangePassword>>,
+        TError,
+        {data: InternalHandlerChangePasswordRequest},
+        TContext
+      > => {
+      return useMutation(getPostAuthChangePasswordMutationOptions(options), queryClient);
+    }
+    
+/**
+ * @summary 账号密码登录
+ */
+export type postAuthLoginResponse200 = {
+  data: InternalHandlerLoginResponse
+  status: 200
+}
+
+export type postAuthLoginResponse400 = {
+  data: InternalHandlerErrorResponse
+  status: 400
+}
+
+export type postAuthLoginResponse401 = {
+  data: InternalHandlerErrorResponse
+  status: 401
+}
+
+export type postAuthLoginResponseSuccess = (postAuthLoginResponse200) & {
+  headers: Headers;
+};
+export type postAuthLoginResponseError = (postAuthLoginResponse400 | postAuthLoginResponse401) & {
+  headers: Headers;
+};
+
+export type postAuthLoginResponse = (postAuthLoginResponseSuccess | postAuthLoginResponseError)
+
+export const getPostAuthLoginUrl = () => {
+
+
+  
+
+  return `/auth/login`
+}
+
+export const postAuthLogin = async (internalHandlerLoginRequest: InternalHandlerLoginRequest, options?: RequestInit): Promise<postAuthLoginResponse> => {
+  
+  return apiClient<postAuthLoginResponse>(getPostAuthLoginUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      internalHandlerLoginRequest,)
+  }
+);}
+  
+
+
+
+export const getPostAuthLoginMutationOptions = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: InternalHandlerLoginRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: InternalHandlerLoginRequest}, TContext> => {
+
+const mutationKey = ['postAuthLogin'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogin>>, {data: InternalHandlerLoginRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthLogin(data,)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthLogin>>>
+    export type PostAuthLoginMutationBody = InternalHandlerLoginRequest
+    export type PostAuthLoginMutationError = ErrorType<InternalHandlerErrorResponse>
+
+    /**
+ * @summary 账号密码登录
+ */
+export const usePostAuthLogin = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogin>>, TError,{data: InternalHandlerLoginRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthLogin>>,
+        TError,
+        {data: InternalHandlerLoginRequest},
+        TContext
+      > => {
+      return useMutation(getPostAuthLoginMutationOptions(options), queryClient);
+    }
+    
+/**
+ * @summary 退出登录
+ */
+export type postAuthLogoutResponse200 = {
+  data: InternalHandlerLogoutResponse
+  status: 200
+}
+
+export type postAuthLogoutResponse401 = {
+  data: InternalHandlerErrorResponse
+  status: 401
+}
+
+export type postAuthLogoutResponseSuccess = (postAuthLogoutResponse200) & {
+  headers: Headers;
+};
+export type postAuthLogoutResponseError = (postAuthLogoutResponse401) & {
+  headers: Headers;
+};
+
+export type postAuthLogoutResponse = (postAuthLogoutResponseSuccess | postAuthLogoutResponseError)
+
+export const getPostAuthLogoutUrl = () => {
+
+
+  
+
+  return `/auth/logout`
+}
+
+export const postAuthLogout = async ( options?: RequestInit): Promise<postAuthLogoutResponse> => {
+  
+  return apiClient<postAuthLogoutResponse>(getPostAuthLogoutUrl(),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+  
+
+
+
+export const getPostAuthLogoutMutationOptions = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,void, TContext> => {
+
+const mutationKey = ['postAuthLogout'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthLogout>>, void> = () => {
+          
+
+          return  postAuthLogout()
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthLogout>>>
+    
+    export type PostAuthLogoutMutationError = ErrorType<InternalHandlerErrorResponse>
+
+    /**
+ * @summary 退出登录
+ */
+export const usePostAuthLogout = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthLogout>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthLogout>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPostAuthLogoutMutationOptions(options), queryClient);
+    }
+    
+/**
+ * @summary 获取当前登录用户信息
+ */
+export type getAuthMeResponse200 = {
+  data: InternalHandlerCurrentUserResponse
+  status: 200
+}
+
+export type getAuthMeResponse401 = {
+  data: InternalHandlerErrorResponse
+  status: 401
+}
+
+export type getAuthMeResponseSuccess = (getAuthMeResponse200) & {
+  headers: Headers;
+};
+export type getAuthMeResponseError = (getAuthMeResponse401) & {
+  headers: Headers;
+};
+
+export type getAuthMeResponse = (getAuthMeResponseSuccess | getAuthMeResponseError)
+
+export const getGetAuthMeUrl = () => {
+
+
+  
+
+  return `/auth/me`
+}
+
+export const getAuthMe = async ( options?: RequestInit): Promise<getAuthMeResponse> => {
+  
+  return apiClient<getAuthMeResponse>(getGetAuthMeUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetAuthMeQueryKey = () => {
+    return [
+    `/auth/me`
+    ] as const;
+    }
+
+    
+export const getGetAuthMeQueryOptions = <TData = Awaited<ReturnType<typeof getAuthMe>>, TError = ErrorType<InternalHandlerErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuthMeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthMe>>> = ({ signal }) => getAuthMe({ signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAuthMeQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthMe>>>
+export type GetAuthMeQueryError = ErrorType<InternalHandlerErrorResponse>
+
+
+export function useGetAuthMe<TData = Awaited<ReturnType<typeof getAuthMe>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthMe>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthMe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthMe<TData = Awaited<ReturnType<typeof getAuthMe>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAuthMe>>,
+          TError,
+          Awaited<ReturnType<typeof getAuthMe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAuthMe<TData = Awaited<ReturnType<typeof getAuthMe>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 获取当前登录用户信息
+ */
+
+export function useGetAuthMe<TData = Awaited<ReturnType<typeof getAuthMe>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAuthMeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
+ * @summary 查询角色列表
+ */
+export type getRolesResponse200 = {
+  data: InternalHandlerRoleListResponse
+  status: 200
+}
+
+export type getRolesResponse401 = {
+  data: InternalHandlerErrorResponse
+  status: 401
+}
+
+export type getRolesResponse403 = {
+  data: InternalHandlerErrorResponse
+  status: 403
+}
+
+export type getRolesResponseSuccess = (getRolesResponse200) & {
+  headers: Headers;
+};
+export type getRolesResponseError = (getRolesResponse401 | getRolesResponse403) & {
+  headers: Headers;
+};
+
+export type getRolesResponse = (getRolesResponseSuccess | getRolesResponseError)
+
+export const getGetRolesUrl = () => {
+
+
+  
+
+  return `/roles`
+}
+
+export const getRoles = async ( options?: RequestInit): Promise<getRolesResponse> => {
+  
+  return apiClient<getRolesResponse>(getGetRolesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetRolesQueryKey = () => {
+    return [
+    `/roles`
+    ] as const;
+    }
+
+    
+export const getGetRolesQueryOptions = <TData = Awaited<ReturnType<typeof getRoles>>, TError = ErrorType<InternalHandlerErrorResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoles>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRolesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRoles>>> = ({ signal }) => getRoles({ signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoles>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRolesQueryResult = NonNullable<Awaited<ReturnType<typeof getRoles>>>
+export type GetRolesQueryError = ErrorType<InternalHandlerErrorResponse>
+
+
+export function useGetRoles<TData = Awaited<ReturnType<typeof getRoles>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoles>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoles>>,
+          TError,
+          Awaited<ReturnType<typeof getRoles>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoles<TData = Awaited<ReturnType<typeof getRoles>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoles>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoles>>,
+          TError,
+          Awaited<ReturnType<typeof getRoles>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoles<TData = Awaited<ReturnType<typeof getRoles>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoles>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询角色列表
+ */
+
+export function useGetRoles<TData = Awaited<ReturnType<typeof getRoles>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoles>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRolesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
 /**
  * @summary 获取系统健康状态
  */
@@ -369,3 +903,237 @@ export function useGetSystemVersion<TData = Awaited<ReturnType<typeof getSystemV
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+
+
+
+
+/**
+ * @summary 查询用户列表
+ */
+export type getUsersResponse200 = {
+  data: InternalHandlerUserListResponse
+  status: 200
+}
+
+export type getUsersResponse401 = {
+  data: InternalHandlerErrorResponse
+  status: 401
+}
+
+export type getUsersResponse403 = {
+  data: InternalHandlerErrorResponse
+  status: 403
+}
+
+export type getUsersResponseSuccess = (getUsersResponse200) & {
+  headers: Headers;
+};
+export type getUsersResponseError = (getUsersResponse401 | getUsersResponse403) & {
+  headers: Headers;
+};
+
+export type getUsersResponse = (getUsersResponseSuccess | getUsersResponseError)
+
+export const getGetUsersUrl = (params?: GetUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/users?${stringifiedParams}` : `/users`
+}
+
+export const getUsers = async (params?: GetUsersParams, options?: RequestInit): Promise<getUsersResponse> => {
+  
+  return apiClient<getUsersResponse>(getGetUsersUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetUsersQueryKey = (params?: GetUsersParams,) => {
+    return [
+    `/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+    
+export const getGetUsersQueryOptions = <TData = Awaited<ReturnType<typeof getUsers>>, TError = ErrorType<InternalHandlerErrorResponse>>(params?: GetUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUsersQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsers>>> = ({ signal }) => getUsers(params, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getUsers>>>
+export type GetUsersQueryError = ErrorType<InternalHandlerErrorResponse>
+
+
+export function useGetUsers<TData = Awaited<ReturnType<typeof getUsers>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+ params: undefined |  GetUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUsers<TData = Awaited<ReturnType<typeof getUsers>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+ params?: GetUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getUsers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUsers<TData = Awaited<ReturnType<typeof getUsers>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+ params?: GetUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询用户列表
+ */
+
+export function useGetUsers<TData = Awaited<ReturnType<typeof getUsers>>, TError = ErrorType<InternalHandlerErrorResponse>>(
+ params?: GetUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
+ * @summary 创建用户
+ */
+export type postUsersResponse200 = {
+  data: InternalHandlerUserCreateResponse
+  status: 200
+}
+
+export type postUsersResponse400 = {
+  data: InternalHandlerErrorResponse
+  status: 400
+}
+
+export type postUsersResponse401 = {
+  data: InternalHandlerErrorResponse
+  status: 401
+}
+
+export type postUsersResponse403 = {
+  data: InternalHandlerErrorResponse
+  status: 403
+}
+
+export type postUsersResponseSuccess = (postUsersResponse200) & {
+  headers: Headers;
+};
+export type postUsersResponseError = (postUsersResponse400 | postUsersResponse401 | postUsersResponse403) & {
+  headers: Headers;
+};
+
+export type postUsersResponse = (postUsersResponseSuccess | postUsersResponseError)
+
+export const getPostUsersUrl = () => {
+
+
+  
+
+  return `/users`
+}
+
+export const postUsers = async (internalHandlerCreateUserRequest: InternalHandlerCreateUserRequest, options?: RequestInit): Promise<postUsersResponse> => {
+  
+  return apiClient<postUsersResponse>(getPostUsersUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      internalHandlerCreateUserRequest,)
+  }
+);}
+  
+
+
+
+export const getPostUsersMutationOptions = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postUsers>>, TError,{data: InternalHandlerCreateUserRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postUsers>>, TError,{data: InternalHandlerCreateUserRequest}, TContext> => {
+
+const mutationKey = ['postUsers'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postUsers>>, {data: InternalHandlerCreateUserRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postUsers(data,)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostUsersMutationResult = NonNullable<Awaited<ReturnType<typeof postUsers>>>
+    export type PostUsersMutationBody = InternalHandlerCreateUserRequest
+    export type PostUsersMutationError = ErrorType<InternalHandlerErrorResponse>
+
+    /**
+ * @summary 创建用户
+ */
+export const usePostUsers = <TError = ErrorType<InternalHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postUsers>>, TError,{data: InternalHandlerCreateUserRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postUsers>>,
+        TError,
+        {data: InternalHandlerCreateUserRequest},
+        TContext
+      > => {
+      return useMutation(getPostUsersMutationOptions(options), queryClient);
+    }

@@ -83,12 +83,17 @@ textarea {
   backdrop-filter: blur(14px);
 }
 
-.console-token.arco-typography {
-  max-width: 240px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: rgba(232, 238, 247, 0.72);
+.console-user-block {
+  line-height: 1.1;
+}
+
+.console-user-name.arco-typography {
+  color: #f4f7ff;
+}
+
+.console-user-meta.arco-typography {
+  color: rgba(232, 238, 247, 0.62);
+  font-size: 12px;
 }
 
 .console-content {

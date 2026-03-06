@@ -1,8 +1,9 @@
-import { Button, Layout, Menu, Space, Tag, Typography } from '@arco-design/web-react'
-import { IconApps, IconCode, IconDashboard, IconPoweroff, IconSettings } from '@arco-design/web-react/icon'
-import { useMemo } from 'react'
+import { Avatar, Button, Layout, Menu, Space, Tag, Typography } from '@arco-design/web-react'
+import { IconApps, IconCode, IconDashboard, IconPoweroff, IconSettings, IconUser } from '@arco-design/web-react/icon'
+import { useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
+import { logout } from '@/api/adapters/auth'
 import { useAuthStore } from '@/store/auth'
 
 const { Header, Sider, Content } = Layout
@@ -14,8 +15,9 @@ const { Text, Title } = Typography
 export function ConsoleLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const token = useAuthStore((state) => state.token)
-  const clearToken = useAuthStore((state) => state.clearToken)
+  const currentUser = useAuthStore((state) => state.currentUser)
+  const clearSession = useAuthStore((state) => state.clearSession)
+  const [logoutPending, setLogoutPending] = useState(false)
 
   const selectedKeys = useMemo(() => {
     if (location.pathname.includes('/system/version')) {
@@ -26,6 +28,19 @@ export function ConsoleLayout() {
     }
     return ['system-health']
   }, [location.pathname])
+
+  const handleLogout = async () => {
+    setLogoutPending(true)
+    try {
+      await logout()
+    } catch {
+      // 后端当前为无状态 JWT，退出接口失败不影响本地清理。
+    } finally {
+      clearSession()
+      setLogoutPending(false)
+      navigate('/login', { replace: true })
+    }
+  }
 
   return (
     <Layout className="console-shell">
@@ -73,17 +88,17 @@ export function ConsoleLayout() {
           </Space>
           <Space size={12}>
             <Tag color="green" bordered>
-              令牌已接入
+              已登录
             </Tag>
-            <Text className="console-token">{token || '未设置令牌'}</Text>
-            <Button
-              icon={<IconPoweroff />}
-              onClick={() => {
-                clearToken()
-                navigate('/login', { replace: true })
-              }}
-            >
-              清除令牌
+            <Avatar size={28} style={{ backgroundColor: '#165dff' }}>
+              <IconUser />
+            </Avatar>
+            <Space size={4} direction="vertical" className="console-user-block">
+              <Text className="console-user-name">{currentUser?.name || '未知用户'}</Text>
+              <Text className="console-user-meta">{currentUser?.username || '-'} / {currentUser?.role || '-'}</Text>
+            </Space>
+            <Button icon={<IconPoweroff />} loading={logoutPending} onClick={handleLogout}>
+              退出登录
             </Button>
           </Space>
         </Header>

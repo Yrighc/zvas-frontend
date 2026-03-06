@@ -2,15 +2,25 @@ import { useAuthStore } from '@/store/auth'
 
 describe('useAuthStore', () => {
   beforeEach(() => {
-    useAuthStore.getState().clearToken()
+    useAuthStore.getState().clearSession()
     window.localStorage.clear()
   })
 
-  it('should save and clear token', () => {
-    useAuthStore.getState().setToken('demo-admin')
-    expect(useAuthStore.getState().token).toBe('demo-admin')
+  it('should save and clear session', () => {
+    useAuthStore.getState().setSession('jwt-token', {
+      id: 'user-admin',
+      username: 'admin',
+      name: '系统管理员',
+      role: 'admin',
+      roles: ['admin'],
+      permissions: ['user:manage'],
+    })
 
-    useAuthStore.getState().clearToken()
+    expect(useAuthStore.getState().token).toBe('jwt-token')
+    expect(useAuthStore.getState().currentUser?.username).toBe('admin')
+
+    useAuthStore.getState().clearSession()
     expect(useAuthStore.getState().token).toBe('')
+    expect(useAuthStore.getState().currentUser).toBeNull()
   })
 })

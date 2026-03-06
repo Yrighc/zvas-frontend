@@ -1,9 +1,8 @@
-/**
- * DemoTokenPreset 定义演示鉴权令牌模板。
- */
-export interface DemoTokenPreset {
-  label: string
-  token: string
+export interface AuthUserView {
+  id: string
+  username: string
+  name: string
   role: string
-  description: string
+  roles: string[]
+  permissions: string[]
 }

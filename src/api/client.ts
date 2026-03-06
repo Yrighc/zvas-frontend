@@ -46,6 +46,11 @@ httpClient.interceptors.response.use(
   (error) => {
     const status = error.response?.status ?? 500
     const payload = error.response?.data as Partial<ApiEnvelope<unknown>> | undefined
+
+    if (status === 401) {
+      useAuthStore.getState().clearSession()
+    }
+
     throw new ApiError(payload?.message || error.message || '请求失败', status, payload?.code, payload?.trace_id)
   },
 )
