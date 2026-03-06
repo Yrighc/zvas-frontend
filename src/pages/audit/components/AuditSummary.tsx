@@ -26,11 +26,10 @@ export const AuditSummary = ({ total, highRiskCount, failureCount, actorCount, i
 
     return (
         <section className="grid grid-cols-1 md:grid-cols-4 gap-6 h-auto md:h-[130px]">
-            {/* 总量卡片 - Apple 极简宣传风格 */}
-            <Card className="bg-gradient-to-br from-[#0071e3]/20 via-black to-black border border-white/10 shadow-none overflow-hidden h-full apple-spotlight rounded-[32px]">
-                <CardBody className="p-6 flex flex-col justify-center relative">
-                    <div className="absolute top-[-50%] right-[-20%] w-48 h-48 bg-[#0071e3]/10 blur-[60px] rounded-full pointer-events-none" />
-                    <span className="text-[10px] text-[#0071e3] uppercase tracking-[0.3em] font-black opacity-80">Full_Access_Log</span>
+            {/* 总量 */}
+            <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
+                <CardBody className="p-6 flex flex-col justify-center">
+                    <span className="text-[10px] text-apple-blue-light uppercase tracking-[0.3em] font-black opacity-80">Full_Access_Log</span>
                     <strong className="text-4xl font-black tracking-tighter mt-1 text-white leading-none">{total}</strong>
                 </CardBody>
             </Card>

@@ -142,15 +142,15 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                 }}
             >
                 <TableHeader>
-                    <TableColumn key="created_at" width={160} align="start">时间 (Timestamp)</TableColumn>
-                    <TableColumn key="actor" width={180} align="start">操作主体 (Actor)</TableColumn>
-                    <TableColumn key="action" width={240} align="start">行为指令 (Command)</TableColumn>
-                    <TableColumn key="resource_type" width={140} align="start">资产类型 (Type)</TableColumn>
-                    <TableColumn key="resource_id" width={180} align="start">关联标识 (Resource_ID)</TableColumn>
-                    <TableColumn key="risk_level" width={120} align="start">风险等级</TableColumn>
-                    <TableColumn key="result" width={100} align="start">执行结果</TableColumn>
-                    <TableColumn key="trace_id" width={140} align="start">溯源码 (Trace)</TableColumn>
-                    <TableColumn key="actions" width={60} align="end">指令</TableColumn>
+                    <TableColumn key="created_at" width={130} align="start">时间</TableColumn>
+                    <TableColumn key="actor" width={140} align="start">操作人</TableColumn>
+                    <TableColumn key="action" width={200} align="start">行为</TableColumn>
+                    <TableColumn key="resource_type" width={110} align="start">资产类型</TableColumn>
+                    <TableColumn key="resource_id" width={150} align="start">资产 ID</TableColumn>
+                    <TableColumn key="risk_level" width={100} align="start">风险</TableColumn>
+                    <TableColumn key="result" width={80} align="start">结果</TableColumn>
+                    <TableColumn key="trace_id" width={120} align="start">溯源码</TableColumn>
+                    <TableColumn key="actions" width={50} align="end"> </TableColumn>
                 </TableHeader>
                 <TableBody
                     items={data}

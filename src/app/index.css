@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  /* Apple 系统调色盘 - 语义化定义 */
-  --color-apple-black: #000000;
+  /* Apple 系统调色盘 - 语义化定义（深色基准） */
+  --color-apple-black: #111113;
   --color-apple-bg: #1c1c1e;
   --color-apple-secondary-bg: #2c2c2e;
   --color-apple-tertiary-bg: #3a3a3c;
@@ -37,10 +37,155 @@
 
   body {
     @apply text-apple-text-primary antialiased selection:bg-apple-blue/30 selection:text-white;
-    background: radial-gradient(circle at 50% -20%, #1a1a1a 0%, #000000 100%);
+    background: radial-gradient(circle at 50% -20%, #222228 0%, #111113 100%);
     min-height: 100vh;
+
+    /* === iPhone 字体规范 ===
+     * 1. Inter (Variable) 作为跨平台首选 - 与 SF Pro 几何结构最接近的开源字体
+     * 2. 系统 SF Pro 栈：-apple-system / BlinkMacSystemFont 在 Apple 设备上自动调用 SF Pro
+     * 3. Noto Sans SC 负责 CJK 字符的精确渲染（非系统字体兜底）
+     */
+    font-family:
+      "Inter Variable", "Inter",
+      -apple-system, BlinkMacSystemFont,
+      "SF Pro Text", "SF Pro Display",
+      "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei UI", "Microsoft YaHei",
+      "Helvetica Neue", Arial,
+      sans-serif;
+
+    /* 字间距：iPhone 全局正文基准 -0.01em */
     letter-spacing: -0.01em;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+
+    /* 行高：iPhone HIG 正文 */
+    line-height: 1.5;
+
+    /* 数字等宽：确保统计指标对齐 */
+    font-variant-numeric: tabular-nums;
+
+    /* 连字：关闭常规连字，保持工程字体风格 */
+    font-feature-settings: "liga" 0, "calt" 1, "kern" 1;
+
+    /* 文字渲染优化 */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 明亮主题变量覆盖（HeroUI 通过 .light class 激活） */
+  .light {
+    color-scheme: light;
+
+    /* Apple macOS 亮色系 — 偏暖灰，降低刺眼感 */
+    --color-apple-black: #e2e2e8;
+    --color-apple-bg: #eaeaef;
+    --color-apple-secondary-bg: #e0e0e7;
+    --color-apple-tertiary-bg: #d0d0d8;
+
+    /* 文字色 - 亮色模式为深色 */
+    --color-apple-text-primary: #1d1d1f;
+    --color-apple-text-secondary: #6e6e73;
+    --color-apple-text-tertiary: #8e8e93;
+
+    /* 蓝色调亮色模式保持 Apple Blue */
+    --color-apple-blue: #0071e3;
+    --color-apple-blue-light: #0077ed;
+
+    /* 边框改为深色半透明 */
+    --color-apple-border: rgba(0, 0, 0, 0.08);
+    --color-apple-border-strong: rgba(0, 0, 0, 0.15);
+  }
+
+  /* 亮色主题背景 */
+  .light,
+  .light body {
+    background: radial-gradient(circle at 50% -20%, #d4d4dc 0%, #e2e2e8 100%);
+    color: #1d1d1f;
+  }
+
+  /* ====================================
+     亮色主题强制覆盖：修复硬编码 Tailwind 类
+     ==================================== */
+
+  /* text-white → 深色文字 */
+  .light .text-white {
+    color: #1d1d1f !important;
+  }
+
+  /* bg-white/* 半透明层改为深色半透明 */
+  .light .bg-white\/\[0\.02\] {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+  }
+
+  .light .bg-white\/5 {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .light .bg-white\/\[0\.03\] {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .light .bg-white\/\[0\.01\] {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+  }
+
+  .light .bg-white\/10 {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .light .bg-white\/20 {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  /* border-white/* → 深色半透明边框 */
+  .light .border-white\/5 {
+    border-color: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .light .border-white\/10 {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .light .border-white\/30 {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* 半透明背景组件（磨砂卡片） */
+  .light .backdrop-blur-3xl {
+    background-color: rgba(255, 255, 255, 0.7);
+  }
+
+  .light .bg-apple-tertiary-bg\/5 {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+  }
+
+  /* apple-spotlight 亮色阴影 */
+  .light .apple-spotlight:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(0, 113, 227, 0.08);
+  }
+
+  /* 表格悬停行 */
+  .light .hover\:bg-white\/\[0\.03\]:hover {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+  }
+
+  /* 第一张统计卡的黑色渐变节点 → 亮色模式下改为白色 */
+  .light .via-black {
+    --tw-gradient-to: rgba(245, 245, 247, 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #f5f5f7 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+  }
+
+  .light .to-black {
+    --tw-gradient-to: #f5f5f7 var(--tw-gradient-to-position) !important;
+  }
+
+  /* 明亮模式下的滚动条可见度优化 */
+  .light .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .light .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.22);
   }
 
   /* Apple 风格极简滚动条 */

@@ -285,10 +285,9 @@ export function UserManagementPage() {
       {/* 紧凑型指标概览区 (iPhone 风格) */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6 h-auto md:h-[130px]">
         {/* 指标卡：Total Users */}
-        <Card className="bg-gradient-to-br from-[#0071e3]/20 via-black to-black border border-white/10 shadow-none overflow-hidden h-full apple-spotlight rounded-[32px]">
-          <CardBody className="p-6 flex flex-col justify-center relative">
-            <div className="absolute top-[-50%] right-[-20%] w-48 h-48 bg-[#0071e3]/10 blur-[60px] rounded-full pointer-events-none" />
-            <span className="text-[10px] text-[#0071e3] uppercase tracking-[0.3em] font-black opacity-80">Full_Registry</span>
+        <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
+          <CardBody className="p-6 flex flex-col justify-center">
+            <span className="text-[10px] text-apple-blue-light uppercase tracking-[0.3em] font-black opacity-80">Full_Registry</span>
             <strong className="text-4xl font-black tracking-tighter mt-1 text-white leading-none">{metrics.total}</strong>
           </CardBody>
         </Card>
@@ -337,7 +336,7 @@ export function UserManagementPage() {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <Select
             selectedKeys={[statusFilter]}
-            onChange={(e) => setStatusFilter(e.target.value as any || 'all')}
+            onChange={(e) => setStatusFilter((e.target.value as 'all' | 'active' | 'disabled') || 'all')}
             variant="flat"
             classNames={{
               trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 w-40 rounded-2xl border border-white/5 backdrop-blur-md text-apple-text-primary font-bold",
@@ -384,12 +383,12 @@ export function UserManagementPage() {
           }}
         >
           <TableHeader>
-            <TableColumn width={220} align="start">用户身份 (Identity)</TableColumn>
-            <TableColumn width={200} align="start">访问权限组 (Roles)</TableColumn>
-            <TableColumn width={120} align="start">账号状态</TableColumn>
-            <TableColumn width={120} align="start">属性标识</TableColumn>
-            <TableColumn width={180} align="start">最后活跃</TableColumn>
-            <TableColumn width={280} align="end">指令操作</TableColumn>
+            <TableColumn width={220} align="start">用户</TableColumn>
+            <TableColumn width={200} align="start">权限角色</TableColumn>
+            <TableColumn width={100} align="start">状态</TableColumn>
+            <TableColumn width={100} align="start">类型</TableColumn>
+            <TableColumn width={160} align="start">最后活跃</TableColumn>
+            <TableColumn width={260} align="end">操作</TableColumn>
           </TableHeader>
           <TableBody emptyContent={<div className="h-40 flex items-center justify-center text-apple-text-tertiary font-bold">未发现符合筛选条件的身份主体。</div>}>
             {filteredItems.map((record) => (
