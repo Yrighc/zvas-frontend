@@ -73,12 +73,6 @@ export function AuditLogPage() {
 
   return (
     <div className="flex flex-col gap-14 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20">
-      {/* 极简顶层信息排版 */}
-      <header className="px-2 flex flex-col gap-1">
-        <h1 className="text-4xl font-black tracking-tighter text-white">全域安全审计系统</h1>
-        <p className="text-xs text-apple-text-tertiary uppercase tracking-[0.3em] font-medium opacity-60">Security_Infrastructure / Realtime_Audit_Mirror</p>
-      </header>
-
       {/* 紧凑型指标概览区 (Bento 风格) */}
       <AuditSummary
         {...summaryData}

@@ -276,12 +276,6 @@ export function UserManagementPage() {
         </AnimatePresence>
       </div>
 
-      {/* 极简顶层信息排版 */}
-      <header className="px-2 flex flex-col gap-1">
-        <h1 className="text-4xl font-black tracking-tighter text-white">身份与访问架构</h1>
-        <p className="text-xs text-apple-text-tertiary uppercase tracking-[0.3em] font-medium opacity-60">Identity_Infrastructure / Nexus_Identity_Center</p>
-      </header>
-
       {/* 紧凑型指标概览区 (iPhone 风格) */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6 h-auto md:h-[130px]">
         {/* 指标卡：Total Users */}
