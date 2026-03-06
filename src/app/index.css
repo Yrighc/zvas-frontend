@@ -1,0 +1,92 @@
+:root {
+  font-family: 'IBM Plex Sans', 'PingFang SC', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e8eef7;
+  background:
+    radial-gradient(circle at top left, rgba(46, 111, 255, 0.22), transparent 28%),
+    radial-gradient(circle at right 20%, rgba(12, 200, 155, 0.16), transparent 24%),
+    linear-gradient(135deg, #07111f 0%, #0b1527 48%, #081b23 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+}
+
+code {
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  color: #8fe4ce;
+  background: rgba(143, 228, 206, 0.12);
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 48px 20px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 20px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.hero-card,
+.meta-card {
+  border: 1px solid rgba(130, 163, 255, 0.16);
+  background: linear-gradient(180deg, rgba(8, 18, 34, 0.9), rgba(8, 24, 38, 0.78));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+.hero-card {
+  min-height: 360px;
+}
+
+.hero-title.arco-typography {
+  margin-bottom: 0;
+  color: #f5f8ff;
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.05;
+}
+
+.hero-copy.arco-typography,
+.meta-copy.arco-typography {
+  max-width: 42rem;
+  margin-bottom: 0;
+  color: rgba(232, 238, 247, 0.78);
+  font-size: 16px;
+}
+
+.meta-label.arco-typography {
+  color: #8fe4ce;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell {
+    padding: 28px 16px;
+  }
+}
