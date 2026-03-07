@@ -43,6 +43,7 @@ export interface AuditListParams {
     trace_id?: string;
     risk_level?: RiskLevel;
     result?: ActionResult;
+    keyword?: string;
 }
 
 /**

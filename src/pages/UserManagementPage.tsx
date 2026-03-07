@@ -94,7 +94,16 @@ export function UserManagementPage() {
     setTimeout(() => setToast({ title, msg, type }), 50)
   }
 
-  const usersQuery = useUserListView({ page, page_size: pageSize })
+  // 搜索/状态变化时重置页码
+  const handleKeywordChange = (v: string) => { setKeyword(v); setPage(1); }
+  const handleStatusFilterChange = (v: 'all' | 'active' | 'disabled') => { setStatusFilter(v); setPage(1); }
+
+  const usersQuery = useUserListView({
+    page,
+    page_size: pageSize,
+    keyword: keyword || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter
+  })
   const rolesQuery = useRoleOptionsView()
 
   useEffect(() => {
@@ -170,69 +179,19 @@ export function UserManagementPage() {
   const canManageRoles = hasPermission(currentUser?.permissions, 'role:manage')
   const roleOptions = rolesQuery.data || []
 
-  const filteredItems = useMemo(() => {
-    const base = usersQuery.data?.items || []
-    return base.filter((item) => {
-      const keywordValue = keyword.trim().toLowerCase()
-      const matchesKeyword =
-        keywordValue.length === 0 ||
-        item.username.toLowerCase().includes(keywordValue) ||
-        item.displayName.toLowerCase().includes(keywordValue) ||
-        item.roles.some((role) => `${role.name} ${role.code}`.toLowerCase().includes(keywordValue))
-
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter
-      return matchesKeyword && matchesStatus
-    })
-  }, [keyword, statusFilter, usersQuery.data?.items])
+  const filteredItems = usersQuery.data?.items || []
 
   const metrics = useMemo(() => {
-    const items = usersQuery.data?.items || []
     return {
       total: usersQuery.data?.pagination.total || 0,
-      active: items.filter((item) => item.status === 'active').length,
-      disabled: items.filter((item) => item.status === 'disabled').length,
-      builtin: items.filter((item) => item.isBuiltin).length,
+      active: (usersQuery.data?.items || []).filter((item) => item.status === 'active').length, // 这里由于只拿了一页，metrics 可能略有不准，但 total 是准确的
+      disabled: (usersQuery.data?.items || []).filter((item) => item.status === 'disabled').length,
+      builtin: (usersQuery.data?.items || []).filter((item) => item.isBuiltin).length,
     }
   }, [usersQuery.data])
 
-  if (usersQuery.isPending || rolesQuery.isPending) {
-    return (
-      <div className="flex flex-col gap-6 w-full text-apple-text-primary">
-        <Card className="w-full bg-apple-bg border border-apple-border p-6">
-          <CardBody className="p-0">
-            <Skeleton className="rounded-2xl w-full h-32 bg-apple-tertiary-bg" />
-          </CardBody>
-        </Card>
-      </div>
-    )
-  }
-
-  if (usersQuery.isError || rolesQuery.isError) {
-    const error = usersQuery.error || rolesQuery.error
-    if (isApiError(error) && (error.status === 401 || error.status === 403)) {
-      return null
-    }
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-apple-text-primary p-8">
-        <h1 className="text-2xl font-bold mb-4 tracking-tight">用户管理接口请求失败</h1>
-        <p className="text-apple-text-secondary text-base mb-8">{error instanceof Error ? error.message : '未知错误'}</p>
-        <Button color="primary" variant="flat" onPress={() => void refreshUsersAndAudits(queryClient, false)} className="rounded-full px-8">
-          刷新页面
-        </Button>
-      </div>
-    )
-  }
-
-  if (!usersQuery.data) {
-    return (
-      <Card className="w-full bg-apple-bg border border-apple-border p-12 flex items-center justify-center">
-        <CardBody className="flex items-center justify-center">
-          <p className="text-apple-text-secondary font-medium">用户接口未返回可展示数据。</p>
-        </CardBody>
-      </Card>
-    )
-  }
+  const apiError = usersQuery.error as { status?: number } | null
+  const isActualError = usersQuery.isError && apiError?.status !== 401 && apiError?.status !== 403
 
   return (
     <div className="flex flex-col gap-14 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20">
@@ -247,30 +206,32 @@ export function UserManagementPage() {
               exit={{ y: -20, opacity: 0, scale: 0.95 }}
               className="pointer-events-auto"
             >
-              <Alert
-                hideIcon
-                color={toast.type}
-                variant="flat"
-                classNames={{
-                  base: [
-                    "max-w-fit min-h-0 border border-white/10 rounded-full py-2.5 px-6 shadow-2xl backdrop-blur-3xl ring-1 ring-white/10 items-center",
-                    toast.type === 'danger' ? "bg-apple-red/20" :
-                      toast.type === 'success' ? "bg-apple-green/20" : "bg-apple-blue-light/10"
-                  ].join(" "),
-                  mainWrapper: "flex flex-row items-center",
-                }}
-              >
-                <div className="flex flex-row items-center gap-3">
-                  <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
-                  <span className={[
-                    "text-[15px] font-bold tracking-tight leading-none whitespace-nowrap",
-                    toast.type === 'danger' ? "text-apple-red-light" :
-                      toast.type === 'success' ? "text-apple-green-light" : "text-apple-blue-light"
-                  ].join(" ")}>
-                    {toast.title}: {toast.msg}
-                  </span>
-                </div>
-              </Alert>
+              <div>
+                <Alert
+                  hideIcon
+                  color={toast.type}
+                  variant="flat"
+                  classNames={{
+                    base: [
+                      "max-w-fit min-h-0 border border-white/10 rounded-full py-2.5 px-6 shadow-2xl backdrop-blur-3xl ring-1 ring-white/10 items-center",
+                      toast.type === 'danger' ? "bg-apple-red/20" :
+                        toast.type === 'success' ? "bg-apple-green/20" : "bg-apple-blue-light/10"
+                    ].join(" "),
+                    mainWrapper: "flex flex-row items-center",
+                  }}
+                >
+                  <div className="flex flex-row items-center gap-3">
+                    <ExclamationTriangleIcon className="w-5 h-5 flex-shrink-0" />
+                    <span className={[
+                      "text-[15px] font-bold tracking-tight leading-none whitespace-nowrap",
+                      toast.type === 'danger' ? "text-apple-red-light" :
+                        toast.type === 'success' ? "text-apple-green-light" : "text-apple-blue-light"
+                    ].join(" ")}>
+                      {toast.title}: {toast.msg}
+                    </span>
+                  </div>
+                </Alert>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -282,7 +243,9 @@ export function UserManagementPage() {
         <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
           <CardBody className="p-6 flex flex-col justify-center">
             <span className="text-[10px] text-apple-blue-light uppercase tracking-[0.3em] font-black opacity-80">Full_Registry</span>
-            <strong className="text-4xl font-black tracking-tighter mt-1 text-white leading-none">{metrics.total}</strong>
+            {usersQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10 mt-1" /> : (
+              <strong className="text-4xl font-black tracking-tighter mt-1 text-white leading-none">{metrics.total}</strong>
+            )}
           </CardBody>
         </Card>
 
@@ -290,7 +253,9 @@ export function UserManagementPage() {
         <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
           <CardBody className="p-6 flex flex-col justify-center">
             <span className="text-[10px] text-apple-green-light uppercase tracking-[0.3em] font-black opacity-80 mb-1">Online_Nodes</span>
-            <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.active}</strong>
+            {usersQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10" /> : (
+              <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.active}</strong>
+            )}
           </CardBody>
         </Card>
 
@@ -298,7 +263,9 @@ export function UserManagementPage() {
         <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
           <CardBody className="p-6 flex flex-col justify-center">
             <span className="text-[10px] text-apple-blue-light uppercase tracking-[0.3em] font-black opacity-80 mb-1">Core_Preset</span>
-            <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.builtin}</strong>
+            {usersQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10" /> : (
+              <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.builtin}</strong>
+            )}
           </CardBody>
         </Card>
 
@@ -306,19 +273,21 @@ export function UserManagementPage() {
         <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
           <CardBody className="p-6 flex flex-col justify-center">
             <span className="text-[10px] text-apple-red-light uppercase tracking-[0.3em] font-black opacity-80 mb-1">Revoked_Status</span>
-            <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.disabled}</strong>
+            {usersQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10" /> : (
+              <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.disabled}</strong>
+            )}
           </CardBody>
         </Card>
       </section>
 
-      {/* 操作与搜索胶囊栏 */}
+      {/* 操作与搜索胶囊栏：始终渲染，确保护航功能可用 */}
       <section className="flex flex-col md:flex-row items-center gap-4 w-full">
         <div className="flex-1 w-full relative">
           <Input
             isClearable
             value={keyword}
-            placeholder="搜索用户名、显示名、角色或 TraceID..."
-            onValueChange={setKeyword}
+            placeholder="搜索用户名、显示名、角色..."
+            onValueChange={handleKeywordChange}
             variant="flat"
             startContent={<MagnifyingGlassIcon className="w-5 h-5 text-apple-text-tertiary" />}
             classNames={{
@@ -329,8 +298,9 @@ export function UserManagementPage() {
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <Select
+            aria-label="状态筛选"
             selectedKeys={[statusFilter]}
-            onChange={(e) => setStatusFilter((e.target.value as 'all' | 'active' | 'disabled') || 'all')}
+            onChange={(e) => handleStatusFilterChange((e.target.value as 'all' | 'active' | 'disabled') || 'all')} // handleStatusFilterChange 内部会重置 page 为 1
             variant="flat"
             classNames={{
               trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 w-40 rounded-2xl border border-white/5 backdrop-blur-md text-apple-text-primary font-bold",
@@ -362,154 +332,182 @@ export function UserManagementPage() {
       </section>
 
       {/* 磨砂玻璃用户列表表格容器 */}
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
-        <Table
-          aria-label="User identity table"
-          layout="fixed"
-          removeWrapper
-          classNames={{
-            base: "p-4 min-w-[1000px]",
-            table: "table-fixed",
-            thead: "[&>tr]:first:rounded-xl",
-            th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
-            td: "py-5 border-b border-white/5 last:border-0 text-left",
-            tr: "hover:bg-white/[0.03] transition-colors cursor-default"
-          }}
-        >
-          <TableHeader>
-            <TableColumn width={220} align="start">用户</TableColumn>
-            <TableColumn width={200} align="start">权限角色</TableColumn>
-            <TableColumn width={100} align="start">状态</TableColumn>
-            <TableColumn width={100} align="start">类型</TableColumn>
-            <TableColumn width={160} align="start">最后活跃</TableColumn>
-            <TableColumn width={260} align="end">操作</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent={<div className="h-40 flex items-center justify-center text-apple-text-tertiary font-bold">未发现符合筛选条件的身份主体。</div>}>
-            {filteredItems.map((record) => (
-              <TableRow key={record.id}>
-                <TableCell>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-base font-bold text-white tracking-tight leading-tight">{record.displayName}</span>
-                    <span className="text-[11px] text-apple-text-tertiary font-mono tracking-tighter uppercase opacity-60">{record.username}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1.5">
-                    {record.roles.map((role) => (
-                      <span key={`${record.id}-${role.code}`} className="inline-flex items-center px-2 py-0.5 rounded-full bg-apple-blue/10 border border-apple-blue/30 text-apple-blue-light text-[10px] font-black uppercase tracking-wider">
-                        {role.name}
-                      </span>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${record.status === 'active'
-                    ? 'border-apple-green/40 text-apple-green-light bg-apple-green/10'
-                    : 'border-apple-red/40 text-apple-red-light bg-apple-red/10'
-                    }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${record.status === 'active' ? 'bg-apple-green-light' : 'bg-apple-red-light'}`} />
-                    {record.status === 'active' ? '在线' : '禁用'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className={`text-[10px] font-black tracking-widest uppercase py-1 px-2 rounded-md ${record.isBuiltin ? 'text-apple-blue-light bg-white/5 border border-white/10' : 'text-apple-text-tertiary border border-transparent'
-                    }`}>
-                    {record.isBuiltin ? '核心预置' : '普通成员'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {record.lastLoginAt ? (
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-apple-text-secondary">{formatDateTime(record.lastLoginAt)}</span>
-                      <span className="text-[10px] text-apple-text-tertiary uppercase tracking-tighter">会话同步</span>
-                    </div>
-                  ) : (
-                    <span className="text-[11px] text-apple-text-tertiary opacity-40 italic">从未初始化</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="bordered"
-                      className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
-                      onPress={() => setDetailTarget(record)}
-                    >
-                      详情
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color={record.status === 'active' ? 'danger' : 'success'}
-                      isDisabled={!canManageUsers || record.isBuiltin || statusMutation.isPending}
-                      className="rounded-full font-black text-[11px] uppercase tracking-wider min-w-[64px] h-8 px-4"
-                      onPress={() => {
-                        setConfirmTarget({ user: record, status: record.status === 'active' ? 'disabled' : 'active' })
-                      }}
-                    >
-                      {record.status === 'active' ? '禁用' : '解禁'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="bordered"
-                      isDisabled={!canManageUsers}
-                      className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
-                      onPress={() => {
-                        setResetTarget(record)
-                        setResetPasswordDraft('')
-                      }}
-                    >
-                      重置密码
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="bordered"
-                      isDisabled={!canManageRoles || record.isBuiltin}
-                      className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
-                      onPress={() => {
-                        setRoleTarget(record)
-                        setRoleDraft(record.roles.map((role) => role.code))
-                      }}
-                    >
-                      权限
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
-        <div className="px-6 py-6 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
-          <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-            当前展示 <span className="text-white">{filteredItems.length}</span> / {usersQuery.data.pagination.total} 个身份主体
-          </p>
-          <Pagination
-            total={Math.ceil(usersQuery.data.pagination.total / usersQuery.data.pagination.pageSize)}
-            page={page}
-            onChange={(page) => setPage(page)}
-            showControls
-            classNames={{
-              wrapper: "gap-2",
-              item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[40px] h-10",
-              cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30",
-              prev: "bg-white/5 text-white/50 rounded-xl",
-              next: "bg-white/5 text-white/50 rounded-xl",
-            }}
-          />
+      {isActualError ? (
+        <div className="flex flex-col items-center justify-center h-64 gap-4 text-apple-text-tertiary bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl rounded-[32px]">
+          <p className="text-base font-medium">账户身份同步失败</p>
+          <p className="text-xs opacity-60">{usersQuery.error instanceof Error ? usersQuery.error.message : '身份管控中心暂时无法响应'}</p>
+          <Button
+            size="sm"
+            variant="flat"
+            color="primary"
+            className="rounded-full font-bold px-6"
+            onPress={() => void refreshUsersAndAudits(queryClient, false)}
+          >
+            立即刷新
+          </Button>
         </div>
-      </div>
+      ) : !usersQuery.data && !usersQuery.isPending ? (
+        <div className="flex flex-col items-center justify-center h-64 text-apple-text-tertiary bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl rounded-[32px]">
+          <p className="font-bold">暂无有效载荷数据 (NULL_PAYLOAD)</p>
+        </div>
+      ) : (
+        <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
+          <Table
+            aria-label="User identity table"
+            layout="fixed"
+            removeWrapper
+            classNames={{
+              base: "p-4 min-w-[1000px]",
+              table: "table-fixed",
+              thead: "[&>tr]:first:rounded-xl",
+              th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
+              td: "py-5 border-b border-white/5 last:border-0 text-left",
+              tr: "hover:bg-white/[0.03] transition-colors cursor-default"
+            }}
+          >
+            <TableHeader>
+              <TableColumn width={220} align="start">用户</TableColumn>
+              <TableColumn width={200} align="start">权限角色</TableColumn>
+              <TableColumn width={100} align="start">状态</TableColumn>
+              <TableColumn width={100} align="start">类型</TableColumn>
+              <TableColumn width={160} align="start">最后活跃</TableColumn>
+              <TableColumn width={260} align="end">操作</TableColumn>
+            </TableHeader>
+            <TableBody
+              emptyContent={<div className="h-40 flex items-center justify-center text-apple-text-tertiary font-bold">未发现符合筛选条件的身份主体。</div>}
+              isLoading={usersQuery.isPending}
+              loadingContent={<Skeleton className="rounded-xl w-full h-40 bg-white/5" />}
+            >
+              {filteredItems.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-base font-bold text-white tracking-tight leading-tight">{record.displayName}</span>
+                      <span className="text-[11px] text-apple-text-tertiary font-mono tracking-tighter uppercase opacity-60">{record.username}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1.5">
+                      {record.roles.map((role) => (
+                        <span key={`${record.id}-${role.code}`} className="inline-flex items-center px-2 py-0.5 rounded-full bg-apple-blue/10 border border-apple-blue/30 text-apple-blue-light text-[10px] font-black uppercase tracking-wider">
+                          {role.name}
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${record.status === 'active'
+                      ? 'border-apple-green/40 text-apple-green-light bg-apple-green/10'
+                      : 'border-apple-red/40 text-apple-red-light bg-apple-red/10'
+                      }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${record.status === 'active' ? 'bg-apple-green-light' : 'bg-apple-red-light'}`} />
+                      {record.status === 'active' ? '在线' : '禁用'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`text-[10px] font-black tracking-widest uppercase py-1 px-2 rounded-md ${record.isBuiltin ? 'text-apple-blue-light bg-white/5 border border-white/10' : 'text-apple-text-tertiary border border-transparent'
+                      }`}>
+                      {record.isBuiltin ? '核心预置' : '普通成员'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {record.lastLoginAt ? (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-apple-text-secondary">{formatDateTime(record.lastLoginAt)}</span>
+                        <span className="text-[10px] text-apple-text-tertiary uppercase tracking-tighter">会话同步</span>
+                      </div>
+                    ) : (
+                      <span className="text-[11px] text-apple-text-tertiary opacity-40 italic">从未初始化</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="bordered"
+                        className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
+                        onPress={() => setDetailTarget(record)}
+                      >
+                        详情
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        color={record.status === 'active' ? 'danger' : 'success'}
+                        isDisabled={!canManageUsers || record.isBuiltin || statusMutation.isPending}
+                        className="rounded-full font-black text-[11px] uppercase tracking-wider min-w-[64px] h-8 px-4"
+                        onPress={() => {
+                          setConfirmTarget({ user: record, status: record.status === 'active' ? 'disabled' : 'active' })
+                        }}
+                      >
+                        {record.status === 'active' ? '禁用' : '解禁'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="bordered"
+                        isDisabled={!canManageUsers}
+                        className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
+                        onPress={() => {
+                          setResetTarget(record)
+                          setResetPasswordDraft('')
+                        }}
+                      >
+                        重置密码
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="bordered"
+                        isDisabled={!canManageRoles || record.isBuiltin}
+                        className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
+                        onPress={() => {
+                          setRoleTarget(record)
+                          setRoleDraft(record.roles.map((role) => role.code))
+                        }}
+                      >
+                        权限
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-      <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-md">
-        <CardBody className="p-6">
-          <div className="grid grid-cols-[160px_1fr] gap-y-4 text-sm font-medium">
-            <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black">身份溯源 (Trace_ID)</div>
-            <div className="font-mono text-apple-text-primary select-all text-xs opacity-80 italic">{usersQuery.data.traceId}</div>
-            <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black">当前账户权能 (Permissions)</div>
-            <div className="font-mono text-apple-text-tertiary uppercase text-[9px] tracking-tight opacity-50">{(currentUser?.permissions || []).join(' | ') || '-'}</div>
-          </div>
-        </CardBody>
-      </Card>
+          {usersQuery.data && (
+            <div className="px-6 py-6 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
+              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                当前展示 <span className="text-white">{filteredItems.length}</span> / {usersQuery.data.pagination.total} 个身份主体
+              </p>
+              <Pagination
+                total={Math.ceil(usersQuery.data.pagination.total / usersQuery.data.pagination.pageSize)}
+                page={page}
+                onChange={(page) => setPage(page)}
+                showControls
+                classNames={{
+                  wrapper: "gap-2",
+                  item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[40px] h-10",
+                  cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30",
+                  prev: "bg-white/5 text-white/50 rounded-xl",
+                  next: "bg-white/5 text-white/50 rounded-xl",
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {usersQuery.data && (
+        <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-md">
+          <CardBody className="p-6">
+            <div className="grid grid-cols-[160px_1fr] gap-y-4 text-sm font-medium">
+              <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black">身份溯源 (Trace_ID)</div>
+              <div className="font-mono text-apple-text-primary select-all text-xs opacity-80 italic">{usersQuery.data.traceId}</div>
+              <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black">当前账户权能 (Permissions)</div>
+              <div className="font-mono text-apple-text-tertiary uppercase text-[9px] tracking-tight opacity-50">{(currentUser?.permissions || []).join(' | ') || '-'}</div>
+            </div>
+          </CardBody>
+        </Card>
+      )}
 
       <Modal
         isOpen={createVisible}
@@ -824,13 +822,11 @@ export function UserManagementPage() {
                           <div className="p-8 text-center text-xs text-apple-text-tertiary italic">未检测到任何活动权能内容更新完成。</div>
                         ) : (
                           <div className="p-2 space-y-1">
-                            {/* 这里模拟级联权限展示，生产环境可由 API 直接下发并在此遍历 */}
-                            {['asset:read', 'scan:launch', 'report:export', 'ident:view'].map(perm => (
-                              <div key={perm} className="flex justify-between items-center p-3 hover:bg-white/5 rounded-xl transition-colors">
-                                <code className="text-xs text-apple-blue-light font-black lowercase">{perm}</code>
-                                <span className="text-[10px] text-apple-green-light font-bold bg-apple-green/10 px-2 py-0.5 rounded uppercase">Verified / 已鉴权</span>
-                              </div>
-                            ))}
+                            {/* 权限快照需要独立明细接口支持，当前 list API 不下发权限详情 */}
+                            <div className="p-8 text-center">
+                              <p className="text-xs text-apple-text-tertiary italic">权限快照暂未接入独立明细接口</p>
+                              <p className="text-[10px] text-apple-text-tertiary/50 mt-1">角色已授予：{detailTarget?.roles.map(r => r.name).join('、') || '无'}</p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -843,7 +839,7 @@ export function UserManagementPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-[11px] font-medium">
                         <span>创建时间</span>
-                        <span className="text-white">2026-03-01 10:00:00</span>
+                        <span className="text-white">—</span>
                       </div>
                       <div className="flex justify-between text-[11px] font-medium">
                         <span>最后访问</span>

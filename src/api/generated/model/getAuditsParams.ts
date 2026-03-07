@@ -15,4 +15,16 @@ page?: number;
  * 每页数量
  */
 page_size?: number;
+/**
+ * 搜索关键字
+ */
+keyword?: string;
+/**
+ * 风险等级筛选
+ */
+risk_level?: string;
+/**
+ * 执行结果筛选
+ */
+result?: string;
 };

@@ -140,6 +140,7 @@ export function LoginPage() {
 
         <form onSubmit={submit} className="flex flex-col gap-4 w-full" noValidate>
           <Input
+            label="用户名"
             name="username"
             placeholder="管理员账户"
             defaultValue="admin"
@@ -187,6 +188,7 @@ export function LoginPage() {
           />
 
           <Input
+            label="密码"
             name="password"
             type={isVisible ? "text" : "password"}
             placeholder="安全口令"

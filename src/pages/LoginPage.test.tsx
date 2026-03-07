@@ -45,7 +45,7 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText('用户名'), 'admin')
     await user.clear(screen.getByLabelText('密码'))
     await user.type(screen.getByLabelText('密码'), 'Admin@123456')
-    await user.click(screen.getByRole('button', { name: '登录' }))
+    await user.click(screen.getByRole('button', { name: /继 续/ }))
 
     await waitFor(() => {
       expect(useAuthStore.getState().token).toBe('jwt-token')

@@ -67,7 +67,6 @@ describe('UserManagementPage', () => {
       </AppProviders>,
     )
 
-    expect(screen.getByText('用户管理台')).toBeInTheDocument()
     expect(screen.getByText('操作员一号')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '新建用户' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '重置密码' })).toBeInTheDocument()

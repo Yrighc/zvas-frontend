@@ -15,4 +15,12 @@ page?: number;
  * 每页数量
  */
 page_size?: number;
+/**
+ * 搜索关键字
+ */
+keyword?: string;
+/**
+ * 状态筛选
+ */
+status?: string;
 };

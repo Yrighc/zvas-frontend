@@ -4,7 +4,9 @@ import type { RiskLevel, ActionResult } from "../../../api/types/audit.types";
 
 interface AuditFilterProps {
     onSearchChange: (value: string) => void;
+    riskLevel: RiskLevel | "all";
     onRiskLevelChange: (value: RiskLevel | "all") => void;
+    result: ActionResult | "all";
     onResultChange: (value: ActionResult | "all") => void;
     onRefresh: () => void;
     isRefreshing?: boolean;
@@ -12,7 +14,9 @@ interface AuditFilterProps {
 
 export const AuditFilter = ({
     onSearchChange,
+    riskLevel,
     onRiskLevelChange,
+    result,
     onResultChange,
     onRefresh,
     isRefreshing
@@ -38,7 +42,11 @@ export const AuditFilter = ({
                     placeholder="风险等级"
                     className="w-40"
                     variant="flat"
-                    onChange={(e) => onRiskLevelChange((e.target.value as RiskLevel) || 'all')}
+                    selectedKeys={[riskLevel]}
+                    onSelectionChange={(keys) => {
+                        const val = Array.from(keys)[0] as RiskLevel | "all";
+                        onRiskLevelChange(val || "all");
+                    }}
                     aria-label="筛选风险等级"
                     classNames={{
                         trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md text-apple-text-primary font-bold",
@@ -55,7 +63,11 @@ export const AuditFilter = ({
                     placeholder="执行结果"
                     className="w-40"
                     variant="flat"
-                    onChange={(e) => onResultChange((e.target.value as ActionResult) || 'all')}
+                    selectedKeys={[result]}
+                    onSelectionChange={(keys) => {
+                        const val = Array.from(keys)[0] as ActionResult | "all";
+                        onResultChange(val || "all");
+                    }}
                     aria-label="筛选执行结果"
                     classNames={{
                         trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md text-apple-text-primary font-bold",

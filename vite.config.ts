@@ -39,10 +39,52 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            react: ['react', 'react-dom', 'react-router-dom'],
-            heroui: ['@heroui/react', 'framer-motion'],
-            query: ['@tanstack/react-query'],
+          manualChunks(id) {
+            if (!id.includes('node_modules')) {
+              return undefined
+            }
+
+            if (
+              id.includes('/node_modules/react/') ||
+              id.includes('/node_modules/react-dom/') ||
+              id.includes('/node_modules/react-router/') ||
+              id.includes('/node_modules/react-router-dom/')
+            ) {
+              return 'react'
+            }
+
+            if (id.includes('/node_modules/@tanstack/')) {
+              return 'query'
+            }
+
+            if (id.includes('/node_modules/framer-motion/')) {
+              return 'motion'
+            }
+
+            if (id.includes('/node_modules/@heroui/')) {
+              return 'heroui'
+            }
+
+            if (id.includes('/node_modules/@react-aria/')) {
+              return 'react-aria'
+            }
+
+            if (id.includes('/node_modules/@react-stately/')) {
+              return 'react-stately'
+            }
+
+            if (id.includes('/node_modules/@react-types/')) {
+              return 'react-types'
+            }
+
+            if (
+              id.includes('/node_modules/@internationalized/') ||
+              id.includes('/node_modules/intl-messageformat/')
+            ) {
+              return 'i18n'
+            }
+
+            return undefined
           },
         },
       },
