@@ -43,12 +43,7 @@ export function FindingsPage() {
 
   return (
     <div className="flex flex-col gap-8 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20 p-4">
-      <section className="flex flex-col gap-2 relative">
-        <h1 className="text-4xl font-black tracking-tight text-[#f5f5f7]">暴露面漏洞聚合</h1>
-        <p className="text-[#86868b] leading-relaxed max-w-2xl font-medium">
-          融合海量资产范围下发掘的高保真漏洞及配置脆弱点全景。
-        </p>
-      </section>
+
 
       <section className="flex flex-col md:flex-row items-center gap-4 w-full mt-4">
         <div className="flex-1 w-full relative">

@@ -19,10 +19,10 @@ const RolesPage = lazy(() => import('@/pages/iam/RolesPage').then(m => ({ defaul
 const AuditLogPage = lazy(() => import('@/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
 
 const AssetPoolsPage = lazy(() => import('@/pages/assets/AssetPoolsPage').then(m => ({ default: m.AssetPoolsPage })))
-const AssetInventoryPage = lazy(() => import('@/pages/assets/AssetInventoryPage').then(m => ({ default: m.AssetInventoryPage })))
 const AssetPoolDetailPage = lazy(() => import('@/pages/assets/AssetPoolDetailPage').then(m => ({ default: m.AssetPoolDetailPage })))
 
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
+const TaskNewPage = lazy(() => import('@/pages/tasks/TaskNewPage').then(m => ({ default: m.TaskNewPage })))
 const TaskTemplatesPage = lazy(() => import('@/pages/tasks/TaskTemplatesPage').then(m => ({ default: m.TaskTemplatesPage })))
 const WorkersPage = lazy(() => import('@/pages/tasks/WorkersPage').then(m => ({ default: m.WorkersPage })))
 const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage').then(m => ({ default: m.TaskDetailPage })))
@@ -131,14 +131,7 @@ export const router = createBrowserRouter(
                 </Suspense>
               ),
             },
-            {
-              path: 'assets/inventory',
-              element: (
-                <Suspense fallback={renderPageLoader()}>
-                  <AssetInventoryPage />
-                </Suspense>
-              ),
-            },
+
             {
               path: 'assets/:id',
               element: (
@@ -152,6 +145,14 @@ export const router = createBrowserRouter(
               element: (
                 <Suspense fallback={renderPageLoader()}>
                   <TasksPage />
+                </Suspense>
+              ),
+            },
+            {
+              path: 'tasks/new',
+              element: (
+                <Suspense fallback={renderPageLoader()}>
+                  <TaskNewPage />
                 </Suspense>
               ),
             },

@@ -345,3 +345,28 @@ export function useAssetPoolFindings(id?: string, params?: { page?: number; page
     enabled: Boolean(id),
   })
 }
+
+// Since ReportView is not defined in asset.ts, we need to redefine it or just import it. Let's just define a minimal type here to avoid circular dependencies.
+export interface ReportSummaryView {
+  id: string
+  name: string
+  scope_type: string
+  scope_id: string
+  scope_name: string
+  status: string
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export function useAssetPoolReports(id?: string, params?: { page?: number; page_size?: number; status?: string }) {
+  return useQuery({
+    queryKey: ['asset-pools', id, 'reports', params],
+    queryFn: async () => {
+      const res = await httpClient.get<{ data: ReportSummaryView[]; pagination?: PaginationMeta }>(`/asset-pools/${id}/reports`, { params })
+      return res.data
+    },
+    enabled: Boolean(id),
+  })
+}
+

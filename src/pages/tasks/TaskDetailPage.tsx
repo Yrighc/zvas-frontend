@@ -85,12 +85,12 @@ export function TaskDetailPage() {
             tab: 'h-14 px-2 text-apple-text-secondary data-[selected=true]:text-white data-[selected=true]:font-black text-[13px] uppercase tracking-widest transition-colors',
           }}
         >
-          <Tab key="overview" title="参数概览" />
-          <Tab key="target" title="快照输入" />
-          <Tab key="expanded" title="快照扩展" />
-          <Tab key="progress" title="执行跟踪监控" />
-          <Tab key="findings" title="漏洞结果流" />
-          <Tab key="reports" title="留存报告" />
+          <Tab key="overview" title="概览" />
+          <Tab key="target" title="扫描目标" />
+          <Tab key="expanded" title="本次发现资产" />
+          <Tab key="progress" title="执行进度" />
+          <Tab key="findings" title="扫描结果" />
+          <Tab key="reports" title="报告" />
         </Tabs>
       </div>
 
@@ -99,8 +99,8 @@ export function TaskDetailPage() {
         {activeTab === 'target' && <TaskSnapshotInputTab task={task} />}
         {activeTab === 'expanded' && <TaskSnapshotExpandedTab task={task} />}
         {activeTab === 'progress' && <TaskProgressTab progress={progress} />}
-        {activeTab === 'findings' && <PlaceholderTab title="待后续模块聚合接入" desc="待 Findings 实装完毕后，此处将开放专门由于此任务所直接导致的漏洞与风险识别列表。" />}
-        {activeTab === 'reports' && <PlaceholderTab title="待核验报告组件接驳" desc="系统将在审计流运行结束后，将过程证据通过格式化模板在此组装生成可用以报备的高管凭证。" />}
+        {activeTab === 'findings' && <PlaceholderTab title="待模块接入" desc="此页面保留为以后开放扫描结果的专门呈现。当前暂无真实业务数据。" />}
+        {activeTab === 'reports' && <PlaceholderTab title="待模块接入" desc="系统将在扫描结束后统一生成分析报表，当前模块暂未开放。" />}
       </div>
     </div>
   )

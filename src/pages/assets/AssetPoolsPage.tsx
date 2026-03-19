@@ -12,9 +12,11 @@ import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
+  Card,
+  CardBody,
 } from '@heroui/react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MagnifyingGlassIcon, PlusIcon, ArrowPathIcon, CloudArrowDownIcon, DocumentPlusIcon, ArrowDownTrayIcon, ServerStackIcon } from '@heroicons/react/24/outline'
 
@@ -51,39 +53,87 @@ export function AssetPoolsPage() {
   const items = poolsQuery.data?.data || []
   const total = poolsQuery.data?.pagination?.total || 0
   const totalPages = Math.ceil(total / pageSize)
+  
+  const metrics = useMemo(() => {
+    const dataItems = poolsQuery.data?.data || []
+    return {
+      totalPools: total,
+      totalAssets: dataItems.reduce((sum, item) => sum + (item.asset_count || 0), 0),
+      totalTasks: dataItems.reduce((sum, item) => sum + (item.task_count || 0), 0),
+      totalFindings: dataItems.reduce((sum, item) => sum + (item.finding_count || 0), 0),
+    }
+  }, [poolsQuery.data?.data, total])
 
   return (
-    <div className="flex flex-col gap-8 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20 p-4">
-      {/* 头部：标题与介绍 */}
-      <section className="flex flex-col gap-2 relative">
-        <h1 className="text-3xl font-black tracking-tight text-[#f5f5f7]">资产源 (Asset Pools)</h1>
-        <p className="text-apple-text-secondary text-sm font-medium">物理域与逻辑域的顶层分组架构。全站业务运转的核心主入口。</p>
+    <div className="flex flex-col gap-14 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20 p-4 md:p-8">
+      
+      {/* 紧凑型指标概览区 (iPhone 风格) */}
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 h-auto md:h-[130px]">
+        {/* 指标卡：Total Pools */}
+        <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
+          <CardBody className="p-6 flex flex-col justify-center">
+            <span className="text-[10px] text-apple-blue-light uppercase tracking-[0.3em] font-black opacity-80 mb-1">Pools_Vault</span>
+            {poolsQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10 mt-1" /> : (
+              <strong className="text-4xl font-black tracking-tighter mt-1 text-white leading-none">{metrics.totalPools}</strong>
+            )}
+          </CardBody>
+        </Card>
+
+        {/* 指标卡：Assets */}
+        <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
+          <CardBody className="p-6 flex flex-col justify-center">
+            <span className="text-[10px] text-apple-green-light uppercase tracking-[0.3em] font-black opacity-80 mb-1">Global_Assets</span>
+            {poolsQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10" /> : (
+              <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.totalAssets}</strong>
+            )}
+          </CardBody>
+        </Card>
+
+        {/* 指标卡：Tasks */}
+        <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
+          <CardBody className="p-6 flex flex-col justify-center">
+            <span className="text-[10px] text-apple-blue-light uppercase tracking-[0.3em] font-black opacity-80 mb-1">Linked_Tasks</span>
+            {poolsQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10" /> : (
+              <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.totalTasks}</strong>
+            )}
+          </CardBody>
+        </Card>
+
+        {/* 指标卡：Findings */}
+        <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl h-full shadow-none apple-spotlight rounded-[32px]">
+          <CardBody className="p-6 flex flex-col justify-center">
+            <span className="text-[10px] text-apple-red-light uppercase tracking-[0.3em] font-black opacity-80 mb-1">Risk_Findings</span>
+            {poolsQuery.isPending ? <Skeleton className="h-8 w-12 rounded-lg bg-white/10" /> : (
+              <strong className="text-4xl font-black tracking-tighter text-white leading-none">{metrics.totalFindings}</strong>
+            )}
+          </CardBody>
+        </Card>
       </section>
 
-      {/* 搜索与工具栏 */}
+      {/* 操作与搜索胶囊栏：始终渲染，确保护航功能可用 */}
       <section className="flex flex-col md:flex-row items-center gap-4 w-full">
-        <div className="flex flex-1 gap-2 w-full">
+        <div className="flex flex-col md:flex-row flex-1 w-full gap-4 relative">
           <Input
             isClearable
             value={keyword}
-            placeholder="搜索资产池名称..."
+            placeholder="搜寻资产池结构名称..."
             onValueChange={(val) => { setKeyword(val); setPage(1) }}
             variant="flat"
             startContent={<MagnifyingGlassIcon className="w-5 h-5 text-apple-text-tertiary" />}
             classNames={{
-              inputWrapper: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-10 rounded-lg border border-white/5",
-              input: "text-sm text-white placeholder:text-apple-text-tertiary",
+              inputWrapper: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md",
+              input: "text-sm font-medium placeholder:text-apple-text-tertiary",
             }}
           />
           <Input
             isClearable
             value={tagFilter}
-            placeholder="按系统标签筛选 (例如 prod, external)..."
+            placeholder="依照系统级 Tag 筛选 (如 external)..."
             onValueChange={(val) => { setTagFilter(val); setPage(1) }}
             variant="flat"
             classNames={{
-              inputWrapper: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-10 rounded-lg border border-white/5",
-              input: "text-sm text-white placeholder:text-apple-text-tertiary",
+              inputWrapper: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md",
+              input: "text-sm font-medium placeholder:text-apple-text-tertiary",
             }}
           />
         </div>
@@ -91,10 +141,10 @@ export function AssetPoolsPage() {
           <Button
             variant="flat"
             isIconOnly
-            className="h-10 w-10 rounded-lg bg-apple-tertiary-bg/10 border border-white/5"
+            className="h-14 w-14 rounded-2xl bg-apple-tertiary-bg/10 border border-white/5 backdrop-blur-md"
             onPress={() => poolsQuery.refetch()}
           >
-            <ArrowPathIcon className="w-5 h-5 text-apple-text-secondary" />
+            <ArrowPathIcon className="w-6 h-6 text-apple-text-secondary" />
           </Button>
 
           <Dropdown
@@ -105,164 +155,205 @@ export function AssetPoolsPage() {
             <DropdownTrigger>
               <Button 
                 variant="flat"
-                className="h-10 rounded-lg font-bold px-6 border border-white/10 bg-white/5 hover:bg-white/10 text-white"
+                className="h-14 rounded-2xl font-black px-6 border border-white/5 bg-apple-tertiary-bg/10 backdrop-blur-md text-white hover:bg-apple-tertiary-bg/20 transition-colors"
               >
-                <ArrowDownTrayIcon className="w-4 h-4 text-apple-blue-light" />
-                <span>目标源投递 (Data Ingestion)</span>
+                <ArrowDownTrayIcon className="w-5 h-5 text-apple-blue-light" />
+                <span>目标源投递 (Ingestion)</span>
               </Button>
             </DropdownTrigger>
             <DropdownMenu aria-label="Ingestion Actions" variant="flat">
               <DropdownItem 
                 key="manual" 
                 startContent={<DocumentPlusIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                description="复制粘贴批量录入 IP/域名"
+                description="纯文本多行映射录入"
                 onPress={() => setManualVisible(true)}
               >
-                手工种源录入
+                手工播种录入
               </DropdownItem>
               <DropdownItem 
                 key="file" 
                 startContent={<CloudArrowDownIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                description="依托 CSV/TXT 映射批量导入"
+                description="结构化映射一键清洗导入"
                 onPress={() => setFileImportVisible(true)}
               >
-                结构化文件导入
+                文件快流导入
               </DropdownItem>
               <DropdownItem 
                 key="sync" 
                 startContent={<ServerStackIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                description="依托云平台 AK/SK 持续同步"
+                description="鉴权 AK/SK 持续远端同步"
                 className="opacity-50 cursor-not-allowed"
                 isReadOnly
               >
-                跨环境源同步 (暂未实装)
+                外部同步映射
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
 
           <Button
             color="primary"
-            className="h-10 rounded-lg font-bold px-6 border-none"
+            className="h-14 rounded-2xl font-black px-8 shadow-2xl shadow-apple-blue/20 flex items-center gap-2"
             onPress={() => setCreateVisible(true)}
           >
-            <PlusIcon className="w-4 h-4" />
+            <PlusIcon className="w-5 h-5" />
             <span>新建实体池</span>
           </Button>
         </div>
       </section>
 
-      {/* 资产池大宽表 */}
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-x-auto">
-        <Table
-          aria-label="Asset pools table"
-          layout="fixed"
-          removeWrapper
-          classNames={{
-            base: "min-w-[1200px]",
-            table: "table-fixed",
-            th: "bg-white/5 text-apple-text-secondary uppercase text-[10px] tracking-[0.1em] font-black border-b border-white/10 py-3",
-            td: "py-4 border-b border-white/5 last:border-0",
-            tr: "hover:bg-white/[0.04] transition-colors cursor-pointer"
-          }}
-          onRowAction={(key) => navigate(`/assets/${key}`)}
-        >
-          <TableHeader>
-            <TableColumn width={220}>结构名称</TableColumn>
-            <TableColumn width={160}>描述</TableColumn>
-            <TableColumn width={140}>聚合标签</TableColumn>
-            <TableColumn width={80} align="end">IP 数</TableColumn>
-            <TableColumn width={80} align="end">域名数</TableColumn>
-            <TableColumn width={80} align="end">站点数</TableColumn>
-            <TableColumn width={80} align="end">任务数</TableColumn>
-            <TableColumn width={80} align="end">漏洞数</TableColumn>
-            <TableColumn width={140}>最近更新</TableColumn>
-            <TableColumn width={100} align="end">操作入口</TableColumn>
-          </TableHeader>
-          <TableBody
-            emptyContent={
-               <div className="h-40 flex items-center justify-center flex-col gap-2 text-apple-text-tertiary">
-                 <p className="text-sm font-bold">源视图全空，无任何已分配实体。</p>
-                 <p className="text-xs">请创建一个资产池或向现有模型结构进行播种动作。</p>
-               </div>
-            }
-            isLoading={poolsQuery.isPending}
-            loadingContent={<Skeleton className="rounded-xl w-full h-40 bg-white/5 animate-pulse" />}
+      {/* 磨砂玻璃用户列表表格容器 */}
+      {poolsQuery.isError ? (
+        <div className="flex flex-col items-center justify-center h-64 gap-4 text-apple-text-tertiary bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl rounded-[32px]">
+          <p className="text-base font-medium">数据源拉取中断</p>
+          <p className="text-xs opacity-60">{poolsQuery.error instanceof Error ? poolsQuery.error.message : '核心通讯网关响应超时'}</p>
+          <Button
+            size="sm"
+            variant="flat"
+            color="primary"
+            className="rounded-full font-bold px-6 border border-white/10"
+            onPress={() => poolsQuery.refetch()}
           >
-            {items.map((pool) => (
-              <TableRow key={pool.id}>
-                <TableCell>
-                  <span className="text-sm font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis block">{pool.name}</span>
-                </TableCell>
-                <TableCell>
-                   <span className="text-xs text-apple-text-secondary whitespace-nowrap overflow-hidden text-ellipsis block">{pool.description || '-'}</span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {(!pool.tags || pool.tags.length === 0) ? <span className="text-xs text-apple-text-tertiary">-</span> : pool.tags.map(t => (
-                      <span key={t} className="text-[10px] bg-white/10 border border-white/10 text-apple-text-secondary px-1.5 py-0.5 rounded-md uppercase tracking-wider">{t}</span>
-                    ))}
-                  </div>
-                </TableCell>
-                {/* 如下三列 IP, Domain, Site 为 UI 结构层分离的展示预期，由于目前后端 API 只提供了一个 aggregate asset_count，故先模拟拆分或做独立占位，未来联调解构 */}
-                <TableCell>
-                  <span className="font-mono text-apple-blue-light text-[13px] font-semibold">{pool.asset_count ?? '-'}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono text-apple-blue-light text-[13px] font-semibold opacity-60">-</span>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono text-apple-blue-light text-[13px] font-semibold opacity-60">-</span>
-                </TableCell>
-                <TableCell>
-                  <span className="font-mono text-apple-text-secondary text-[13px] font-semibold">{pool.task_count ?? 0}</span>
-                </TableCell>
-                <TableCell>
-                  <span className={`font-mono text-[13px] font-black ${pool.finding_count && pool.finding_count > 0 ? 'text-apple-red shadow-apple-red/20 drop-shadow-md' : 'text-apple-text-secondary opacity-30'}`}>
-                    {pool.finding_count ?? 0}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[11px] text-apple-text-secondary font-mono tracking-tight">{formatDateTime(pool.updated_at || pool.created_at)}</span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end pr-2">
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      className="rounded-lg text-apple-blue font-bold tracking-widest text-[11px] bg-apple-blue/10 hover:bg-apple-blue/20 px-4"
-                      onPress={() => navigate(`/assets/${pool.id}`)}
-                    >
-                      洞察控制台
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        
-        {/* 分页组件 */}
-        {total > 0 && (
-          <div className="px-6 py-4 flex flex-col md:flex-row justify-between items-center border-t border-white/5 text-sm bg-white/[0.01]">
-            <span className="text-[11px] font-black text-apple-text-tertiary tracking-[0.2em] uppercase">合规录入池卷数 {total}</span>
-            {totalPages > 1 && (
-              <Pagination
-                total={totalPages}
-                page={page}
-                onChange={setPage}
-                size="sm"
-                classNames={{
-                  wrapper: "gap-1",
-                  item: "bg-white/5 text-apple-text-secondary font-bold rounded-md border border-white/5 min-w-8 h-8",
-                  cursor: "bg-apple-blue text-white font-black rounded-md shadow-lg",
-                  prev: "bg-white/5 rounded-md",
-                  next: "bg-white/5 rounded-md",
-                }}
-              />
-            )}
+            强制刷新
+          </Button>
+        </div>
+      ) : !poolsQuery.data && !poolsQuery.isPending ? (
+        <div className="flex flex-col items-center justify-center h-64 text-apple-text-tertiary bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-3xl rounded-[32px]">
+          <p className="font-bold">库表游标已探底 (NULL_PAYLOAD)</p>
+        </div>
+      ) : (
+        <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
+          <Table
+            aria-label="Asset pools advanced table"
+            layout="fixed"
+            removeWrapper
+            classNames={{
+              base: "p-4 min-w-[1240px]",
+              table: "table-fixed",
+              thead: "[&>tr]:first:rounded-xl",
+              th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
+              td: "py-5 border-b border-white/5 last:border-0 text-left",
+              tr: "hover:bg-white/[0.03] transition-colors cursor-pointer"
+            }}
+            onRowAction={(key) => navigate(`/assets/${key}`)}
+          >
+            <TableHeader>
+              <TableColumn width={220} align="start">资产池单元</TableColumn>
+              <TableColumn width={160} align="start">边界定义</TableColumn>
+              <TableColumn width={160} align="start">汇编标签</TableColumn>
+              <TableColumn width={80} align="end">IP节点</TableColumn>
+              <TableColumn width={80} align="end">解析域名</TableColumn>
+              <TableColumn width={80} align="end">承载站点</TableColumn>
+              <TableColumn width={80} align="end">派发任务</TableColumn>
+              <TableColumn width={80} align="end">脆弱点</TableColumn>
+              <TableColumn width={140} align="end">上次编目</TableColumn>
+              <TableColumn width={120} align="end">流操作</TableColumn>
+            </TableHeader>
+            <TableBody
+              emptyContent={<div className="h-40 flex items-center justify-center text-apple-text-tertiary font-bold">空图纸。核心系统需介入新建资产对象。</div>}
+              isLoading={poolsQuery.isPending}
+              loadingContent={<Skeleton className="rounded-xl w-full h-40 bg-white/5" />}
+            >
+              {items.map((pool) => (
+                <TableRow key={pool.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5 max-w-[200px]">
+                      <span className="text-base font-bold text-white tracking-tight leading-tight truncate">{pool.name}</span>
+                      <span className="text-[11px] text-apple-text-tertiary font-mono tracking-tighter uppercase opacity-60">ID:{pool.id.substring(0,8)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs text-apple-text-secondary whitespace-normal overflow-hidden line-clamp-2 max-w-[140px] font-medium leading-relaxed">
+                      {pool.description || '-'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(!pool.tags || pool.tags.length === 0) ? <span className="text-[10px] text-apple-text-tertiary italic">-</span> : pool.tags.map(t => (
+                        <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-apple-text-secondary text-[10px] font-black uppercase tracking-wider">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-apple-blue-light text-[14px] font-black drop-shadow-[0_0_8px_rgba(0,113,227,0.3)]">{pool.asset_count ?? '-'}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-apple-blue-light/50 text-[14px] font-bold">—</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-apple-blue-light/50 text-[14px] font-bold">—</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-apple-text-secondary text-[14px] font-black">{pool.task_count ?? 0}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`font-mono text-[14px] font-black ${pool.finding_count && pool.finding_count > 0 ? 'text-apple-red-light drop-shadow-[0_0_8px_rgba(255,59,48,0.5)]' : 'text-apple-text-tertiary opacity-40'}`}>
+                      {pool.finding_count ?? 0}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[11px] font-semibold text-apple-text-secondary font-mono tracking-tighter uppercase">{formatDateTime(pool.updated_at || pool.created_at).split(' ')[0]}</span>
+                      <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60">{formatDateTime(pool.updated_at || pool.created_at).split(' ')[1]}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end pr-2">
+                      <Button
+                        size="sm"
+                        variant="bordered"
+                        className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-5"
+                        onPress={() => navigate(`/assets/${pool.id}`)}
+                      >
+                        详情
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {total > 0 && (
+            <div className="px-6 py-6 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
+              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                合规录入池总卷 <span className="text-white mx-1">{total}</span>
+              </p>
+              {totalPages > 1 && (
+                <Pagination
+                  total={totalPages}
+                  page={page}
+                  onChange={setPage}
+                  showControls
+                  classNames={{
+                    wrapper: "gap-2",
+                    item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[40px] h-10",
+                    cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white",
+                    prev: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
+                    next: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
+                  }}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 底部溯源信息卡片 */}
+      <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-md rounded-[32px] mt-4 shadow-none">
+        <CardBody className="p-8">
+          <div className="grid grid-cols-[160px_1fr] gap-y-4 text-sm font-medium">
+            <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black">资产映射 (Mapping_Index)</div>
+            <div className="text-apple-text-tertiary uppercase text-[10px] tracking-tight opacity-50 font-mono">LIVE_NODE_SYNC_ACTIVE</div>
+            
+            <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black mt-2">权能鉴权 (Auth_Level)</div>
+            <div className="text-apple-text-tertiary uppercase text-[10px] tracking-tight opacity-50 mt-2">
+              当前用户态具有完全浏览及操作权限
+            </div>
           </div>
-        )}
-      </div>
+        </CardBody>
+      </Card>
 
       <CreateAssetPoolModal 
         isOpen={createVisible} 

@@ -46,14 +46,14 @@ const MENU_CONFIG: MainMenu[] = [
   {
      key: 'assets', label: 'Assets', icon: <CubeTransparentIcon className="w-[18px] h-[18px]" />,
      children: [
-       { key: 'asset-pools', path: '/assets', label: '资产池', kicker: 'ASSET POOLS' },
-       { key: 'asset-inventory', path: '/assets/inventory', label: '资产清单', kicker: 'INVENTORY' }
+       { key: 'asset-pools', path: '/assets', label: '资产池', kicker: 'ASSET POOLS' }
      ]
   },
   {
      key: 'tasks', label: 'Tasks', icon: <RocketLaunchIcon className="w-[18px] h-[18px]" />,
      children: [
-       { key: 'tasks-list', path: '/tasks', label: '任务列表', kicker: 'TASKS & OPS' },
+       { key: 'tasks-list', path: '/tasks', label: '任务管理', kicker: 'TASKS & OPS' },
+       { key: 'tasks-new', path: '/tasks/new', label: '新建任务', kicker: 'NEW TASK' },
        { key: 'tasks-templates', path: '/tasks/templates', label: '任务模板', kicker: 'TEMPLATES' },
        { key: 'tasks-workers', path: '/tasks/workers', label: 'Worker / 引擎', kicker: 'WORKERS' }
      ]

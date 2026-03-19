@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { httpClient } from '@/api/client'
 import type { PaginationMeta } from './asset'
 
@@ -194,5 +194,67 @@ export function useTaskSnapshotAssets(
       }
     },
     enabled: Boolean(id),
+  })
+}
+
+// ─── 统一任务创建 ────────────────────────────────────────────────────────────
+
+export interface CreateTaskAssetPoolConfig {
+  /** 'create' = 同时创建新资产池；'existing' = 归并到已有资产池 */
+  mode: 'create' | 'existing'
+  asset_pool_id?: string
+  name?: string
+  description?: string
+  scope_rule?: string
+  tags?: string[]
+}
+
+export interface CreateTaskInputConfig {
+  source: 'manual'
+  items: string[]
+}
+
+export interface CreateTaskTargetSetRequest {
+  generation_source: 'pool_filter_plus_manual' | 'pool_filter' | 'manual_only'
+  filters?: {
+    view?: string
+    keyword?: string
+    asset_type?: string
+  }
+}
+
+export interface CreateTaskRequest {
+  /** 'from_pool' = 基于已有资产池；'ad_hoc' = 直接传入目标 */
+  mode: 'from_pool' | 'ad_hoc'
+  name: string
+  template_code: string
+  /** from_pool 模式 */
+  asset_pool_id?: string
+  target_set_request?: CreateTaskTargetSetRequest
+  manual_append?: string[]
+  stage_overrides?: Record<string, boolean>
+  params?: Record<string, string>
+  /** ad_hoc 模式 */
+  asset_pool?: CreateTaskAssetPoolConfig
+  input?: CreateTaskInputConfig
+}
+
+export interface CreateTaskResponseVM {
+  task_id: string
+  asset_pool_id: string
+  target_set_id?: string
+}
+
+export function useCreateTask() {
+  return useMutation({
+    mutationFn: async (req: CreateTaskRequest): Promise<CreateTaskResponseVM> => {
+      const res = await httpClient.post<{ data: any }>('/tasks', req)
+      const d = res.data.data || res.data
+      return {
+        task_id: d.task_id || d.id || '',
+        asset_pool_id: d.asset_pool_id || req.asset_pool_id || '',
+        target_set_id: d.target_set_id,
+      }
+    },
   })
 }

@@ -37,12 +37,7 @@ export function EvidencesPage() {
 
   return (
     <div className="flex flex-col gap-8 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20 p-4">
-      <section className="flex flex-col gap-2 relative">
-        <h1 className="text-4xl font-black tracking-tight text-[#f5f5f7]">法医学 / 证据归档管理</h1>
-        <p className="text-[#86868b] leading-relaxed max-w-2xl font-medium">
-          一切扫描引擎发出的测试载荷和回显、加密截图记录等司法溯源包均冻结于此。
-        </p>
-      </section>
+
 
       <section className="flex flex-col md:flex-row items-center gap-4 w-full mt-4">
         <div className="flex-1 w-full relative">

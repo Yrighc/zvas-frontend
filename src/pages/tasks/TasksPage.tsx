@@ -56,10 +56,7 @@ export function TasksPage() {
 
   return (
     <div className="flex flex-col gap-6 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20 p-4">
-      {/* 头部：标题与介绍 */}
-      <section className="flex flex-col gap-2 relative">
-        <h1 className="text-3xl font-black tracking-tight text-[#f5f5f7]">任务控制专区</h1>
-      </section>
+
 
       {/* 搜索与控制面板 */}
       <section className="flex flex-col md:flex-row items-center gap-4 w-full bg-white/[0.02] border border-white/5 p-4 rounded-xl">
