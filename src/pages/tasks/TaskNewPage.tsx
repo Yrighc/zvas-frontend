@@ -1,33 +1,54 @@
-import { Button, Input, Select, SelectItem, Textarea, RadioGroup, Radio } from '@heroui/react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { PlusCircleIcon, FolderOpenIcon } from '@heroicons/react/24/outline'
+import { Button, Input, Select, SelectItem, Textarea, RadioGroup, Radio, Switch, Chip, Spinner } from '@heroui/react'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { PlusCircleIcon, FolderOpenIcon, BeakerIcon } from '@heroicons/react/24/outline'
 
 import { useCreateTask } from '@/api/adapters/task'
 import { useAssetPools } from '@/api/adapters/asset'
-
-const TEMPLATE_OPTIONS = [
-  { key: 'full_scan', label: '全量扫描（域名扩展 + 端口 + Web 指纹）' },
-  { key: 'asset_expand', label: '资产扩展（发现子域名 / 关联 IP）' },
-  { key: 'port_scan', label: '端口探测（轻量暴露面测绘）' },
-  { key: 'web_identify', label: 'Web 指纹识别' },
-  { key: 'vuln_scan', label: '漏洞扫描' },
-]
+import { useTaskTemplates, useTaskTemplateDetail } from '@/api/adapters/template'
 
 /** 模式 A：归并到已有资产池；模式 B：创建新资产池并启动 */
 type AdHocMode = 'existing' | 'create'
 
 export function TaskNewPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const createTask = useCreateTask()
+
   const poolsQuery = useAssetPools({ page: 1, page_size: 100 })
   const poolItems = poolsQuery.data?.data || []
 
+  // ── 模板驱动数据源 ───────────────────────────────────────────────
+  const { data: templatesData, isPending: isLoadingTemplates } = useTaskTemplates({ page_size: 100 })
+  const templates = templatesData?.data || []
+
   // ── 公共字段 ──────────────────────────────────────────────────
   const [taskName, setTaskName] = useState('')
-  const [templateCode, setTemplateCode] = useState('full_scan')
+  const [templateCode, setTemplateCode] = useState(searchParams.get('template_code') || '')
   const [targets, setTargets] = useState('')
   const [adHocMode, setAdHocMode] = useState<AdHocMode>('existing')
+
+  // 若路由没带，且获取到列表时则默认选中第一个
+  useEffect(() => {
+    if (!templateCode && templates.length > 0) {
+      setTemplateCode(templates[0].code)
+    }
+  }, [templateCode, templates])
+
+  const { data: tplDetail, isPending: isLoadingTpl } = useTaskTemplateDetail(templateCode)
+
+  // ── 模板覆盖参数 (Overrides) ───────────────────────────────────
+  const [portMode, setPortMode] = useState('top_100')
+  const [httpProbe, setHttpProbe] = useState(false)
+
+  // 模板切换时，重置默认值
+  useEffect(() => {
+    if (tplDetail) {
+      setPortMode(tplDetail.default_port_scan_mode)
+      setHttpProbe(tplDetail.default_http_probe_enabled)
+    }
+  }, [tplDetail])
+
 
   // ── 模式 A：归并到已有资产池 ──────────────────────────────────
   const [existingPoolId, setExistingPoolId] = useState('')
@@ -40,6 +61,7 @@ export function TaskNewPage() {
   const isValid = () => {
     if (!taskName.trim()) return false
     if (!targets.trim()) return false
+    if (!templateCode) return false
     if (adHocMode === 'existing' && !existingPoolId) return false
     if (adHocMode === 'create' && !newPoolName.trim()) return false
     return true
@@ -52,6 +74,15 @@ export function TaskNewPage() {
       .map((s) => s.trim())
       .filter(Boolean)
 
+    // 构建待覆盖 template_overrides
+    const templateOverrides: Record<string, any> = {}
+    if (tplDetail?.allow_port_mode_override && portMode !== tplDetail.default_port_scan_mode) {
+      templateOverrides.port_scan_mode = portMode
+    }
+    if (tplDetail?.allow_http_probe_override && httpProbe !== tplDetail.default_http_probe_enabled) {
+      templateOverrides.http_probe_enabled = httpProbe
+    }
+
     createTask.mutate(
       {
         mode: 'ad_hoc',
@@ -62,6 +93,7 @@ export function TaskNewPage() {
             ? { mode: 'existing', asset_pool_id: existingPoolId }
             : { mode: 'create', name: newPoolName.trim(), description: newPoolDesc.trim() || undefined, tags: tags.length > 0 ? tags : undefined },
         input: { source: 'manual', items },
+        template_overrides: Object.keys(templateOverrides).length > 0 ? templateOverrides : undefined,
       },
       {
         onSuccess: (res) => {
@@ -132,20 +164,58 @@ export function TaskNewPage() {
 
         <div className="flex flex-col gap-1.5">
           <label className="text-apple-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">扫描模板</label>
-          <Select
-            variant="flat"
-            aria-label="扫描模板"
-            selectedKeys={[templateCode]}
-            onChange={(e) => setTemplateCode(e.target.value)}
-            classNames={{ trigger: 'bg-white/5 border border-white/10 h-12 pr-10 rounded-[16px]', value: 'truncate' }}
-          >
-            {TEMPLATE_OPTIONS.map((t) => (
-              <SelectItem key={t.key} textValue={t.label}>
-                {t.label}
-              </SelectItem>
-            ))}
-          </Select>
+          <div className="flex items-center gap-4">
+            <Select
+              variant="flat"
+              aria-label="扫描模板"
+              isLoading={isLoadingTemplates}
+              selectedKeys={templateCode ? [templateCode] : []}
+              onChange={(e) => setTemplateCode(e.target.value)}
+              className="flex-1"
+              classNames={{ trigger: 'bg-white/5 border border-white/10 h-12 pr-10 rounded-[16px]', value: 'truncate' }}
+            >
+              {templates.map((t) => (
+                <SelectItem key={t.code} textValue={t.name}>
+                  {t.name} {t.is_builtin ? '(内置)' : ''}
+                </SelectItem>
+              ))}
+            </Select>
+            {isLoadingTpl && <Spinner size="sm" color="white" />}
+          </div>
         </div>
+
+        {/* 覆盖参数区 */}
+        {(tplDetail?.allow_port_mode_override || tplDetail?.allow_http_probe_override) && (
+          <div className="flex flex-col gap-5 mt-4 pt-4 border-t border-white/5">
+             <p className="text-[10px] text-apple-text-tertiary uppercase tracking-[0.2em] font-black">模板高级控制</p>
+             {tplDetail.allow_port_mode_override && (
+               <div className="flex flex-col gap-1.5">
+                 <label className="text-apple-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">端口扫描模式 (覆盖)</label>
+                 <Select
+                    variant="flat"
+                    selectedKeys={[portMode]}
+                    onChange={(e) => setPortMode(e.target.value)}
+                    classNames={{ trigger: 'bg-white/5 border border-white/10 h-12 pr-10 rounded-[16px]' }}
+                  >
+                    <SelectItem key="web_common" textValue="Web 常用端口">Web 常用端口</SelectItem>
+                    <SelectItem key="top_100" textValue="Top 100">Top 100</SelectItem>
+                    <SelectItem key="common" textValue="常见端口">常见端口</SelectItem>
+                    <SelectItem key="full" textValue="全端口扫描">全端口扫描</SelectItem>
+                    <SelectItem key="custom" textValue="自定义">自定义</SelectItem>
+                  </Select>
+               </div>
+             )}
+             {tplDetail.allow_http_probe_override && (
+               <div className="flex flex-col gap-1.5 mt-2">
+                 <label className="text-apple-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">首页识别 (覆盖)</label>
+                 <Switch size="sm" isSelected={httpProbe} onValueChange={setHttpProbe} classNames={{ wrapper: 'group-data-[selected=true]:bg-apple-blue' }}>
+                   <span className="text-[13px] text-white">开启首页识别与协议指纹嗅探</span>
+                 </Switch>
+               </div>
+             )}
+          </div>
+        )}
+
       </div>
 
       {/* ─── 模式 A：选择已有资产池 ── */}
@@ -223,6 +293,23 @@ export function TaskNewPage() {
       </div>
 
       {/* ─── 提交区 ── */}
+      <div className="bg-apple-blue/5 border border-apple-blue/10 backdrop-blur-3xl rounded-[28px] p-6 mb-4 flex flex-col gap-4">
+         <h2 className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-blue-light flex items-center gap-2">
+           <BeakerIcon className="w-4 h-4" /> 执行预览
+         </h2>
+         {!tplDetail ? (
+           <p className="text-[12px] text-apple-text-tertiary">正在拉取模板评述...</p>
+         ) : (
+           <div className="flex flex-col gap-3">
+             <p className="text-[13px] text-apple-text-secondary leading-relaxed">{tplDetail.preview_summary || '未定义模板细节行为。'}</p>
+             <div className="flex gap-2 flex-wrap">
+                <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white font-mono h-6">{portMode} mode</Chip>
+                {httpProbe && <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white font-mono h-6">http probe enabled</Chip>}
+             </div>
+           </div>
+         )}
+      </div>
+
       <div className="flex justify-end gap-4">
         <Button
           variant="flat"

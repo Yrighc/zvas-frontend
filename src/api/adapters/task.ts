@@ -212,7 +212,10 @@ export function useTasks(params: { page?: number; page_size?: number; keyword?: 
   return useQuery({
     queryKey: ['tasks', params],
     queryFn: async () => {
-      const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>('/tasks', { params })
+      const cleanParams = params 
+        ? Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== undefined && v !== ''))
+        : undefined
+      const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>('/tasks', { params: cleanParams })
       return {
         ...res.data,
         data: (res.data.data || []).map(mapToTaskListItemVM),
@@ -326,6 +329,7 @@ export interface CreateTaskRequest {
   target_set_request?: CreateTaskTargetSetRequest
   manual_append?: string[]
   stage_overrides?: Record<string, boolean>
+  template_overrides?: Record<string, any>
   params?: Record<string, string>
   asset_pool?: CreateTaskAssetPoolConfig
   input?: CreateTaskInputConfig
@@ -341,11 +345,11 @@ export function useCreateTask() {
   return useMutation({
     mutationFn: async (req: CreateTaskRequest): Promise<CreateTaskResponseVM> => {
       const res = await httpClient.post<{ data: any }>('/tasks', req)
-      const d = res.data.data || res.data
+      const d = res.data.data || res.data // 根据通用约定展开
       return {
-        task_id: d.task_id || d.id || '',
-        asset_pool_id: d.asset_pool_id || req.asset_pool_id || '',
-        target_set_id: d.target_set_id,
+        task_id: d.task?.id || d.id || '',
+        asset_pool_id: d.asset_pool?.id || d.asset_pool_id || req.asset_pool_id || '',
+        target_set_id: d.target_set?.id || d.target_set_id,
       }
     },
   })

@@ -24,6 +24,7 @@ const AssetPoolDetailPage = lazy(() => import('@/pages/assets/AssetPoolDetailPag
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
 const TaskNewPage = lazy(() => import('@/pages/tasks/TaskNewPage').then(m => ({ default: m.TaskNewPage })))
 const TaskTemplatesPage = lazy(() => import('@/pages/tasks/TaskTemplatesPage').then(m => ({ default: m.TaskTemplatesPage })))
+const TaskTemplateDetailPage = lazy(() => import('@/pages/tasks/TaskTemplateDetailPage').then(m => ({ default: m.TaskTemplateDetailPage })))
 const WorkersPage = lazy(() => import('@/pages/tasks/WorkersPage').then(m => ({ default: m.WorkersPage })))
 const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage').then(m => ({ default: m.TaskDetailPage })))
 
@@ -161,6 +162,14 @@ export const router = createBrowserRouter(
               element: (
                 <Suspense fallback={renderPageLoader()}>
                   <TaskTemplatesPage />
+                </Suspense>
+              ),
+            },
+            {
+              path: 'tasks/templates/:code',
+              element: (
+                <Suspense fallback={renderPageLoader()}>
+                  <TaskTemplateDetailPage />
                 </Suspense>
               ),
             },
