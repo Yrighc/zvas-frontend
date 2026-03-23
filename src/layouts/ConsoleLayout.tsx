@@ -38,19 +38,19 @@ type MainMenu = {
 
 const MENU_CONFIG: MainMenu[] = [
   {
-     key: 'overview', label: 'Overview', icon: <ChartPieIcon className="w-[18px] h-[18px]" />,
+     key: 'overview', label: '仪表盘', icon: <ChartPieIcon className="w-[18px] h-[18px]" />,
      children: [
        { key: 'overview-main', path: '/overview', label: '仪表盘', kicker: 'GLOBAL VIEW' }
      ]
   },
   {
-     key: 'assets', label: 'Assets', icon: <CubeTransparentIcon className="w-[18px] h-[18px]" />,
+     key: 'assets', label: '资产管理', icon: <CubeTransparentIcon className="w-[18px] h-[18px]" />,
      children: [
        { key: 'asset-pools', path: '/assets', label: '资产池', kicker: 'ASSET POOLS' }
      ]
   },
   {
-     key: 'tasks', label: 'Tasks', icon: <RocketLaunchIcon className="w-[18px] h-[18px]" />,
+     key: 'tasks', label: '任务管理', icon: <RocketLaunchIcon className="w-[18px] h-[18px]" />,
      children: [
        { key: 'tasks-list', path: '/tasks', label: '任务管理', kicker: 'TASKS & OPS' },
        { key: 'tasks-new', path: '/tasks/new', label: '新建任务', kicker: 'NEW TASK' },
@@ -59,7 +59,7 @@ const MENU_CONFIG: MainMenu[] = [
      ]
   },
   {
-     key: 'findings', label: 'Findings', icon: <ShieldExclamationIcon className="w-[18px] h-[18px]" />,
+     key: 'findings', label: '漏洞管理', icon: <ShieldExclamationIcon className="w-[18px] h-[18px]" />,
      children: [
        { key: 'findings-list', path: '/findings', label: '漏洞结果', kicker: 'THREAT INTELLIGENCE' },
        { key: 'findings-evidences', path: '/findings/evidences', label: '证据管理', kicker: 'EVIDENCES' },
@@ -67,7 +67,7 @@ const MENU_CONFIG: MainMenu[] = [
      ]
   },
   {
-     key: 'iam', label: 'IAM', icon: <UsersIcon className="w-[18px] h-[18px]" />,
+     key: 'iam', label: '用户管理', icon: <UsersIcon className="w-[18px] h-[18px]" />,
      children: [
        { key: 'iam-users', path: '/iam/users', label: '用户管理', kicker: 'USERS' },
        { key: 'iam-roles', path: '/iam/roles', label: '角色与权限', kicker: 'ROLES' },
@@ -75,7 +75,7 @@ const MENU_CONFIG: MainMenu[] = [
      ]
   },
   {
-     key: 'system', label: 'System', icon: <WrenchScrewdriverIcon className="w-[18px] h-[18px]" />,
+     key: 'system', label: '系统管理', icon: <WrenchScrewdriverIcon className="w-[18px] h-[18px]" />,
      children: [
        { key: 'system-health', path: '/system/health', label: '系统健康', kicker: 'HEALTH' },
        { key: 'system-version', path: '/system/version', label: '系统版本', kicker: 'VERSION' },
