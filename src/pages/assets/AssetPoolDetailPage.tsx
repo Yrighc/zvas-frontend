@@ -94,14 +94,13 @@ export function AssetPoolDetailPage() {
                   className="h-14 w-full sm:w-auto rounded-2xl font-black px-6 border border-white/5 bg-apple-tertiary-bg/10 backdrop-blur-md text-white hover:bg-white/10 transition-colors"
                 >
                   <ArrowDownTrayIcon className="w-5 h-5 text-apple-blue-light" />
-                  <span>载入记录 (Ingest)</span>
+                  <span>手动录入</span>
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Ingestion Actions">
                 <DropdownItem 
                   key="manual" 
                   startContent={<DocumentPlusIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                  description="手工映射规则与资产树"
                   onPress={() => setManualModeOpen(true)}
                 >
                   高级录入模式
@@ -109,7 +108,6 @@ export function AssetPoolDetailPage() {
                 <DropdownItem 
                   key="file" 
                   startContent={<CloudArrowDownIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                  description="结构化流处理引擎"
                   onPress={() => setFileImportOpen(true)}
                 >
                   批处理导入
@@ -131,7 +129,7 @@ export function AssetPoolDetailPage() {
               onPress={() => setTaskModalOpen(true)}
             >
               <RocketLaunchIcon className="w-5 h-5" />
-              <span>极速下发任务</span>
+              <span>下发任务</span>
             </Button>
         </div>
       </div>

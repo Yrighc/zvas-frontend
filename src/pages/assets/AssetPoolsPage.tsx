@@ -116,7 +116,7 @@ export function AssetPoolsPage() {
           <Input
             isClearable
             value={keyword}
-            placeholder="搜寻资产池结构名称..."
+            placeholder="搜寻资产池名称..."
             onValueChange={(val) => { setKeyword(val); setPage(1) }}
             variant="flat"
             startContent={<MagnifyingGlassIcon className="w-5 h-5 text-apple-text-tertiary" />}
@@ -158,35 +158,32 @@ export function AssetPoolsPage() {
                 className="h-14 rounded-2xl font-black px-6 border border-white/5 bg-apple-tertiary-bg/10 backdrop-blur-md text-white hover:bg-apple-tertiary-bg/20 transition-colors"
               >
                 <ArrowDownTrayIcon className="w-5 h-5 text-apple-blue-light" />
-                <span>目标源投递 (Ingestion)</span>
+                <span>导入资产</span>
               </Button>
             </DropdownTrigger>
             <DropdownMenu aria-label="Ingestion Actions" variant="flat">
               <DropdownItem 
                 key="manual" 
                 startContent={<DocumentPlusIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                description="纯文本多行映射录入"
                 onPress={() => setManualVisible(true)}
               >
-                手工播种录入
+                手动录入
               </DropdownItem>
               <DropdownItem 
                 key="file" 
                 startContent={<CloudArrowDownIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                description="结构化映射一键清洗导入"
                 onPress={() => setFileImportVisible(true)}
               >
-                文件快流导入
+                上传文件
               </DropdownItem>
               <DropdownItem 
                 key="sync" 
                 startContent={<ServerStackIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                description="鉴权 AK/SK 持续远端同步"
                 className="opacity-50 cursor-not-allowed"
                 isReadOnly
               >
-                外部同步映射
-              </DropdownItem>
+                外部同步扩展
+              </DropdownItem> 
             </DropdownMenu>
           </Dropdown>
 

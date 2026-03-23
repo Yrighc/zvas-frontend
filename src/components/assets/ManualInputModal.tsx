@@ -55,7 +55,7 @@ export function ManualInputModal({ isOpen, onClose, defaultPoolId }: ManualInput
         <>
           <ModalHeader className="flex flex-col gap-1">
              <span className="text-[10px] text-apple-blue-light uppercase tracking-[0.3em] font-black">Data Ingestion / 目标入库</span>
-             <h3 className="text-2xl font-black tracking-tight mt-1">手工投递资产 (种子输入)</h3>
+             <h3 className="text-2xl font-black tracking-tight mt-1">录入资产</h3>
           </ModalHeader>
           <ModalBody>
             <div className="flex flex-col gap-6">

@@ -45,7 +45,7 @@ export function AssetPoolInputsTab({ poolId }: { poolId: string }) {
             className="h-12 rounded-[16px] px-6 bg-apple-tertiary-bg/10 border border-white/5 text-white font-bold backdrop-blur-md hover:bg-white/10 transition-colors"
           >
             <DocumentPlusIcon className="w-5 h-5 text-apple-text-tertiary" /> 
-            <span>录入新节点</span>
+            <span>手动录入</span>
           </Button>
 
           <Button 

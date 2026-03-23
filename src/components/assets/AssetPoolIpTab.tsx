@@ -114,8 +114,6 @@ export function AssetPoolIpTab({ poolId }: { poolId: string }) {
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 w-full mb-8">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full gap-4">
         <div className="flex flex-col">
-          <h3 className="text-xl font-black text-white tracking-tight mb-1">IP 资产</h3>
-          <p className="text-[13px] text-apple-text-tertiary font-medium">展示资产池中沉淀的 IP 资产及端口服务摘要，点击行展开查看端口明细。</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <Input
