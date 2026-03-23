@@ -56,8 +56,17 @@ function IpExpandedRow({ poolId, item }: { poolId: string; item: PoolAssetVM }) 
 
   return (
     <div className="px-6 py-4 bg-white/[0.01] border-l-2 border-l-apple-blue animate-in fade-in slide-in-from-top-2 duration-200">
-      <div className="mb-3">
-        <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">端口明细</span>
+      <div className="flex flex-wrap items-center gap-6 mb-5">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">端口明细</span>
+        </div>
+        
+        {payload?.expanded_from_cidr && payload?.source_cidr && (
+          <div className="flex flex-col gap-1.5 bg-apple-blue/5 border border-apple-blue/10 px-4 py-2 rounded-xl">
+             <span className="text-[9px] uppercase font-black tracking-widest text-apple-blue-light opacity-80">来源网段</span>
+             <span className="text-[12px] font-mono font-bold text-apple-blue-light">{payload.source_cidr}</span>
+          </div>
+        )}
       </div>
       {ports.length === 0 ? (
         <div className="py-6 text-center text-[12px] text-apple-text-tertiary italic">暂无端口明细记录</div>
@@ -176,6 +185,9 @@ export function AssetPoolIpTab({ poolId }: { poolId: string }) {
                   <TableCell><span className="text-[11px] font-bold text-apple-text-secondary uppercase tracking-wider">{sourceLabel(it.source_summary)}</span></TableCell>
                   <TableCell>
                     <div className="flex gap-1.5 flex-wrap">
+                      {it.detail?.expanded_from_cidr && (
+                        <span className="text-[9px] font-black tracking-widest text-apple-blue-light uppercase bg-apple-blue/10 border border-apple-blue/20 px-2 py-0.5 rounded-full">CIDR展开</span>
+                      )}
                       {joinTags(it.system_facets, it.custom_tags).map((tag) => (
                         <span key={tag} className="text-[9px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{tag}</span>
                       ))}

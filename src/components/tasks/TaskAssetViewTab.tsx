@@ -57,9 +57,18 @@ function ExpandedRow({ taskId, item, assetKind }: { taskId?: string; item: TaskS
 
     return (
       <div className="px-6 py-4 bg-white/[0.01] border-l-2 border-l-apple-blue animate-in fade-in slide-in-from-top-2 duration-200">
-        <div className="mb-3">
+      <div className="flex flex-wrap items-center gap-6 mb-5">
+        <div className="flex flex-col gap-1.5">
           <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">端口明细</span>
         </div>
+        
+        {payload?.expanded_from_cidr && payload?.source_cidr && (
+          <div className="flex flex-col gap-1.5 bg-apple-blue/5 border border-apple-blue/10 px-4 py-2 rounded-xl">
+             <span className="text-[9px] uppercase font-black tracking-widest text-apple-blue-light opacity-80">来源网段</span>
+             <span className="text-[12px] font-mono font-bold text-apple-blue-light">{payload.source_cidr}</span>
+          </div>
+        )}
+      </div>
         {ports.length === 0 ? (
           <div className="py-6 text-center text-[12px] text-apple-text-tertiary italic">暂无端口明细记录</div>
         ) : (
@@ -246,7 +255,16 @@ export function TaskAssetViewTab({ taskId }: { taskId?: string }) {
     cells.push(
       <TableCell key="source_type"><span className="text-[10px] bg-white/5 border border-white/10 text-apple-text-secondary px-2 py-0.5 rounded uppercase font-bold">{item.source_type || '-'}</span></TableCell>,
       <TableCell key="confidence_level"><span className="text-[10px] text-apple-green-light font-bold uppercase">{item.confidence_level || '-'}</span></TableCell>,
-      <TableCell key="labels"><span className="text-[11px] text-apple-text-tertiary">-</span></TableCell>,
+      <TableCell key="labels">
+        <div className="flex gap-1.5 flex-wrap">
+          {item.extra_payload?.expanded_from_cidr && (
+             <span className="text-[9px] bg-apple-blue/10 border border-apple-blue/20 text-apple-blue-light px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest">CIDR展开</span>
+          )}
+          {(item.system_facets || []).slice(0, 3).map((tag: string) => (
+             <span key={tag} className="text-[9px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{tag}</span>
+          ))}
+        </div>
+      </TableCell>,
     )
 
     return cells

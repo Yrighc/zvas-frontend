@@ -30,10 +30,10 @@ import { TrashIcon } from '@heroicons/react/24/outline'
 export function AssetPoolDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  
+
   const poolQuery = useAssetPoolDetail(id)
   const pool = poolQuery.data
-  
+
   const [activeTab, setActiveTab] = useState('overview')
   const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [manualModeOpen, setManualModeOpen] = useState(false)
@@ -67,9 +67,9 @@ export function AssetPoolDetailPage() {
       {/* 页面头部 */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-6">
-          <Button 
-            isIconOnly 
-            variant="flat" 
+          <Button
+            isIconOnly
+            variant="flat"
             className="text-apple-text-secondary bg-apple-tertiary-bg/10 border border-white/5 rounded-2xl h-14 w-14 hover:text-white backdrop-blur-md"
             onPress={() => navigate('/assets')}
           >
@@ -78,82 +78,82 @@ export function AssetPoolDetailPage() {
           <div className="flex flex-col">
             <h1 className="text-3xl font-black text-white tracking-tight leading-none mb-2">{pool.name}</h1>
             <div className="flex items-center gap-3">
-               {pool.description && <p className="text-[13px] text-apple-text-tertiary font-medium">{pool.description}</p>}
-               {pool.tags && pool.tags.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-apple-blue-light/50"></span>}
-               {pool.tags && pool.tags.map((t: string) => (
-                   <span key={t} className="text-[10px] uppercase font-black text-apple-text-secondary tracking-widest border border-white/10 px-2 py-0.5 rounded-full bg-white/5">{t}</span>
-               ))}
+              {pool.description && <p className="text-[13px] text-apple-text-tertiary font-medium">{pool.description}</p>}
+              {pool.tags && pool.tags.length > 0 && <span className="w-1.5 h-1.5 rounded-full bg-apple-blue-light/50"></span>}
+              {pool.tags && pool.tags.map((t: string) => (
+                <span key={t} className="text-[10px] uppercase font-black text-apple-text-secondary tracking-widest border border-white/10 px-2 py-0.5 rounded-full bg-white/5">{t}</span>
+              ))}
             </div>
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-            <Dropdown
-              classNames={{
-                content: "bg-apple-bg/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden min-w-[200px]"
-              }}
-           >
-              <DropdownTrigger>
-                <Button 
-                  variant="flat"
-                  className="h-14 w-full sm:w-auto rounded-2xl font-black px-6 border border-white/5 bg-apple-tertiary-bg/10 backdrop-blur-md text-white hover:bg-white/10 transition-colors"
-                >
-                  <ArrowDownTrayIcon className="w-5 h-5 text-apple-blue-light" />
-                  <span>手动录入</span>
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="Ingestion Actions">
-                <DropdownItem 
-                  key="manual" 
-                  startContent={<DocumentPlusIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                  onPress={() => setManualModeOpen(true)}
-                >
-                  高级录入模式
-                </DropdownItem>
-                <DropdownItem 
-                  key="file" 
-                  startContent={<CloudArrowDownIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                  onPress={() => setFileImportOpen(true)}
-                >
-                  批处理导入
-                </DropdownItem>
-                <DropdownItem 
-                  key="sync" 
-                  startContent={<ServerStackIcon className="w-5 h-5 text-apple-text-tertiary" />}
-                  className="opacity-50 cursor-not-allowed"
-                  isReadOnly
-                >
-                  跨系统自动同步
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+          <Dropdown
+            classNames={{
+              content: "bg-apple-bg/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden min-w-[200px]"
+            }}
+          >
+            <DropdownTrigger>
+              <Button
+                variant="flat"
+                className="h-14 w-full sm:w-auto rounded-2xl font-black px-6 border border-white/5 bg-apple-tertiary-bg/10 backdrop-blur-md text-white hover:bg-white/10 transition-colors"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5 text-apple-blue-light" />
+                <span>手动录入</span>
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Ingestion Actions">
+              <DropdownItem
+                key="manual"
+                startContent={<DocumentPlusIcon className="w-5 h-5 text-apple-text-tertiary" />}
+                onPress={() => setManualModeOpen(true)}
+              >
+                文本录入
+              </DropdownItem>
+              <DropdownItem
+                key="file"
+                startContent={<CloudArrowDownIcon className="w-5 h-5 text-apple-text-tertiary" />}
+                onPress={() => setFileImportOpen(true)}
+              >
+                文件导入
+              </DropdownItem>
+              <DropdownItem
+                key="sync"
+                startContent={<ServerStackIcon className="w-5 h-5 text-apple-text-tertiary" />}
+                className="opacity-50 cursor-not-allowed"
+                isReadOnly
+              >
+                资产扩展
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
 
-            <Button
-              color="primary"
-              className="h-14 w-full sm:w-auto rounded-2xl font-black px-8 shadow-2xl shadow-apple-blue/20 flex items-center gap-2"
-              onPress={() => setTaskModalOpen(true)}
-            >
-              <RocketLaunchIcon className="w-5 h-5" />
-              <span>下发任务</span>
-            </Button>
+          <Button
+            color="primary"
+            className="h-14 w-full sm:w-auto rounded-2xl font-black px-8 shadow-2xl shadow-apple-blue/20 flex items-center gap-2"
+            onPress={() => setTaskModalOpen(true)}
+          >
+            <RocketLaunchIcon className="w-5 h-5" />
+            <span>下发任务</span>
+          </Button>
 
-            <Button
-              variant="flat"
-              color="danger"
-              className="h-14 w-full sm:w-auto rounded-2xl bg-apple-red/10 border border-apple-red/20 font-black px-6 text-apple-red-light hover:bg-apple-red/20 transition-colors"
-              onPress={() => setDeleteVisible(true)}
-            >
-              <TrashIcon className="w-5 h-5" />
-              <span>删除</span>
-            </Button>
+          <Button
+            variant="flat"
+            color="danger"
+            className="h-14 w-full sm:w-auto rounded-2xl bg-apple-red/10 border border-apple-red/20 font-black px-6 text-apple-red-light hover:bg-apple-red/20 transition-colors"
+            onPress={() => setDeleteVisible(true)}
+          >
+            <TrashIcon className="w-5 h-5" />
+            <span>删除</span>
+          </Button>
         </div>
       </div>
 
       {/* 玻璃拟态 Tabs */}
       <div className="w-full">
-        <Tabs 
-          aria-label="Asset Pool Workspaces" 
-          selectedKey={activeTab} 
+        <Tabs
+          aria-label="Asset Pool Workspaces"
+          selectedKey={activeTab}
           onSelectionChange={(k) => setActiveTab(k as string)}
           variant="light"
           classNames={{
@@ -183,7 +183,7 @@ export function AssetPoolDetailPage() {
           {activeTab === 'domain' && <AssetPoolDomainTab poolId={id!} />}
           {activeTab === 'site' && <AssetPoolSiteTab poolId={id!} />}
           {activeTab === 'tasks' && <AssetPoolTasksTab poolId={id!} />}
-          
+
           {activeTab === 'findings' && <AssetPoolFindingsTab poolId={id!} />}
           {activeTab === 'reports' && <AssetPoolReportsTab poolId={id!} />}
         </div>
@@ -193,7 +193,7 @@ export function AssetPoolDetailPage() {
       <CreateTaskFromPoolModal isOpen={taskModalOpen} onClose={() => setTaskModalOpen(false)} poolId={id!} poolName={pool?.name} />
       <ManualInputModal isOpen={manualModeOpen} onClose={() => setManualModeOpen(false)} defaultPoolId={id!} />
       <FileImportModal isOpen={fileImportOpen} onClose={() => setFileImportOpen(false)} />
-      
+
       <ConfirmModal
         isOpen={deleteVisible}
         onClose={() => setDeleteVisible(false)}
