@@ -217,7 +217,7 @@ export function useTasks(params: { page?: number; page_size?: number; keyword?: 
     queryKey: ['tasks', params],
     queryFn: async () => {
       const cleanParams = params 
-        ? Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== undefined && v !== ''))
+        ? Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''))
         : undefined
       const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>('/tasks', { params: cleanParams })
       return {

@@ -1,5 +1,5 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem, Textarea, Switch, Chip, Spinner } from '@heroui/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { RocketLaunchIcon, BeakerIcon } from '@heroicons/react/24/outline'
 
@@ -18,7 +18,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
   const createTask = useCreateTask()
 
   const { data: templatesData, isPending: isLoadingTemplates } = useTaskTemplates({ page_size: 100 })
-  const templates = templatesData?.data || []
+  const templates = useMemo(() => templatesData?.data || [], [templatesData?.data])
 
   const [taskName, setTaskName] = useState('')
   const [templateCode, setTemplateCode] = useState('')
@@ -26,6 +26,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
 
   useEffect(() => {
     if (!templateCode && templates.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTemplateCode(templates[0].code)
     }
   }, [templateCode, templates])
@@ -37,6 +38,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
 
   useEffect(() => {
     if (tplDetail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPortMode(tplDetail.default_port_scan_mode)
       setHttpProbe(tplDetail.default_http_probe_enabled)
     }
@@ -48,7 +50,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
       ? manualTargets.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
       : []
 
-    const templateOverrides: Record<string, any> = {}
+    const templateOverrides: Record<string, unknown> = {}
     if (tplDetail?.allow_port_mode_override && portMode !== tplDetail.default_port_scan_mode) {
       templateOverrides.port_scan_mode = portMode
     }
@@ -140,11 +142,15 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
                     className="flex-1"
                     classNames={{ trigger: 'bg-white/5 border border-white/10 h-12 pr-10 rounded-[16px]', value: 'truncate' }}
                   >
-                    {templates.map((t) => (
-                      <SelectItem key={t.code} textValue={t.name}>
-                        {t.name} {t.is_builtin ? '(内置)' : ''}
-                      </SelectItem>
-                    ))}
+                    {templates.map((t: unknown) => {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const tpl = t as any
+                      return (
+                        <SelectItem key={tpl.code} textValue={tpl.name}>
+                          {tpl.name} {tpl.is_builtin ? '(内置)' : ''}
+                        </SelectItem>
+                      )
+                    })}
                   </Select>
                   {isLoadingTpl && <Spinner size="sm" color="white" />}
                 </div>

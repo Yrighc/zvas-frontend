@@ -1,5 +1,5 @@
 import { Button, Input, Select, SelectItem, Textarea, RadioGroup, Radio, Switch, Chip, Spinner } from '@heroui/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { PlusCircleIcon, FolderOpenIcon, BeakerIcon } from '@heroicons/react/24/outline'
 
@@ -20,7 +20,7 @@ export function TaskNewPage() {
 
   // ── 模板驱动数据源 ───────────────────────────────────────────────
   const { data: templatesData, isPending: isLoadingTemplates } = useTaskTemplates({ page_size: 100 })
-  const templates = templatesData?.data || []
+  const templates = useMemo(() => templatesData?.data || [], [templatesData?.data])
 
   // ── 公共字段 ──────────────────────────────────────────────────
   const [taskName, setTaskName] = useState('')
@@ -31,6 +31,7 @@ export function TaskNewPage() {
   // 若路由没带，且获取到列表时则默认选中第一个
   useEffect(() => {
     if (!templateCode && templates.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTemplateCode(templates[0].code)
     }
   }, [templateCode, templates])
@@ -44,6 +45,7 @@ export function TaskNewPage() {
   // 模板切换时，重置默认值
   useEffect(() => {
     if (tplDetail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPortMode(tplDetail.default_port_scan_mode)
       setHttpProbe(tplDetail.default_http_probe_enabled)
     }
@@ -75,7 +77,7 @@ export function TaskNewPage() {
       .filter(Boolean)
 
     // 构建待覆盖 template_overrides
-    const templateOverrides: Record<string, any> = {}
+    const templateOverrides: Record<string, unknown> = {}
     if (tplDetail?.allow_port_mode_override && portMode !== tplDetail.default_port_scan_mode) {
       templateOverrides.port_scan_mode = portMode
     }
@@ -174,11 +176,15 @@ export function TaskNewPage() {
               className="flex-1"
               classNames={{ trigger: 'bg-white/5 border border-white/10 h-12 pr-10 rounded-[16px]', value: 'truncate' }}
             >
-              {templates.map((t) => (
-                <SelectItem key={t.code} textValue={t.name}>
-                  {t.name} {t.is_builtin ? '(内置)' : ''}
-                </SelectItem>
-              ))}
+              {templates.map((t: unknown) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const tpl = t as any
+                return (
+                  <SelectItem key={tpl.code} textValue={tpl.name}>
+                    {tpl.name} {tpl.is_builtin ? '(内置)' : ''}
+                  </SelectItem>
+                )
+              })}
             </Select>
             {isLoadingTpl && <Spinner size="sm" color="white" />}
           </div>

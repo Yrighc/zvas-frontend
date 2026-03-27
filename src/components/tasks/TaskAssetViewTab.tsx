@@ -3,6 +3,7 @@ import { Tabs, Tab, Skeleton, Table, TableHeader, TableColumn, TableBody, TableR
 import { ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import { useTaskSnapshotAssets, useTaskSnapshotAssetDetail, type TaskSnapshotAssetVM } from '@/api/adapters/task'
+import { parseHttpProbeSummary } from '@/api/adapters/asset'
 
 const ASSET_KIND_LABEL: Record<string, string> = {
   ip: 'IP',
@@ -169,24 +170,43 @@ function ExpandedRow({ taskId, item, assetKind }: { taskId?: string; item: TaskS
   }
 
   if (assetKind === 'site') {
+    const sum = parseHttpProbeSummary(item.extra_payload)
     return (
       <div className="px-10 py-5 bg-white/[0.01] border-l-2 border-l-apple-blue flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">HTTP 响应头特征</span>
-            <span className="text-[12px] text-apple-text-secondary italic">暂无数据</span>
+            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">标题 (Title)</span>
+            <span className="text-[12px] text-white font-medium break-all">{sum?.title || '-'}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">状态码</span>
+            <span className="text-[12px] text-apple-text-secondary">
+              {sum?.status_code ? (
+                <span className={`px-2 py-0.5 rounded-md font-bold ${sum.status_code >= 200 && sum.status_code < 400 ? 'bg-apple-green/20 text-apple-green-light' : 'bg-white/10 text-white'}`}>
+                  {sum.status_code}
+                </span>
+              ) : '-'}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">内容长度</span>
+            <span className="text-[12px] text-apple-text-secondary italic font-mono">{sum?.content_length ?? '-'}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">Server 响应头</span>
+            <span className="text-[12px] text-apple-text-secondary italic font-mono">{sum?.server || '-'}</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">Favicon Hash</span>
-            <span className="text-[12px] text-apple-text-secondary italic">-</span>
+            <span className="text-[12px] text-apple-text-secondary italic font-mono">{sum?.favicon_hash || '-'}</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">所属服务器 IP</span>
-            <span className="text-[12px] text-apple-text-secondary italic">-</span>
+            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">ICP 备案信息</span>
+            <span className="text-[12px] text-apple-text-secondary italic">{sum?.icp || '-'}</span>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">所属域名</span>
-            <span className="text-[12px] text-apple-text-secondary italic">-</span>
+          <div className="flex flex-col gap-1 col-span-2">
+            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">页面根 URL</span>
+            <span className="text-[12px] text-apple-blue-light font-mono break-all">{sum?.site_url || item.display_name}</span>
           </div>
         </div>
       </div>

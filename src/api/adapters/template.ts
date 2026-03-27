@@ -61,7 +61,7 @@ export function useTaskTemplates(params?: { keyword?: string; page?: number; pag
     queryKey: ['task-templates', params],
     queryFn: async () => {
       const cleanParams = params 
-        ? Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== undefined && v !== ''))
+        ? Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''))
         : undefined
       const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>('/task-templates', { params: cleanParams })
       return {

@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagination, Skeleton, Input, Button } from '@heroui/react'
 import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
-import { useAssetPoolAssets } from '@/api/adapters/asset'
+import { useAssetPoolAssets, parseHttpProbeSummary } from '@/api/adapters/asset'
+import type { PoolAssetVM } from '@/api/adapters/asset'
+import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 
 function joinTags(systemFacets: string[], customTags: string[]) {
   return [...systemFacets, ...customTags].slice(0, 4)
@@ -13,10 +15,56 @@ function sourceLabel(sourceSummary: Record<string, unknown>) {
   return typeof candidate === 'string' && candidate ? candidate : '-'
 }
 
+function ExpandedSiteRow({ item }: { item: PoolAssetVM }) {
+  const extra = item.detail?.extra_payload || item.detail
+  const probe = parseHttpProbeSummary(extra)
+  return (
+    <div className="px-10 py-5 bg-white/[0.01] border-l-2 border-l-apple-blue flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">标题 (Title)</span>
+          <span className="text-[12px] text-white font-medium break-all">{probe?.title || '-'}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">状态码</span>
+          <span className="text-[12px] text-apple-text-secondary">
+            {probe?.status_code ? (
+              <span className={`px-2 py-0.5 rounded-md font-bold ${probe.status_code >= 200 && probe.status_code < 400 ? 'bg-apple-green/20 text-apple-green-light' : 'bg-white/10 text-white'}`}>
+                {probe.status_code}
+              </span>
+            ) : '-'}
+          </span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">内容长度</span>
+          <span className="text-[12px] text-apple-text-secondary italic font-mono">{probe?.content_length ?? '-'}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">Server 响应头</span>
+          <span className="text-[12px] text-apple-text-secondary italic font-mono">{probe?.server || '-'}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">Favicon Hash</span>
+          <span className="text-[12px] text-apple-text-secondary italic font-mono">{probe?.favicon_hash || '-'}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">ICP 备案信息</span>
+          <span className="text-[12px] text-apple-text-secondary italic">{probe?.icp || '-'}</span>
+        </div>
+        <div className="flex flex-col gap-1 col-span-2">
+          <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">页面根 URL</span>
+          <span className="text-[12px] text-apple-blue-light font-mono break-all">{probe?.site_url || item.display_name}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
   const [page, setPage] = useState(1)
   const [pageSize] = useState(20)
   const [keyword, setKeyword] = useState('')
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
 
   const { data, isPending, refetch } = useAssetPoolAssets(poolId, {
     page,
@@ -58,10 +106,8 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
         <Table 
           removeWrapper 
           aria-label="Site Assets Table" 
-          layout="fixed"
           classNames={{ 
             base: "p-4 min-w-[940px]",
-            table: "table-fixed",
             thead: "[&>tr]:first:rounded-xl",
             th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
             td: "border-b border-white/5 py-4 text-left last:border-0",
@@ -84,36 +130,53 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
             isLoading={isPending} 
             loadingContent={<Skeleton className="h-40 w-full rounded-[24px] bg-white/5" />}
           >
-            {items.map((it) => (
-              <TableRow key={it.id}>
-                <TableCell>
-                  <span className="font-mono text-[14px] text-apple-blue-light font-black tracking-tight break-all drop-shadow-[0_0_8px_rgba(0,113,227,0.3)]">{it.display_name}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[12px] text-white font-mono break-all font-bold">{it.normalized_key}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[9px] bg-apple-green/10 border border-apple-green/20 text-apple-green-light px-2.5 py-1 rounded-full tracking-[0.2em] font-black uppercase">
-                    {it.confidence_level}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[9px] border border-white/10 bg-white/5 text-apple-text-secondary px-2.5 py-1 rounded-full font-black tracking-[0.2em] uppercase">
-                    {it.status}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[11px] font-bold text-apple-text-secondary uppercase tracking-wider">{sourceLabel(it.source_summary)}</span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {joinTags(it.system_facets, it.custom_tags).map((tag) => (
-                      <span key={tag} className="text-[9px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{tag}</span>
-                    ))}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {items.map((it) => {
+              const isExpanded = expandedRowId === it.id
+              return (
+                <React.Fragment key={it.id}>
+                  <TableRow>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button isIconOnly size="sm" variant="light" className="text-apple-text-tertiary w-6 h-6 min-w-6" onPress={() => setExpandedRowId(isExpanded ? null : it.id)}>
+                          {isExpanded ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />}
+                        </Button>
+                        <span className="font-mono text-[14px] text-apple-blue-light font-black tracking-tight break-all drop-shadow-[0_0_8px_rgba(0,113,227,0.3)] cursor-pointer" onClick={() => setExpandedRowId(isExpanded ? null : it.id)}>{it.display_name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[12px] text-white font-mono break-all font-bold">{it.normalized_key}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[9px] bg-apple-green/10 border border-apple-green/20 text-apple-green-light px-2.5 py-1 rounded-full tracking-[0.2em] font-black uppercase">
+                        {it.confidence_level}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[9px] border border-white/10 bg-white/5 text-apple-text-secondary px-2.5 py-1 rounded-full font-black tracking-[0.2em] uppercase">
+                        {it.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[11px] font-bold text-apple-text-secondary uppercase tracking-wider">{sourceLabel(it.source_summary)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {joinTags(it.system_facets, it.custom_tags).map((tag) => (
+                          <span key={tag} className="text-[9px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{tag}</span>
+                        ))}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {isExpanded && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="p-0 border-b border-white/5">
+                        <ExpandedSiteRow item={it} />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              )
+            })}
           </TableBody>
         </Table>
         {total > 0 && (

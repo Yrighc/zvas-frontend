@@ -54,6 +54,36 @@ export interface PoolInputRecordVM {
   created_at: string
 }
 
+export interface HTTPProbeSummaryVM {
+  site_url: string
+  status_code: number | null
+  title: string
+  content_length: number | null
+  server: string
+  html_hash: string
+  favicon_hash: string
+  icp: string
+}
+
+export function parseHttpProbeSummary(extraPayload: unknown): HTTPProbeSummaryVM | null {
+  if (!extraPayload) return null
+  const root = extraPayload as any
+  const payload = root.http_probe || root
+  if (!payload.site_url && !payload.status_code && !payload.title) {
+    if (Object.keys(payload).length === 0) return null
+  }
+  return {
+    site_url: payload.site_url || '',
+    status_code: payload.status_code ? Number(payload.status_code) : null,
+    title: payload.title || '',
+    content_length: payload.content_length ? Number(payload.content_length) : null,
+    server: payload.server || '',
+    html_hash: payload.html_hash || '',
+    favicon_hash: payload.favicon_hash || '',
+    icp: payload.icp || '',
+  }
+}
+
 export interface PoolAssetVM {
   id: string
   asset_kind: string

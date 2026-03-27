@@ -28,7 +28,20 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
         </div>
       </div>
 
-      <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex flex-col gap-4">
+      <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex flex-col gap-4 animate-in fade-in duration-500 delay-100 fill-mode-both">
+        <h3 className="text-sm font-bold text-white border-b border-white/5 pb-2">核心执行参数 (Runtime Configuration)</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-8 text-sm pt-4">
+           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">执行器并发数</span> <span className="text-apple-text-secondary font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">{task.params?.concurrency || '-'}</span></div>
+           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">端口扫描超时</span> <span className="text-apple-text-secondary">{task.params?.timeout_ms ? `${task.params.timeout_ms} ms` : '-'}</span></div>
+           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">端口配置偏好</span> <span className="text-apple-text-secondary">{task.params?.port_scan_mode || task.params?.port_profile || '-'}</span></div>
+           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">首页识别探针</span> <span className="text-[12px]">{task.params?.http_probe_enabled ? <span className="text-apple-green-light font-bold">开启 (ON)</span> : <span className="text-apple-text-tertiary">关闭 (OFF)</span>}</span></div>
+           {task.params?.http_probe_enabled && task.params?.http_timeout_sec && (
+             <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">HTTP 探针超时</span> <span className="text-apple-text-secondary font-mono">{task.params.http_timeout_sec} sec</span></div>
+           )}
+        </div>
+      </div>
+
+      <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex flex-col gap-4 animate-in fade-in duration-500 delay-200 fill-mode-both">
         <h3 className="text-sm font-bold text-white border-b border-white/5 pb-2">生命周期及底层环境数据包 (Lifecycle Info)</h3>
         <div className="grid grid-cols-2 gap-y-6 text-sm pt-4">
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">诞生时刻</span> <span className="text-apple-text-secondary font-mono">{formatDateTime(task.created_at)}</span></div>

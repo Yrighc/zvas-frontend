@@ -3,6 +3,8 @@ import { Input, Pagination, Select, SelectItem, Skeleton, Table, TableBody, Tabl
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 import { useTaskRecords } from '@/api/adapters/task'
+import type { TaskRecordVM } from '@/api/adapters/task'
+import { parseHttpProbeSummary } from '@/api/adapters/asset'
 
 const RECORD_TYPE_LABEL: Record<string, string> = {
   'port_scan/ip_service_identify': 'IP 服务识别',
@@ -24,6 +26,36 @@ function formatDuration(durationMs: number) {
   if (!durationMs) return '-'
   if (durationMs < 1000) return `${durationMs} ms`
   return `${(durationMs / 1000).toFixed(1)} s`
+}
+
+function renderResultSummary(item: TaskRecordVM) {
+  if (item.task_type === 'http_probe' && item.task_subtype === 'homepage_identify') {
+    let payload = null
+    try {
+      if (typeof item.result_summary === 'string' && item.result_summary.startsWith('{')) {
+        payload = JSON.parse(item.result_summary)
+      } else {
+        payload = item.result_summary
+      }
+    } catch {
+      // ignore
+    }
+    const sum = parseHttpProbeSummary(payload)
+    if (sum) {
+      return (
+        <div className="flex flex-col gap-1 w-full overflow-hidden">
+          <div className="flex items-center gap-2 w-full">
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${sum.status_code && sum.status_code >= 200 && sum.status_code < 400 ? 'bg-apple-green/20 text-apple-green-light' : 'bg-white/10 text-white/70'}`}>
+              {sum.status_code || '-'}
+            </span>
+            <span className="text-[12px] truncate text-white font-medium" title={sum.title}>{sum.title || '无标题'}</span>
+          </div>
+          <span className="text-[10px] text-apple-text-tertiary truncate font-mono" title={sum.site_url}>{sum.site_url}</span>
+        </div>
+      )
+    }
+  }
+  return <span className="truncate block w-full">{item.result_summary || '-'}</span>
 }
 
 export function TaskRecordsTab({ taskId }: { taskId?: string }) {
@@ -100,7 +132,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                 <TableCell>{item.attempt}</TableCell>
                 <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                 <TableCell>{formatDateTime(item.started_at)}</TableCell>
-                <TableCell>{item.result_summary || '-'}</TableCell>
+                <TableCell>{renderResultSummary(item)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
