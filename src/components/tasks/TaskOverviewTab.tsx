@@ -1,5 +1,5 @@
 import type { TaskDetailVM } from '@/api/adapters/task'
-import { getActiveGroupLabel, getBlockedReasonLabel, getGroupStateInfo, isTerminalTaskStatus } from '@/api/adapters/task'
+import { getActiveGroupLabel, getBlockedReasonLabel, getGroupStateInfo, isTerminalTaskStatus, getAttackRouteLabel, getTemplateCodeLabel } from '@/api/adapters/task'
 import { useTaskRoutes, getRouteLabel } from '@/api/adapters/route'
 import { getPortModeLabel } from '@/api/adapters/template'
 
@@ -37,7 +37,7 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
               {task.active_attack_route && (
                 <div>
                   <span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">当前攻击路由</span>
-                  <span className="text-apple-text-secondary font-mono text-xs bg-white/5 px-2 py-0.5 rounded border border-white/10">{task.active_attack_route}</span>
+                  <span className="text-apple-text-secondary font-mono text-xs bg-white/5 px-2 py-0.5 rounded border border-white/10">{getAttackRouteLabel(task.active_attack_route)}</span>
                 </div>
               )}
             </div>
@@ -101,7 +101,7 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-8 text-sm pt-4">
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">全局唯一识别码</span> <span className="font-mono text-apple-text-secondary">{task.id}</span></div>
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">指令标题</span> <span className="text-white font-bold">{task.name}</span></div>
-           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">搭载算子模型</span> <span className="text-apple-blue-light font-mono px-2 py-0.5 rounded bg-apple-blue/10 border border-apple-blue/20 text-xs tracking-wider">{task.template_code}</span></div>
+           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">搭载算子模型</span> <span className="text-apple-blue-light font-mono px-2 py-0.5 rounded bg-apple-blue/10 border border-apple-blue/20 text-xs tracking-wider">{getTemplateCodeLabel(task.template_code)}</span></div>
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">落点数据源域</span> <span className="text-white hover:text-apple-blue cursor-pointer">{task.asset_pool_name}</span></div>
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">运转水位状态</span>
               <span className={`inline-flex items-center mt-0.5 gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase border ${

@@ -68,8 +68,9 @@ export function FindingsPage() {
             variant="flat"
             classNames={{
               trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 w-40 rounded-[20px] border border-white/5 backdrop-blur-md text-apple-text-primary font-bold pr-12",
-              value: "text-apple-text-primary truncate text-ellipsis"
+              value: "text-apple-text-primary truncate text-ellipsis pl-1"
             }}
+            popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[200px]" } }}
           >
             <SelectItem key="all" textValue="所有等级">所有等级风险</SelectItem>
             <SelectItem key="critical" textValue="严重 (Critical)">严重 (Critical)</SelectItem>

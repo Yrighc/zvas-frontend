@@ -49,6 +49,7 @@ export function CreateAssetPoolModal({ isOpen, onClose, onSuccess }: CreateAsset
       onOpenChange={(open) => !open && onClose()} 
       placement="center"
       backdrop="blur"
+      scrollBehavior="inside"
       classNames={{
         base: "bg-apple-bg/80 backdrop-blur-3xl text-apple-text-primary border border-white/10 rounded-[32px] max-w-md shadow-2xl",
         header: "border-b border-white/5 p-8",

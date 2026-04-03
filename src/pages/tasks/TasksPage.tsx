@@ -17,7 +17,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
-import { useTasks, usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, isTerminalTaskStatus } from '@/api/adapters/task'
+import { useTasks, usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, isTerminalTaskStatus, getAttackRouteLabel, getTemplateCodeLabel } from '@/api/adapters/task'
 import { useAssetPools } from '@/api/adapters/asset'
 import { useTaskRoutes } from '@/api/adapters/route'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
@@ -84,7 +84,8 @@ export function TasksPage() {
             aria-label="资产池筛选"
             selectedKeys={new Set([poolFilter])}
             onChange={(e) => { setPoolFilter(e.target.value || 'all'); setPage(1) }}
-            classNames={{ trigger: "bg-white/5 border border-white/10 h-10 pr-10", value: "truncate text-ellipsis" }}
+            classNames={{ trigger: "bg-white/5 border border-white/10 h-10 pr-10", value: "truncate text-ellipsis pl-1" }}
+            popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[200px]" } }}
           >
             {[
                { id: 'all', name: '全源资产池 (所有)' },
@@ -99,7 +100,8 @@ export function TasksPage() {
             aria-label="模板筛选"
             selectedKeys={new Set([templateFilter])}
             onChange={(e) => { setTemplateFilter(e.target.value || 'all'); setPage(1) }}
-            classNames={{ trigger: "bg-white/5 border border-white/10 h-10 pr-10", value: "truncate text-ellipsis" }}
+            classNames={{ trigger: "bg-white/5 border border-white/10 h-10 pr-10", value: "truncate text-ellipsis pl-1" }}
+            popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[200px]" } }}
             items={[{ key: 'all', label: '所有执行模板' }, ...(routesData || []).map(r => ({ key: r.key, label: r.label }))]}
           >
             {(item) => <SelectItem key={item.key} textValue={item.label}>{item.label}</SelectItem>}
@@ -108,7 +110,8 @@ export function TasksPage() {
             aria-label="状态筛选"
             selectedKeys={new Set([statusFilter])}
             onChange={(e) => { setStatusFilter(e.target.value || 'all'); setPage(1) }}
-             classNames={{ trigger: "bg-white/5 border border-white/10 h-10 pr-10", value: "truncate text-ellipsis" }}
+             classNames={{ trigger: "bg-white/5 border border-white/10 h-10 pr-10", value: "truncate text-ellipsis pl-1" }}
+             popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[200px]" } }}
           >
             <SelectItem key="all" textValue="任何状态流">任何状态流</SelectItem>
             <SelectItem key="draft" textValue="草稿 (draft)">草稿 (draft)</SelectItem>
@@ -171,7 +174,7 @@ export function TasksPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="text-[10px] bg-white/10 border border-white/10 text-apple-text-secondary px-2 py-0.5 rounded font-black font-mono uppercase tracking-widest leading-none">{task.template_code || '-'}</span>
+                  <span className="text-[10px] bg-white/10 border border-white/10 text-apple-text-secondary px-2 py-0.5 rounded font-black font-mono uppercase tracking-widest leading-none">{getTemplateCodeLabel(task.template_code)}</span>
                 </TableCell>
                 <TableCell>
                   <div className="text-xs text-apple-text-secondary flex flex-col gap-1">
@@ -193,7 +196,7 @@ export function TasksPage() {
                           <span className="text-[10px] text-apple-amber font-bold">{getBlockedReasonLabel(task.blocked_reason)}</span>
                         )}
                         {task.active_attack_route && (
-                          <span className="text-[9px] text-apple-text-tertiary font-mono truncate" title={task.active_attack_route}>→ {task.active_attack_route}</span>
+                          <span className="text-[9px] text-apple-text-tertiary font-mono truncate" title={getAttackRouteLabel(task.active_attack_route)}>→ {getAttackRouteLabel(task.active_attack_route)}</span>
                         )}
                       </>
                     )}

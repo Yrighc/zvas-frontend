@@ -10,7 +10,7 @@ import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
 
 import { CreateTaskFromPoolModal } from '@/components/assets/CreateTaskFromPoolModal'
 import { useAssetPoolTasks } from '@/api/adapters/asset'
-import { usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel } from '@/api/adapters/task'
+import { usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel, getTemplateCodeLabel } from '@/api/adapters/task'
 import { useTaskRoutes, mapStageLabels } from '@/api/adapters/route'
 
 function formatTime(value?: string): string {
@@ -135,8 +135,8 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                       <span className="text-[11px] font-mono text-apple-text-secondary truncate">{item.id}</span>
                     </div>
                     <div className="flex flex-col gap-1 overflow-hidden font-medium">
-                      <span className="text-[13px] font-bold text-white truncate">{item.template_name || item.template_code}</span>
-                      <span className="text-[11px] font-mono text-apple-text-secondary truncate">TPL_{item.template_code}</span>
+                      <span className="text-[13px] font-bold text-white truncate">{item.template_name || getTemplateCodeLabel(item.template_code)}</span>
+                      <span className="text-[11px] font-mono text-apple-text-secondary truncate">TPL_{getTemplateCodeLabel(item.template_code)}</span>
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <Chip size="sm" variant="flat" color={statusInfo.color} classNames={{ base: "border-0 font-black tracking-[0.1em] uppercase px-1.5 py-0.5 rounded-md" }}>

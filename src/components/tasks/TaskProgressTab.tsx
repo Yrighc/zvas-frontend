@@ -1,6 +1,6 @@
 import { Progress, Skeleton } from '@heroui/react'
 import type { TaskProgressVM } from '@/api/adapters/task'
-import { getActiveGroupLabel, getBlockedReasonLabel, getGroupStateInfo, isTerminalTaskStatus } from '@/api/adapters/task'
+import { getActiveGroupLabel, getBlockedReasonLabel, getGroupStateInfo, isTerminalTaskStatus, getAttackRouteLabel } from '@/api/adapters/task'
 import { useTaskRoutes, getRouteLabel } from '@/api/adapters/route'
 
 function percent(done: number, total: number) {
@@ -66,7 +66,7 @@ export function TaskProgressTab({ progress }: { progress?: TaskProgressVM }) {
           </div>
           {!isTerminal && progress.active_attack_route && (
             <div className="mt-3 text-[10px] text-apple-text-tertiary">
-              当前攻击路由：<span className="text-apple-text-secondary font-mono">{progress.active_attack_route}</span>
+              当前攻击路由：<span className="text-apple-text-secondary font-mono">{getAttackRouteLabel(progress.active_attack_route)}</span>
             </div>
           )}
         </div>

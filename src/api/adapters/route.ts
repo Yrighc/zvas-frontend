@@ -125,6 +125,8 @@ export function resolveTaskRouteMeta(
 /** 获取阶段/类型的中文 label，兜底返回原始字符串 */
 export function getRouteLabel(routes: TaskRouteMeta[] | undefined, stageOrType: string): string {
   if (!routes || !stageOrType) return stageOrType || '未知'
+  if (stageOrType === 'vuln_scan.nuclei' || stageOrType === 'vuln_scan') return '漏洞扫描'
+  
   const hit =
     routes.find(r => r.taskType === stageOrType) ||
     routes.find(r => r.stage === stageOrType) ||

@@ -304,8 +304,9 @@ export function UserManagementPage() {
             variant="flat"
             classNames={{
               trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 w-40 rounded-2xl border border-white/5 backdrop-blur-md text-apple-text-primary font-bold pr-10",
-              value: "text-apple-text-primary truncate text-ellipsis"
+              value: "text-apple-text-primary truncate text-ellipsis pl-1"
             }}
+            popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[160px]" } }}
           >
             <SelectItem key="all" textValue="全部状态">全部状态</SelectItem>
             <SelectItem key="active" textValue="在线 (Active)">在线 (Active)</SelectItem>
@@ -582,8 +583,9 @@ export function UserManagementPage() {
                       variant="flat"
                       classNames={{
                         trigger: "bg-white/5 h-12 rounded-2xl border border-white/5 pr-10",
-                        value: "truncate text-ellipsis text-sm"
+                        value: "truncate text-ellipsis text-sm pl-1"
                       }}
+                      popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[240px]" } }}
                     >
                     {roleOptions.map((role) => (
                       <SelectItem key={role.code} textValue={`${role.name} / ${role.code}`}>
@@ -722,8 +724,9 @@ export function UserManagementPage() {
                       variant="flat"
                       classNames={{
                         trigger: "bg-white/5 h-12 rounded-2xl border border-white/5 pr-10",
-                        value: "truncate text-ellipsis text-sm"
+                        value: "truncate text-ellipsis text-sm pl-1"
                       }}
+                      popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[240px]" } }}
                     >
                     {roleOptions.map((role) => (
                       <SelectItem key={role.code} textValue={`${role.name} / ${role.code}`}>

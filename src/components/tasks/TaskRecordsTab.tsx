@@ -50,6 +50,31 @@ const SUMMARY_RENDERERS: Record<string, SummaryRenderer> = {
       </div>
     )
   },
+  // Task-030: vuln_scan 漏洞扫描记录专属摘要渲染器
+  'vuln_scan': (item) => {
+    const summary = item.result_summary
+    if (!summary) return null
+    // 后端已整理为可直接展示的文字摘要，无需二次拼接
+    const isFound = typeof summary === 'string' && summary.includes('发现')
+    const isSkipped = typeof summary === 'string' && summary.includes('跳过')
+    const isClean = typeof summary === 'string' && summary.includes('未发现')
+    return (
+      <div className="flex items-center gap-2 w-full overflow-hidden">
+        <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${
+          isFound ? 'bg-apple-red' :
+          isSkipped ? 'bg-apple-amber' :
+          isClean ? 'bg-apple-green' :
+          'bg-white/30'
+        }`} />
+        <span className={`text-[12px] truncate font-medium ${
+          isFound ? 'text-apple-red-light' :
+          isSkipped ? 'text-apple-amber' :
+          isClean ? 'text-apple-green-light' :
+          'text-apple-text-secondary'
+        }`}>{String(summary)}</span>
+      </div>
+    )
+  },
 }
 
 function renderResultSummary(item: TaskRecordVM) {
@@ -168,10 +193,22 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
           classNames={{ inputWrapper: 'bg-white/5 border border-white/5 rounded-2xl h-12', input: 'text-sm' }}
           startContent={<MagnifyingGlassIcon className="w-4 h-4 text-apple-text-tertiary" />}
         />
-        <Select selectedKeys={stage ? [stage] : []} placeholder="阶段" onSelectionChange={(keys) => { setStage(Array.from(keys)[0] as string || ''); setPage(1) }} classNames={{ trigger: 'bg-white/5 border border-white/5 rounded-2xl h-12' }}>
+        <Select
+          selectedKeys={stage ? [stage] : []}
+          placeholder="阶段"
+          onSelectionChange={(keys) => { setStage(Array.from(keys)[0] as string || ''); setPage(1) }}
+          classNames={{ trigger: 'bg-white/5 border border-white/5 rounded-2xl h-12' }}
+          popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[180px]" } }}
+        >
           {stageOptions.map((item) => <SelectItem key={item.key}>{item.label}</SelectItem>)}
         </Select>
-        <Select selectedKeys={status ? [status] : []} placeholder="状态" onSelectionChange={(keys) => { setStatus(Array.from(keys)[0] as string || ''); setPage(1) }} classNames={{ trigger: 'bg-white/5 border border-white/5 rounded-2xl h-12' }}>
+        <Select
+          selectedKeys={status ? [status] : []}
+          placeholder="状态"
+          onSelectionChange={(keys) => { setStatus(Array.from(keys)[0] as string || ''); setPage(1) }}
+          classNames={{ trigger: 'bg-white/5 border border-white/5 rounded-2xl h-12' }}
+          popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[160px]" } }}
+        >
           {statusOptions.map((item) => <SelectItem key={item.key}>{item.label}</SelectItem>)}
         </Select>
       </div>

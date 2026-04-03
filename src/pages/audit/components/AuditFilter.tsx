@@ -50,8 +50,9 @@ export const AuditFilter = ({
                     aria-label="筛选风险等级"
                     classNames={{
                         trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md text-apple-text-primary font-bold pr-10",
-                        value: "text-apple-text-primary truncate"
+                        value: "text-apple-text-primary truncate pl-1"
                     }}
+                    popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[160px]" } }}
                 >
                     <SelectItem key="all">全部风险</SelectItem>
                     <SelectItem key="low">低风险</SelectItem>
@@ -71,8 +72,9 @@ export const AuditFilter = ({
                     aria-label="筛选执行结果"
                     classNames={{
                         trigger: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md text-apple-text-primary font-bold pr-10",
-                        value: "text-apple-text-primary truncate"
+                        value: "text-apple-text-primary truncate pl-1"
                     }}
+                    popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[160px]" } }}
                 >
                     <SelectItem key="all">全部结果</SelectItem>
                     <SelectItem key="success">成功</SelectItem>

@@ -14,6 +14,7 @@ export function FileImportModal({ isOpen, onClose }: Props) {
       placement="right"
       backdrop="blur"
       size="sm"
+      scrollBehavior="inside"
       classNames={{
         base: "bg-apple-bg/90 backdrop-blur-3xl text-apple-text-primary border-l border-white/10",
         header: "border-b border-white/5 px-8 pt-10 pb-6",

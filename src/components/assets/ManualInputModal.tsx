@@ -44,6 +44,7 @@ export function ManualInputModal({ isOpen, onClose, defaultPoolId }: ManualInput
       placement="center"
       backdrop="blur"
       size="2xl"
+      scrollBehavior="inside"
       classNames={{
         base: "bg-apple-bg/80 backdrop-blur-3xl text-apple-text-primary border border-white/10 rounded-[32px] shadow-2xl",
         header: "border-b border-white/5 p-8",
@@ -66,7 +67,8 @@ export function ManualInputModal({ isOpen, onClose, defaultPoolId }: ManualInput
                   selectedKeys={poolId ? [poolId] : []}
                   onChange={(e) => setPoolId(e.target.value)}
                   isLoading={poolsQuery.isPending}
-                  classNames={{ trigger: "bg-white/5 border border-white/10 h-12 pr-10", value: "truncate text-ellipsis" }}
+                  classNames={{ trigger: "bg-white/5 border border-white/10 h-12 pr-10 rounded-xl", value: "truncate text-ellipsis pl-1 text-sm" }}
+                  popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[240px]" } }}
                 >
                   {poolItems.map(p => (
                     <SelectItem key={p.id} textValue={p.name}>{p.name}</SelectItem>

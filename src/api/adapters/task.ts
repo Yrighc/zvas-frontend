@@ -319,6 +319,17 @@ export function getBlockedReasonLabel(reason: string): string {
   return BLOCKED_LABELS[reason] || reason || ''
 }
 
+/** Task-030 专用：映射具体阶段内的特有插件实现路由，抹去第三方品牌和底层配置 */
+export function getAttackRouteLabel(route: string): string {
+  if (route === 'vuln_scan.nuclei' || route === 'vuln_scan') return '漏洞扫描'
+  return route || ''
+}
+
+export function getTemplateCodeLabel(code: string): string {
+  if (code === 'vuln_scan') return '漏洞扫描'
+  return code || '-'
+}
+
 /** 获取阶段组状态的显示信息 */
 export function getGroupStateInfo(state: string): { label: string; color: string } {
   switch (state) {

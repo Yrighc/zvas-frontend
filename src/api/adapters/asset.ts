@@ -375,6 +375,7 @@ export interface FindingSummaryView {
   status: string
   asset_ref: string
   created_at: string
+  detail?: Record<string, any>
 }
 
 function mapToTaskSummaryView(dto: any): TaskSummaryView {

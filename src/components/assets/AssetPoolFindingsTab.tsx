@@ -99,10 +99,14 @@ export function AssetPoolFindingsTab({ poolId }: { poolId: string }) {
               <TableRow key={it.finding_id}>
                 <TableCell>
                   <span className="font-bold text-[14px] text-white tracking-tight leading-tight block">{it.title}</span>
-                  <span className="text-[10px] text-apple-text-tertiary font-mono">{it.finding_id}</span>
+                  <span className="text-[10px] text-apple-text-tertiary font-mono">
+                    {it.detail?.rule_id ? `${it.finding_id} • ${it.detail.rule_id}` : it.finding_id}
+                  </span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-[10px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{it.finding_type}</span>
+                  <span className="text-[10px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                    {it.finding_type === 'vul_scan' ? '漏洞' : it.finding_type}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <Chip size="sm" variant="flat" color={severityColor(it.severity)} classNames={{ base: "border-0 font-black tracking-[0.1em] uppercase px-1" }}>
