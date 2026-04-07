@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Button, Spinner, Chip } from '@heroui/react'
 import { ArrowLeftIcon, RocketLaunchIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 
-import { useTaskTemplateDetail, getPortModeLabel, isHighCostPortTemplate, getTemplatePresetBadge, FULL_PORT_WARNING } from '@/api/adapters/template'
+import { useTaskTemplateDetail, getPortModeLabel, getVulScanSeverityLabel, isHighCostPortTemplate, getTemplatePresetBadge, FULL_PORT_WARNING } from '@/api/adapters/template'
 import { useTaskRoutes, getRouteLabel } from '@/api/adapters/route'
 
 export function TaskTemplateDetailPage() {
@@ -137,6 +137,18 @@ export function TaskTemplateDetailPage() {
                     : `${detail.default_timeout_ms} ms`}
                 </div>
               </div>
+              {detail.supports_vul_scan && (
+                <div className="col-span-2">
+                  <div className="text-[12px] text-apple-text-secondary mb-2">默认漏洞等级</div>
+                  <div className="flex flex-wrap gap-2">
+                    {detail.default_vul_scan_severity.map((severity) => (
+                      <Chip key={severity} size="sm" variant="flat" className="bg-white/5 text-white border border-white/5">
+                        {getVulScanSeverityLabel(severity)}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="col-span-2">
                 <div className="text-[12px] text-apple-text-secondary mb-2">调度阶段执行流 (默认计划)</div>
                 <div className="flex flex-wrap gap-2">
@@ -194,6 +206,16 @@ export function TaskTemplateDetailPage() {
                   <Chip size="sm" variant="dot" color="default" className="border-0 bg-transparent text-apple-text-tertiary">模板写死</Chip>
                 )}
               </div>
+              {detail.supports_vul_scan && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-apple-text-secondary">漏洞等级</span>
+                  {detail.allow_advanced_override ? (
+                    <Chip size="sm" variant="dot" color="success" className="border-0 bg-transparent text-apple-text-primary font-bold">允许覆盖</Chip>
+                  ) : (
+                    <Chip size="sm" variant="dot" color="default" className="border-0 bg-transparent text-apple-text-tertiary">模板写死</Chip>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

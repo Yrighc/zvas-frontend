@@ -5,7 +5,7 @@ import { PlusCircleIcon, FolderOpenIcon, BeakerIcon } from '@heroicons/react/24/
 
 import { useCreateTask } from '@/api/adapters/task'
 import { useAssetPools } from '@/api/adapters/asset'
-import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, isHighCostPortTemplate, FULL_PORT_WARNING } from '@/api/adapters/template'
+import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, isHighCostPortTemplate, FULL_PORT_WARNING, VUL_SCAN_SEVERITY_OPTIONS, buildVulScanSeverityParam, formatVulScanSeverityLabels } from '@/api/adapters/template'
 
 /** 模式 A：归并到已有资产池；模式 B：创建新资产池并启动 */
 type AdHocMode = 'existing' | 'create'
@@ -44,6 +44,7 @@ export function TaskNewPage() {
   const [concurrency, setConcurrency] = useState<number | ''>('')
   const [rate, setRate] = useState<number | ''>('')
   const [timeoutMs, setTimeoutMs] = useState<number | ''>('')
+  const [vulScanSeverity, setVulScanSeverity] = useState<string[]>([])
 
   // 模板切换时，重置默认值
   useEffect(() => {
@@ -54,9 +55,11 @@ export function TaskNewPage() {
       setConcurrency(tplDetail.default_concurrency)
       setRate(tplDetail.default_rate)
       setTimeoutMs(tplDetail.default_timeout_ms)
+      setVulScanSeverity(tplDetail.supports_vul_scan ? tplDetail.default_vul_scan_severity : [])
     }
   }, [tplDetail])
 
+  const vulScanSeveritySummary = useMemo(() => formatVulScanSeverityLabels(vulScanSeverity), [vulScanSeverity])
 
   // ── 模式 A：归并到已有资产池 ──────────────────────────────────
   const [existingPoolId, setExistingPoolId] = useState('')
@@ -72,6 +75,7 @@ export function TaskNewPage() {
     if (!templateCode) return false
     if (adHocMode === 'existing' && !existingPoolId) return false
     if (adHocMode === 'create' && !newPoolName.trim()) return false
+    if (tplDetail?.supports_vul_scan && vulScanSeverity.length === 0) return false
     return true
   }
 
@@ -100,6 +104,18 @@ export function TaskNewPage() {
       templateOverrides.timeout_ms = Number(timeoutMs)
     }
 
+    const params: Record<string, string> = {}
+    if (tplDetail?.supports_vul_scan) {
+      const selectedSeverity = buildVulScanSeverityParam(vulScanSeverity)
+      const defaultSeverity = buildVulScanSeverityParam(tplDetail.default_vul_scan_severity)
+      if (!selectedSeverity) {
+        return
+      }
+      if (selectedSeverity !== defaultSeverity) {
+        params.vul_scan_severity = selectedSeverity
+      }
+    }
+
     createTask.mutate(
       {
         mode: 'ad_hoc',
@@ -111,6 +127,7 @@ export function TaskNewPage() {
             : { mode: 'create', name: newPoolName.trim(), description: newPoolDesc.trim() || undefined, tags: tags.length > 0 ? tags : undefined },
         input: { source: 'manual', items },
         template_overrides: Object.keys(templateOverrides).length > 0 ? templateOverrides : undefined,
+        params: Object.keys(params).length > 0 ? params : undefined,
       },
       {
         onSuccess: (res) => {
@@ -206,7 +223,7 @@ export function TaskNewPage() {
         </div>
 
         {/* 覆盖参数区 */}
-        {(tplDetail?.allow_port_mode_override || tplDetail?.allow_http_probe_override || tplDetail?.allow_advanced_override) && (
+        {(tplDetail?.allow_port_mode_override || tplDetail?.allow_http_probe_override || tplDetail?.allow_advanced_override || tplDetail?.supports_vul_scan) && (
           <div className="flex flex-col gap-5 mt-4 pt-4 border-t border-white/5">
              <p className="text-[10px] text-apple-text-tertiary uppercase tracking-[0.2em] font-black">模板高级控制</p>
              {tplDetail.allow_port_mode_override && (
@@ -235,6 +252,25 @@ export function TaskNewPage() {
                  <Switch size="sm" isSelected={httpProbe} onValueChange={setHttpProbe} classNames={{ wrapper: 'group-data-[selected=true]:bg-apple-blue' }}>
                    <span className="text-[13px] text-white">开启首页识别与协议指纹嗅探</span>
                  </Switch>
+               </div>
+             )}
+             {tplDetail.supports_vul_scan && (
+               <div className="flex flex-col gap-2 mt-2">
+                 <label className="text-apple-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">漏洞等级 (覆盖)</label>
+                 <Select
+                   selectionMode="multiple"
+                   variant="flat"
+                   selectedKeys={new Set(vulScanSeverity)}
+                   onSelectionChange={(keys) => setVulScanSeverity(keys === 'all' ? VUL_SCAN_SEVERITY_OPTIONS.map((item) => item.value) : Array.from(keys) as string[])}
+                   placeholder="请选择漏洞等级"
+                   classNames={{ trigger: 'bg-white/5 border border-white/10 min-h-12 rounded-[16px] pr-10', value: 'text-sm text-apple-text-primary' }}
+                 >
+                   {VUL_SCAN_SEVERITY_OPTIONS.map((item) => (
+                     <SelectItem key={item.value} textValue={item.label}>{item.label}</SelectItem>
+                   ))}
+                 </Select>
+                 <p className="text-[11px] text-apple-text-tertiary">模板默认：{formatVulScanSeverityLabels(tplDetail.default_vul_scan_severity)}</p>
+                 {vulScanSeverity.length === 0 && <p className="text-[11px] text-apple-red-light font-bold">至少选择一个漏洞等级</p>}
                </div>
              )}
              {tplDetail.allow_advanced_override && (
@@ -345,6 +381,7 @@ export function TaskNewPage() {
              <div className="flex gap-2 flex-wrap">
                 <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white font-mono h-6">{getPortModeLabel(portMode)}</Chip>
                 {httpProbe && <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white font-mono h-6">http probe enabled</Chip>}
+                {tplDetail.supports_vul_scan && <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white h-6">漏洞等级: {vulScanSeveritySummary}</Chip>}
              </div>
            </div>
          )}

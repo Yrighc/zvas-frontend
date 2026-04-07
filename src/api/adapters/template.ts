@@ -26,7 +26,27 @@ export interface TaskTemplateDetailVM extends TaskTemplateListItemVM {
   allow_advanced_override: boolean
   default_stage_plan: string[]
   allowed_stages: string[]
+  default_params: Record<string, string>
+  supports_vul_scan: boolean
+  default_vul_scan_severity: string[]
 }
+
+export const VUL_SCAN_SEVERITY_OPTIONS = [
+  { value: 'low', label: '低危' },
+  { value: 'medium', label: '中危' },
+  { value: 'high', label: '高危' },
+  { value: 'critical', label: '严重' },
+] as const
+
+const VUL_SCAN_SEVERITY_LABELS: Record<string, string> = {
+  low: '低危',
+  medium: '中危',
+  high: '高危',
+  critical: '严重',
+}
+
+const VUL_SCAN_SEVERITY_ORDER = VUL_SCAN_SEVERITY_OPTIONS.map((item) => item.value)
+const VUL_SCAN_STAGE_KEYS = new Set(['vuln_scan', 'vul_scan'])
 
 function mapToTaskTemplateListItemVM(dto: any): TaskTemplateListItemVM {
   return {
@@ -47,22 +67,67 @@ function mapToTaskTemplateListItemVM(dto: any): TaskTemplateListItemVM {
 }
 
 function mapToTaskTemplateDetailVM(dto: any): TaskTemplateDetailVM {
+  const defaultStagePlan = Array.isArray(dto.default_stages) ? dto.default_stages : []
+  const allowedStages = Array.isArray(dto.optional_stages) ? dto.optional_stages : []
+  const defaultParams = dto.default_params && typeof dto.default_params === 'object' ? dto.default_params : {}
+  const supportsVulScan = [...defaultStagePlan, ...allowedStages].some((stage) => VUL_SCAN_STAGE_KEYS.has(String(stage || '').trim()))
+  const defaultVulScanSeverity = supportsVulScan
+    ? normalizeVulScanSeverityValues(defaultParams.vul_scan_severity || VUL_SCAN_SEVERITY_ORDER)
+    : []
+
   return {
     ...mapToTaskTemplateListItemVM(dto),
     default_custom_ports: dto.default_ports || '',
     allow_port_mode_override: Boolean(dto.allow_port_mode_override),
     allow_http_probe_override: Boolean(dto.allow_http_probe_override),
     allow_advanced_override: Boolean(dto.allow_advanced_override),
-    default_stage_plan: dto.default_stages || [],
-    allowed_stages: dto.optional_stages || [],
+    default_stage_plan: defaultStagePlan,
+    allowed_stages: allowedStages,
+    default_params: defaultParams,
+    supports_vul_scan: supportsVulScan,
+    default_vul_scan_severity: defaultVulScanSeverity,
   }
+}
+
+export function normalizeVulScanSeverityValues(input?: string | string[]): string[] {
+  const rawValues = Array.isArray(input)
+    ? input
+    : typeof input === 'string'
+      ? input.split(',')
+      : []
+  const selected = new Set<string>()
+
+  rawValues.forEach((item) => {
+    const value = String(item || '').trim().toLowerCase()
+    if (VUL_SCAN_SEVERITY_LABELS[value]) {
+      selected.add(value)
+    }
+  })
+
+  return VUL_SCAN_SEVERITY_ORDER.filter((item) => selected.has(item))
+}
+
+export function buildVulScanSeverityParam(values: string[]): string {
+  return normalizeVulScanSeverityValues(values).join(',')
+}
+
+export function getVulScanSeverityLabel(value: string): string {
+  return VUL_SCAN_SEVERITY_LABELS[String(value || '').trim().toLowerCase()] || value || '-'
+}
+
+export function formatVulScanSeverityLabels(values: string[]): string {
+  const normalized = normalizeVulScanSeverityValues(values)
+  if (normalized.length === 0) {
+    return '未设置'
+  }
+  return normalized.map(getVulScanSeverityLabel).join(' / ')
 }
 
 export function useTaskTemplates(params?: { keyword?: string; page?: number; page_size?: number }) {
   return useQuery({
     queryKey: ['task-templates', params],
     queryFn: async () => {
-      const cleanParams = params 
+      const cleanParams = params
         ? Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''))
         : undefined
       const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>('/task-templates', { params: cleanParams })

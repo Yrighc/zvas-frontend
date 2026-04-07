@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { RocketLaunchIcon, BeakerIcon } from '@heroicons/react/24/outline'
 
 import { useCreateTask } from '@/api/adapters/task'
-import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, isHighCostPortTemplate, FULL_PORT_WARNING } from '@/api/adapters/template'
+import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, isHighCostPortTemplate, FULL_PORT_WARNING, VUL_SCAN_SEVERITY_OPTIONS, buildVulScanSeverityParam, formatVulScanSeverityLabels } from '@/api/adapters/template'
 
 interface Props {
   poolId: string
@@ -37,6 +37,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
   const [concurrency, setConcurrency] = useState<number | ''>('')
   const [rate, setRate] = useState<number | ''>('')
   const [timeoutMs, setTimeoutMs] = useState<number | ''>('')
+  const [vulScanSeverity, setVulScanSeverity] = useState<string[]>([])
 
   useEffect(() => {
     if (tplDetail) {
@@ -46,8 +47,11 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
       setConcurrency(tplDetail.default_concurrency)
       setRate(tplDetail.default_rate)
       setTimeoutMs(tplDetail.default_timeout_ms)
+      setVulScanSeverity(tplDetail.supports_vul_scan ? tplDetail.default_vul_scan_severity : [])
     }
   }, [tplDetail])
+
+  const vulScanSeveritySummary = useMemo(() => formatVulScanSeverityLabels(vulScanSeverity), [vulScanSeverity])
 
   const handleSubmit = () => {
     const name = taskName.trim() || `基于「${poolName || poolId}」的扫描任务`
@@ -70,6 +74,18 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
       templateOverrides.timeout_ms = Number(timeoutMs)
     }
 
+    const params: Record<string, string> = {}
+    if (tplDetail?.supports_vul_scan) {
+      const selectedSeverity = buildVulScanSeverityParam(vulScanSeverity)
+      const defaultSeverity = buildVulScanSeverityParam(tplDetail.default_vul_scan_severity)
+      if (!selectedSeverity) {
+        return
+      }
+      if (selectedSeverity !== defaultSeverity) {
+        params.vul_scan_severity = selectedSeverity
+      }
+    }
+
     createTask.mutate(
       {
         mode: 'from_pool',
@@ -80,6 +96,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
           generation_source: 'pool_filter',
         },
         template_overrides: Object.keys(templateOverrides).length > 0 ? templateOverrides : undefined,
+        params: Object.keys(params).length > 0 ? params : undefined,
       },
       {
         onSuccess: (res) => {
@@ -95,14 +112,16 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
     <Modal
       isOpen={isOpen}
       onOpenChange={(open) => !open && onClose()}
-      placement="center"
+      placement="top-center"
       backdrop="blur"
       scrollBehavior="inside"
       classNames={{
-        base: 'bg-apple-bg/90 backdrop-blur-3xl text-apple-text-primary border border-white/10 rounded-[28px] max-w-2xl shadow-2xl overflow-hidden',
-        header: 'border-b border-white/5 p-6',
-        body: 'p-6',
-        footer: 'border-t border-white/5 p-4 flex justify-end gap-3',
+        wrapper: '!items-start z-[140] overflow-y-auto px-3 pb-4 pt-[calc(env(safe-area-inset-top)+5rem)] sm:px-6 sm:pt-[calc(env(safe-area-inset-top)+5.5rem)]',
+        backdrop: 'z-[130] bg-apple-black/72 backdrop-blur-md',
+        base: 'mt-0 flex max-h-[calc(100dvh-env(safe-area-inset-top)-1rem)] w-full max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-apple-bg/90 text-apple-text-primary shadow-2xl sm:max-w-[calc(100vw-3rem)] md:max-w-2xl',
+        header: 'shrink-0 border-b border-white/5 p-5 sm:p-6',
+        body: 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-6',
+        footer: 'shrink-0 flex flex-col-reverse justify-end gap-3 border-t border-white/5 p-4 sm:flex-row',
       }}
     >
       <ModalContent>
@@ -123,7 +142,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
           </ModalHeader>
 
           <ModalBody>
-            <div className="flex flex-col gap-5">
+            <div className="flex min-h-0 flex-col gap-4 sm:gap-5">
               {/* Top Row: Task Basics */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 focus-within:z-10">
@@ -166,7 +185,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
               </div>
 
               {/* Bento Grid for Overrides */}
-              {(tplDetail?.allow_port_mode_override || tplDetail?.allow_http_probe_override || tplDetail?.allow_advanced_override) && (
+              {(tplDetail?.allow_port_mode_override || tplDetail?.allow_http_probe_override || tplDetail?.allow_advanced_override || tplDetail?.supports_vul_scan) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    {/* 端口扫描模块 */}
                    {tplDetail?.allow_port_mode_override && (
@@ -221,11 +240,34 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
                      </div>
                    )}
 
+                   {tplDetail?.supports_vul_scan && (
+                     <div className="flex flex-col gap-3 p-4 bg-white/5 border border-white/5 rounded-2xl md:col-span-2">
+                       <label className="text-apple-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">漏洞等级 (覆盖)</label>
+                       <Select
+                         selectionMode="multiple"
+                         selectedKeys={new Set(vulScanSeverity)}
+                         onSelectionChange={(keys) => setVulScanSeverity(keys === 'all' ? VUL_SCAN_SEVERITY_OPTIONS.map((item) => item.value) : Array.from(keys) as string[])}
+                         variant="flat"
+                         placeholder="请选择漏洞等级"
+                         classNames={{ trigger: 'bg-white/5 border border-white/10 min-h-11 rounded-xl pr-10', value: 'text-sm text-apple-text-primary' }}
+                         popoverProps={{ classNames: { content: "bg-apple-bg/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-1 min-w-[240px]" } }}
+                       >
+                         {VUL_SCAN_SEVERITY_OPTIONS.map((item) => (
+                           <SelectItem key={item.value} textValue={item.label}>
+                             {item.label}
+                           </SelectItem>
+                         ))}
+                       </Select>
+                       <p className="text-[10px] text-apple-text-tertiary font-medium">模板默认：{formatVulScanSeverityLabels(tplDetail.default_vul_scan_severity)}</p>
+                       {vulScanSeverity.length === 0 && <p className="text-[10px] text-apple-red-light font-bold">至少选择一个漏洞等级</p>}
+                     </div>
+                   )}
+
                    {/* 性能治理模块 */}
                    {tplDetail?.allow_advanced_override && (
                      <div className="flex flex-col gap-3 p-4 bg-white/5 border border-white/5 rounded-2xl md:col-span-2">
                        <label className="text-apple-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">高级性能治理 (Scaling Overrides)</label>
-                       <div className="grid grid-cols-3 gap-3">
+                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                          <div className="flex flex-col gap-1">
                            <span className="text-[9px] text-apple-text-tertiary font-bold ml-1">并发实例 (Concurrency)</span>
                            <Input 
@@ -272,11 +314,12 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
                  {!tplDetail ? (
                    <p className="text-[11px] text-apple-text-tertiary">正在获取模板元数据...</p>
                  ) : (
-                   <div className="flex items-center justify-between gap-4">
-                     <p className="text-[11px] text-apple-text-secondary leading-tight line-clamp-2 max-w-[70%]">{tplDetail.preview_summary || '无特殊预览说明。'}</p>
-                     <div className="flex items-center gap-1.5 shrink-0 bg-white/5 p-1 rounded-lg border border-white/5">
+                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                     <p className="max-w-full text-[11px] text-apple-text-secondary leading-tight sm:max-w-[70%]">{tplDetail.preview_summary || '无特殊预览说明。'}</p>
+                     <div className="flex flex-wrap items-center gap-1.5 bg-white/5 p-1 rounded-lg border border-white/5 sm:shrink-0">
                         <Chip size="sm" variant="flat" classNames={{ base: "bg-transparent border-0 h-4", content: "text-[10px] font-mono font-black border-r border-white/10 pr-2 mr-0.5" }}>{getPortModeLabel(portMode)}</Chip>
                         {httpProbe && <div className="w-1.5 h-1.5 rounded-full bg-apple-green animate-pulse" title="HomePage Probe Mode On" />}
+                        {tplDetail.supports_vul_scan && <Chip size="sm" variant="flat" classNames={{ base: "bg-transparent border-0 h-4", content: "text-[10px] font-black pl-1" }}>等级: {vulScanSeveritySummary}</Chip>}
                      </div>
                    </div>
                  )}
@@ -285,13 +328,14 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="flat" onPress={onClose} className="rounded-xl px-6 font-bold text-apple-text-secondary">
+            <Button variant="flat" onPress={onClose} className="w-full rounded-xl px-6 font-bold text-apple-text-secondary sm:w-auto">
               取消
             </Button>
             <Button
               color="primary"
-              className="rounded-xl px-10 font-black shadow-lg shadow-apple-blue/20"
+              className="w-full rounded-xl px-10 font-black shadow-lg shadow-apple-blue/20 sm:w-auto"
               isLoading={createTask.isPending}
+              isDisabled={Boolean(tplDetail?.supports_vul_scan && vulScanSeverity.length === 0)}
               onPress={handleSubmit}
             >
               发起任务
