@@ -1,6 +1,6 @@
 import type { TaskDetailVM } from '@/api/adapters/task'
 import { getActiveGroupLabel, getBlockedReasonLabel, getGroupStateInfo, isTerminalTaskStatus, getAttackRouteLabel, getTemplateCodeLabel } from '@/api/adapters/task'
-import { useTaskRoutes, getRouteLabel } from '@/api/adapters/route'
+import { useTaskRoutes, getRouteLabel, getRouteActiveLabel } from '@/api/adapters/route'
 import { getPortModeLabel } from '@/api/adapters/template'
 
 function formatDateTime(isoStr?: string) {
@@ -8,25 +8,52 @@ function formatDateTime(isoStr?: string) {
   return new Date(isoStr).toLocaleString()
 }
 
+function formatTimeOnly(isoStr?: string) {
+  const text = formatDateTime(isoStr)
+  return text === '-' ? '-' : text.split(' ')[1] || text
+}
+
+function toDisplayState(state: string, isTerminal: boolean) {
+  if (isTerminal && (state === 'active' || state === 'blocked' || state === 'pending')) {
+    return 'completed'
+  }
+  return state
+}
+
+function isEnabledFlag(raw?: string) {
+  return ['1', 'true', 'yes', 'on'].includes((raw || '').toLowerCase())
+}
+
+function isVulScanRoute(routeCode: string) {
+  return ['vul_scan.site', 'vuln_scan.nuclei', 'vuln_scan', 'vul_scan'].includes(routeCode)
+}
+
 export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
   const { data: routes } = useTaskRoutes()
 
   const isTerminal = isTerminalTaskStatus(task.status)
+  const showRuntimePanel = Boolean(task.active_route_code || task.route_progress.length > 0 || task.active_group || task.group_progress.length > 0)
+  const activeRouteRunningLabel = task.active_route_code ? getRouteActiveLabel(routes, task.active_route_code) : ''
+  const hasVulScan = task.route_plan.some(isVulScanRoute)
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-      {/* ── 编排状态总览 ── */}
-      {(task.active_group || task.group_progress.length > 0) && (
+      {showRuntimePanel && (
         <div className={`${isTerminal ? 'bg-white/[0.02] border-white/5' : 'bg-apple-blue/[0.03] border-apple-blue/10'} border p-6 rounded-2xl flex flex-col gap-5 animate-in fade-in duration-500`}>
           <h3 className={`text-sm font-bold ${isTerminal ? 'text-white border-white/10' : 'text-apple-blue-light border-apple-blue/10'} border-b pb-2 flex items-center gap-2`}>
             {!isTerminal && <span className="w-2 h-2 rounded-full bg-apple-blue animate-pulse" />}
-            阶段编排状态 (Orchestration State)
+            运行编排状态 (Runtime Orchestration)
           </h3>
+
           {!isTerminal && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-5 gap-x-8 text-sm">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-5 gap-x-8 text-sm">
+              <div>
+                <span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">当前活动路由</span>
+                <span className="text-apple-blue-light font-bold text-base">{activeRouteRunningLabel || '-'}</span>
+              </div>
               <div>
                 <span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">当前活动阶段组</span>
-                <span className="text-apple-blue-light font-bold text-base">{getActiveGroupLabel(task.active_group) || '-'}</span>
+                <span className="text-apple-text-secondary font-bold text-base">{getActiveGroupLabel(task.active_group) || '-'}</span>
               </div>
               {task.blocked_reason && (
                 <div>
@@ -34,7 +61,7 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
                   <span className="text-apple-amber font-bold">{getBlockedReasonLabel(task.blocked_reason)}</span>
                 </div>
               )}
-              {task.active_attack_route && (
+              {task.active_attack_route && task.active_attack_route !== task.active_route_code && (
                 <div>
                   <span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">当前攻击路由</span>
                   <span className="text-apple-text-secondary font-mono text-xs bg-white/5 px-2 py-0.5 rounded border border-white/10">{getAttackRouteLabel(task.active_attack_route)}</span>
@@ -43,13 +70,50 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
             </div>
           )}
 
-          {/* 阶段组执行状态时间线 */}
+          {task.route_progress.length > 0 && (
+            <div className="mt-2">
+              <span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-3">路由推进 (Route Progress)</span>
+              <div className="flex items-center gap-0 overflow-x-auto pb-1">
+                {task.route_progress.map((rp, idx) => {
+                  const displayState = toDisplayState(rp.state, isTerminal)
+                  const stateInfo = getGroupStateInfo(displayState)
+                  const routeLabel = getRouteLabel(routes, rp.route_code)
+                  return (
+                    <div key={`${rp.route_code}-${idx}`} className="flex items-center">
+                      <div className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border transition-all min-w-[140px] ${
+                        displayState === 'active' ? 'bg-apple-blue/10 border-apple-blue/30 shadow-md shadow-apple-blue/10' :
+                        displayState === 'completed' ? 'bg-apple-green/10 border-apple-green/20' :
+                        displayState === 'blocked' ? 'bg-apple-amber/10 border-apple-amber/20' :
+                        'bg-white/[0.02] border-white/5'
+                      }`}>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-apple-text-tertiary">{routeLabel}</span>
+                        <span className={`text-[11px] font-bold ${
+                          stateInfo.color === 'primary' ? 'text-apple-blue-light' :
+                          stateInfo.color === 'success' ? 'text-apple-green-light' :
+                          stateInfo.color === 'warning' ? 'text-apple-amber' :
+                          'text-apple-text-secondary'
+                        }`}>{stateInfo.label}</span>
+                        {!isTerminal && rp.route_code === task.active_route_code && (
+                          <span className="text-[9px] text-apple-blue-light font-black">当前路由</span>
+                        )}
+                        <span className="text-[9px] text-apple-text-tertiary font-mono">{formatTimeOnly(rp.completed_at || rp.seeded_at)}</span>
+                      </div>
+                      {idx < task.route_progress.length - 1 && (
+                        <div className="w-6 h-[2px] bg-white/10 shrink-0" />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {task.group_progress.length > 0 && (
             <div className="mt-2">
-              <span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-3">阶段组执行进度 (Group Progress)</span>
+              <span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-3">阶段组概览 (Group Overview)</span>
               <div className="flex items-center gap-0 overflow-x-auto">
                 {task.group_progress.map((gp, idx) => {
-                  const displayState = isTerminal && (gp.state === 'active' || gp.state === 'blocked' || gp.state === 'pending') ? 'completed' : gp.state
+                  const displayState = toDisplayState(gp.state, isTerminal)
                   const stateInfo = getGroupStateInfo(displayState)
                   return (
                     <div key={gp.group_code} className="flex items-center">
@@ -66,7 +130,7 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
                           stateInfo.color === 'warning' ? 'text-apple-amber' :
                           'text-apple-text-secondary'
                         }`}>{stateInfo.label}</span>
-                        {gp.seeded_at && <span className="text-[9px] text-apple-text-tertiary font-mono">{formatDateTime(gp.seeded_at).split(' ')[1]}</span>}
+                        <span className="text-[9px] text-apple-text-tertiary font-mono">{formatTimeOnly(gp.completed_at || gp.seeded_at)}</span>
                       </div>
                       {idx < task.group_progress.length - 1 && (
                         <div className="w-6 h-[2px] bg-white/10 shrink-0" />
@@ -80,7 +144,6 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
         </div>
       )}
 
-      {/* ── 路由计划 ── */}
       {task.route_plan.length > 0 && (
         <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex flex-col gap-4 animate-in fade-in duration-500 delay-75 fill-mode-both">
           <h3 className="text-sm font-bold text-white border-b border-white/5 pb-2">执行路线计划 (Route Plan)</h3>
@@ -95,7 +158,6 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
         </div>
       )}
 
-      {/* ── 下发参数 ── */}
       <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex flex-col gap-4">
         <h3 className="text-sm font-bold text-white border-b border-white/5 pb-2">下发参数与调度核心要素 (Scheduling Metadata)</h3>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-8 text-sm pt-4">
@@ -113,11 +175,10 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
                 {task.status || 'DRAFT'}
               </span>
            </div>
-           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">阶段挂载参数覆盖</span> <span className="text-apple-text-secondary">{Object.keys(task.stage_overrides || {}).length > 0 ? "已自定义传参干预" : "遵循主控中心默认编排"}</span></div>
+           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">阶段挂载参数覆盖</span> <span className="text-apple-text-secondary">{Object.keys(task.stage_overrides || {}).length > 0 ? '已自定义传参干预' : '遵循主控中心默认编排'}</span></div>
         </div>
       </div>
 
-      {/* ── 核心执行参数 ── */}
       <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex flex-col gap-4 animate-in fade-in duration-500 delay-100 fill-mode-both">
         <h3 className="text-sm font-bold text-white border-b border-white/5 pb-2">核心执行参数 (Runtime Configuration)</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-8 text-sm pt-4">
@@ -125,14 +186,21 @@ export function TaskOverviewTab({ task }: { task: TaskDetailVM }) {
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">发包速率</span> <span className="text-apple-text-secondary font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">{task.params?.rate || '-'}</span></div>
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">端口扫描超时</span> <span className="text-apple-text-secondary">{task.params?.timeout_ms ? `${task.params.timeout_ms} ms` : '-'}</span></div>
            <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">端口配置偏好</span> <span className="text-apple-text-secondary">{getPortModeLabel(task.params?.port_profile || task.params?.port_scan_mode || '')}</span></div>
-           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">首页识别探针</span> <span className="text-[12px]">{task.params?.http_probe_enabled ? <span className="text-apple-green-light font-bold">开启 (ON)</span> : <span className="text-apple-text-tertiary">关闭 (OFF)</span>}</span></div>
-           {task.params?.http_probe_enabled && task.params?.http_timeout_sec && (
+           <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">首页识别探针</span> <span className="text-[12px]">{isEnabledFlag(task.params?.http_probe_enabled) ? <span className="text-apple-green-light font-bold">开启 (ON)</span> : <span className="text-apple-text-tertiary">关闭 (OFF)</span>}</span></div>
+           {isEnabledFlag(task.params?.http_probe_enabled) && task.params?.http_timeout_sec && (
              <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">HTTP 探针超时</span> <span className="text-apple-text-secondary font-mono">{task.params.http_timeout_sec} sec</span></div>
+           )}
+           {hasVulScan && (
+             <>
+               <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">漏洞扫描模式</span> <span className="text-apple-text-secondary font-bold">全量扫描</span></div>
+               <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">漏洞速率限制</span> <span className="text-apple-text-secondary font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">{task.params?.vul_scan_rate_limit || '-'}</span></div>
+               <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">漏洞并发数</span> <span className="text-apple-text-secondary font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">{task.params?.vul_scan_concurrency || '-'}</span></div>
+               <div><span className="text-[10px] text-apple-text-tertiary uppercase tracking-widest font-black block mb-1">漏洞超时</span> <span className="text-apple-text-secondary font-mono bg-white/5 px-2 py-0.5 rounded border border-white/10">{task.params?.vul_scan_timeout_seconds ? `${task.params.vul_scan_timeout_seconds} sec` : '-'}</span></div>
+             </>
            )}
         </div>
       </div>
 
-      {/* ── 生命周期 ── */}
       <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex flex-col gap-4 animate-in fade-in duration-500 delay-200 fill-mode-both">
         <h3 className="text-sm font-bold text-white border-b border-white/5 pb-2">生命周期及底层环境数据包 (Lifecycle Info)</h3>
         <div className="grid grid-cols-2 gap-y-6 text-sm pt-4">

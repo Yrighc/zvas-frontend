@@ -124,14 +124,32 @@ export function resolveTaskRouteMeta(
 
 /** 获取阶段/类型的中文 label，兜底返回原始字符串 */
 export function getRouteLabel(routes: TaskRouteMeta[] | undefined, stageOrType: string): string {
-  if (!routes || !stageOrType) return stageOrType || '未知'
-  if (stageOrType === 'vuln_scan.nuclei' || stageOrType === 'vuln_scan') return '漏洞扫描'
-  
+  if (!stageOrType) return '未知'
+
+  const fallbackLabels: Record<string, string> = {
+    port_scan: '端口扫描',
+    'http_probe.homepage': '首页识别',
+    web_fingerprint: '站点指纹',
+    'vul_scan.site': '漏洞扫描',
+    'vuln_scan.nuclei': '漏洞扫描',
+    vuln_scan: '漏洞扫描',
+    vul_scan: '漏洞扫描',
+  }
+  if (fallbackLabels[stageOrType]) return fallbackLabels[stageOrType]
+  if (!routes) return stageOrType
+
   const hit =
+    routes.find(r => r.routeCode === stageOrType) ||
     routes.find(r => r.taskType === stageOrType) ||
     routes.find(r => r.stage === stageOrType) ||
     routes.find(r => r.key === stageOrType)
   return hit?.label || stageOrType
+}
+
+export function getRouteActiveLabel(routes: TaskRouteMeta[] | undefined, routeCode: string): string {
+  const label = getRouteLabel(routes, routeCode)
+  if (!label || label === '未知') return ''
+  return label.endsWith('中') ? label : `${label}中`
 }
 
 /** 获取阶段描述 */

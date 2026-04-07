@@ -61,9 +61,11 @@ export interface TaskListItemVM {
   desired_state: string
   // Task-025 新增：编排调度字段
   route_plan: string[]
+  active_route_code: string
   active_group: string
   blocked_reason: string
   active_attack_route: string
+  route_progress: RouteProgressVM[]
   group_progress: GroupProgressVM[]
 }
 
@@ -71,6 +73,16 @@ export interface TaskListItemVM {
 export interface GroupProgressVM {
   group_code: string
   state: string   // pending | active | completed | blocked
+  seeded_at: string
+  completed_at: string
+  blocked_reason: string
+}
+
+/** 路由级执行进度 */
+export interface RouteProgressVM {
+  route_code: string
+  group_code: string
+  state: string
   seeded_at: string
   completed_at: string
   blocked_reason: string
@@ -103,9 +115,11 @@ export interface TaskProgressVM {
   updated_at: string
   stages: TaskProgressStageVM[]
   // Task-025 新增
+  active_route_code: string
   active_group: string
   blocked_reason: string
   active_attack_route: string
+  route_progress: RouteProgressVM[]
   group_progress: GroupProgressVM[]
 }
 
@@ -156,6 +170,17 @@ function mapGroupProgress(arr: any[]): GroupProgressVM[] {
   }))
 }
 
+function mapRouteProgress(arr: any[]): RouteProgressVM[] {
+  return (arr || []).map((item: any) => ({
+    route_code: item.route_code || '',
+    group_code: item.group_code || '',
+    state: item.state || 'pending',
+    seeded_at: item.seeded_at || '',
+    completed_at: item.completed_at || '',
+    blocked_reason: item.blocked_reason || '',
+  }))
+}
+
 function mapToTaskListItemVM(dto: any): TaskListItemVM {
   return {
     id: dto.id || dto.task_id || '',
@@ -175,9 +200,11 @@ function mapToTaskListItemVM(dto: any): TaskListItemVM {
     stage_overrides: dto.stage_overrides || {},
     desired_state: dto.desired_state || 'running',
     route_plan: dto.route_plan || [],
+    active_route_code: dto.active_route_code || '',
     active_group: dto.active_group || '',
     blocked_reason: dto.blocked_reason || '',
     active_attack_route: dto.active_attack_route || '',
+    route_progress: mapRouteProgress(dto.route_progress),
     group_progress: mapGroupProgress(dto.group_progress),
   }
 }
@@ -210,9 +237,11 @@ function mapToTaskProgressVM(dto: any): TaskProgressVM {
       failed: stage.failed ?? 0,
       pending: Boolean(stage.pending),
     })),
+    active_route_code: dto.active_route_code || '',
     active_group: dto.active_group || '',
     blocked_reason: dto.blocked_reason || '',
     active_attack_route: dto.active_attack_route || '',
+    route_progress: mapRouteProgress(dto.route_progress),
     group_progress: mapGroupProgress(dto.group_progress),
   }
 }
@@ -321,7 +350,7 @@ export function getBlockedReasonLabel(reason: string): string {
 
 /** Task-030 专用：映射具体阶段内的特有插件实现路由，抹去第三方品牌和底层配置 */
 export function getAttackRouteLabel(route: string): string {
-  if (route === 'vuln_scan.nuclei' || route === 'vuln_scan') return '漏洞扫描'
+  if (route === 'vuln_scan.nuclei' || route === 'vuln_scan' || route === 'vul_scan.site') return '漏洞扫描'
   return route || ''
 }
 
@@ -474,7 +503,9 @@ export interface CreateTaskResponseVM {
   target_set_id?: string
   // Task-025: 编排字段透传
   route_plan: string[]
+  active_route_code: string
   active_group: string
+  route_progress: RouteProgressVM[]
   group_progress: GroupProgressVM[]
 }
 
@@ -489,7 +520,9 @@ export function useCreateTask() {
         asset_pool_id: d.asset_pool?.id || d.asset_pool_id || req.asset_pool_id || '',
         target_set_id: d.target_set?.id || d.target_set_id,
         route_plan: task.route_plan || [],
+        active_route_code: task.active_route_code || '',
         active_group: task.active_group || '',
+        route_progress: mapRouteProgress(task.route_progress),
         group_progress: mapGroupProgress(task.group_progress),
       }
     },

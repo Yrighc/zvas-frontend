@@ -356,6 +356,7 @@ export interface TaskSummaryView {
   target_set_id: string
   status: string
   stage_plan: string[]
+  route_plan: string[]
   created_by: string
   created_at: string
   updated_at: string
@@ -363,8 +364,11 @@ export interface TaskSummaryView {
   finished_at?: string
   desired_state: string
   // Task-025 新增
+  active_route_code: string
   active_group: string
   blocked_reason: string
+  active_attack_route: string
+  route_progress: { route_code: string; group_code: string; state: string; seeded_at: string; completed_at: string; blocked_reason: string }[]
 }
 
 export interface FindingSummaryView {
@@ -389,14 +393,25 @@ function mapToTaskSummaryView(dto: any): TaskSummaryView {
     target_set_id: dto.target_set_id || '',
     status: dto.status || 'draft',
     stage_plan: dto.stage_plan || [],
+    route_plan: dto.route_plan || [],
     created_by: dto.created_by || '',
     created_at: dto.created_at || '',
     updated_at: dto.updated_at || dto.created_at || '',
     started_at: dto.started_at || '',
     finished_at: dto.finished_at || '',
     desired_state: dto.desired_state || 'running',
+    active_route_code: dto.active_route_code || '',
     active_group: dto.active_group || '',
     blocked_reason: dto.blocked_reason || '',
+    active_attack_route: dto.active_attack_route || '',
+    route_progress: (dto.route_progress || []).map((item: any) => ({
+      route_code: item.route_code || '',
+      group_code: item.group_code || '',
+      state: item.state || 'pending',
+      seeded_at: item.seeded_at || '',
+      completed_at: item.completed_at || '',
+      blocked_reason: item.blocked_reason || '',
+    })),
   }
 }
 

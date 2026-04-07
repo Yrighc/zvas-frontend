@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Chip, Pagination, Skeleton } from '@heroui/react'
-import { 
-  RocketLaunchIcon, 
-  BoltIcon, 
-  ArrowPathIcon
+import {
+  RocketLaunchIcon,
+  BoltIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
 
 import { CreateTaskFromPoolModal } from '@/components/assets/CreateTaskFromPoolModal'
 import { useAssetPoolTasks } from '@/api/adapters/asset'
-import { usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel, getTemplateCodeLabel } from '@/api/adapters/task'
-import { useTaskRoutes, mapStageLabels } from '@/api/adapters/route'
+import { usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, getTemplateCodeLabel, isTerminalTaskStatus } from '@/api/adapters/task'
+import { useTaskRoutes, mapStageLabels, getRouteActiveLabel } from '@/api/adapters/route'
 
 function formatTime(value?: string): string {
   if (!value) return '-'
@@ -35,8 +35,6 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
   const pauseTask = usePauseTask()
   const resumeTask = useResumeTask()
   const stopTask = useStopTask()
-
-  // 统一路由配置（stage 翻译）
   const { data: routes } = useTaskRoutes()
 
   const items = data?.data || []
@@ -124,7 +122,10 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
             <div className="flex flex-col">
               {items.map((item) => {
                 const statusInfo = getTaskStatusInfo(item.status, item.desired_state)
-                
+                const isTerminal = isTerminalTaskStatus(item.status)
+                const activeRouteLabel = item.active_route_code ? getRouteActiveLabel(routes, item.active_route_code) : ''
+                const planLabels = mapStageLabels(routes, item.route_plan.length > 0 ? item.route_plan : item.stage_plan)
+
                 return (
                   <div
                     key={item.id}
@@ -139,22 +140,27 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                       <span className="text-[11px] font-mono text-apple-text-secondary truncate">TPL_{getTemplateCodeLabel(item.template_code)}</span>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <Chip size="sm" variant="flat" color={statusInfo.color} classNames={{ base: "border-0 font-black tracking-[0.1em] uppercase px-1.5 py-0.5 rounded-md" }}>
+                      <Chip size="sm" variant="flat" color={statusInfo.color} classNames={{ base: 'border-0 font-black tracking-[0.1em] uppercase px-1.5 py-0.5 rounded-md' }}>
                         {statusInfo.label}
                       </Chip>
-                      {item.active_group && (
-                        <span className="text-[9px] text-apple-blue-light font-bold pl-0.5">{getActiveGroupLabel(item.active_group)}</span>
+                      {!isTerminal && activeRouteLabel && (
+                        <span className="text-[9px] text-apple-blue-light font-bold pl-0.5">{activeRouteLabel}</span>
+                      )}
+                      {!isTerminal && item.active_group && (
+                        <span className="text-[9px] text-apple-text-tertiary font-bold pl-0.5">{getActiveGroupLabel(item.active_group)}</span>
+                      )}
+                      {!isTerminal && item.blocked_reason && (
+                        <span className="text-[9px] text-apple-amber font-bold pl-0.5">{getBlockedReasonLabel(item.blocked_reason)}</span>
                       )}
                     </div>
-                    <div className="text-[11px] font-bold tracking-widest text-apple-text-secondary uppercase truncate">
-                      {item.stage_plan ? mapStageLabels(routes, item.stage_plan).join(' • ') : '—'}
+                    <div className="text-[11px] font-bold tracking-widest text-apple-text-secondary uppercase truncate" title={planLabels.join(' • ')}>
+                      {planLabels.length > 0 ? planLabels.join(' • ') : '—'}
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[11px] font-semibold text-apple-text-secondary font-mono tracking-tighter uppercase">{formatTime(item.updated_at).split(' ')[0]}</span>
                       <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60">{formatTime(item.updated_at).split(' ')[1]}</span>
                     </div>
                     <div className="flex items-center justify-end gap-1.5">
-                       {/* 交互控制组 */}
                        <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                           {statusInfo.canPause && (
                             <Button isIconOnly size="sm" variant="light" className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(item.id)}>
@@ -172,7 +178,7 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                             </Button>
                           )}
                        </div>
-                      
+
                       <Button
                         size="sm"
                         variant="bordered"
@@ -192,18 +198,18 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
             <div className="flex justify-between items-center px-6 py-5 bg-white/[0.01]">
               <span className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-text-tertiary">合计任务流 <span className="text-white mx-1">{pagination?.total ?? items.length}</span> 项</span>
               {totalPages > 1 && (
-                <Pagination 
-                  size="sm" 
-                  page={page} 
-                  total={totalPages} 
-                  onChange={setPage} 
-                  classNames={{ 
-                    wrapper: "gap-2",
-                    item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]",
-                    cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white",
-                    prev: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
-                    next: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
-                  }} 
+                <Pagination
+                  size="sm"
+                  page={page}
+                  total={totalPages}
+                  onChange={setPage}
+                  classNames={{
+                    wrapper: 'gap-2',
+                    item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]',
+                    cursor: 'bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white',
+                    prev: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
+                    next: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
+                  }}
                 />
               )}
             </div>
