@@ -92,9 +92,9 @@ function formatPlainValue(value: unknown): string {
   return String(value)
 }
 
-function getRawInfoMap(item: TaskRecordVulnerabilityVM): Record<string, any> {
+function getRawInfoMap(item: TaskRecordVulnerabilityVM): Record<string, unknown> {
   const info = item.raw?.info
-  return info && typeof info === 'object' && !Array.isArray(info) ? (info as Record<string, any>) : {}
+  return info && typeof info === 'object' && !Array.isArray(info) ? (info as Record<string, unknown>) : {}
 }
 
 function getMatchedLink(item: TaskRecordVulnerabilityVM): string {

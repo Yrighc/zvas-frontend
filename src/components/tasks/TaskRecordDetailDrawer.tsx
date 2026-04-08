@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import {
   Button,
@@ -419,7 +419,7 @@ function renderHTTPResult(detail: TaskRecordDetailVM) {
   )
 }
 
-function renderSeveritySummary(summary: Record<string, any>) {
+function renderSeveritySummary(summary: Record<string, unknown>) {
   const items = Object.entries(summary || {})
     .map(([severity, count]) => ({ severity, count: Number(count) || 0 }))
     .filter((item) => item.count > 0)
@@ -568,18 +568,15 @@ export function TaskRecordDetailDrawer({ taskId, record, isOpen, onClose }: Prop
   const query = useTaskRecordDetail(taskId, record?.unit_id, isOpen)
   const [portSort, setPortSort] = useState<'port' | 'service'>('port')
   const detail = query.data
-  const sortedPortResults = useMemo(() => {
-    const items = detail?.port_results ? [...detail.port_results] : []
-    items.sort((a, b) => {
-      if (portSort === 'service') {
-        const byService = compareService(a.service || '', b.service || '')
-        if (byService !== 0) return byService
-      }
-      if (a.port !== b.port) return a.port - b.port
-      return compareService(a.service || '', b.service || '')
-    })
-    return items
-  }, [detail?.port_results, portSort])
+  const sortedPortResults = detail?.port_results ? [...detail.port_results] : []
+  sortedPortResults.sort((a, b) => {
+    if (portSort === 'service') {
+      const byService = compareService(a.service || '', b.service || '')
+      if (byService !== 0) return byService
+    }
+    if (a.port !== b.port) return a.port - b.port
+    return compareService(a.service || '', b.service || '')
+  })
 
   if (!record) return null
 
