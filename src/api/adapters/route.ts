@@ -32,7 +32,6 @@ export interface TaskRouteMeta {
   groupOrder: number
   dispatchOrder: number
   seedSource: string
-  downstreamRoutes: string[]
   budgetBucket: string
 }
 
@@ -61,7 +60,6 @@ function mapToMeta(dto: any): TaskRouteMeta {
     groupOrder: dto.group_order ?? 0,
     dispatchOrder: dto.dispatch_order ?? 0,
     seedSource: dto.seed_source || '',
-    downstreamRoutes: dto.downstream_routes || [],
     budgetBucket: dto.budget_bucket || '',
   }
 }
