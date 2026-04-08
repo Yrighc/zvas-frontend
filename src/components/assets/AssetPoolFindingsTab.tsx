@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import { useMemo, useState, type KeyboardEvent } from 'react'
 
 import {
   Button,
@@ -27,7 +27,7 @@ import {
   MagnifyingGlassIcon,
   ShieldExclamationIcon,
 } from '@heroicons/react/24/outline'
-import { useSearchParams } from 'react-router-dom'
+import { type SetURLSearchParams, useSearchParams } from 'react-router-dom'
 
 import { type FindingSummaryView, useAssetPoolFindings } from '@/api/adapters/asset'
 
@@ -133,9 +133,9 @@ function formatPlainValue(value: unknown): string {
   return String(value)
 }
 
-function getRawInfoMap(item: FindingSummaryView): Record<string, any> {
+function getRawInfoMap(item: FindingSummaryView): Record<string, unknown> {
   const info = item.raw?.info
-  return info && typeof info === 'object' && !Array.isArray(info) ? (info as Record<string, any>) : {}
+  return info && typeof info === 'object' && !Array.isArray(info) ? (info as Record<string, unknown>) : {}
 }
 
 function getMatchedLink(item: FindingSummaryView): string {
@@ -315,17 +315,17 @@ function FindingsDrawer({ item, onClose }: { item: FindingSummaryView | null; on
   )
 }
 
-export function AssetPoolFindingsTab({ poolId }: { poolId: string }) {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const urlFilters = useMemo(() => readFiltersFromSearchParams(searchParams), [searchParams])
+type AssetPoolFindingsTabContentProps = {
+  poolId: string
+  searchParams: URLSearchParams
+  setSearchParams: SetURLSearchParams
+  urlFilters: FindingFilterState
+}
+
+function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, urlFilters }: AssetPoolFindingsTabContentProps) {
   const [page, setPage] = useState(1)
   const [draftFilters, setDraftFilters] = useState<FindingFilterState>(urlFilters)
   const [selectedItem, setSelectedItem] = useState<FindingSummaryView | null>(null)
-
-  useEffect(() => {
-    setDraftFilters(urlFilters)
-    setPage(1)
-  }, [urlFilters])
 
   const queryParams = useMemo(() => ({
     page,
@@ -541,5 +541,20 @@ export function AssetPoolFindingsTab({ poolId }: { poolId: string }) {
 
       <FindingsDrawer item={selectedItem} onClose={() => setSelectedItem(null)} />
     </div>
+  )
+}
+
+export function AssetPoolFindingsTab({ poolId }: { poolId: string }) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlFilters = useMemo(() => readFiltersFromSearchParams(searchParams), [searchParams])
+
+  return (
+    <AssetPoolFindingsTabContent
+      key={`${poolId}:${searchParams.toString()}`}
+      poolId={poolId}
+      searchParams={searchParams}
+      setSearchParams={setSearchParams}
+      urlFilters={urlFilters}
+    />
   )
 }
