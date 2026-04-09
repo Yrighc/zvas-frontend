@@ -262,11 +262,8 @@ export function AssetPoolsPage() {
                 return (
                   <TableRow key={pool.id} className="cursor-pointer" onClick={() => navigate(`/assets/${pool.id}`)}>
                     <TableCell>
-                      <div className="flex flex-col gap-0.5 max-w-[200px]">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-bold text-white tracking-tight leading-tight truncate">{pool.name}</span>
-                        </div>
-                        <span className="text-[11px] text-apple-text-tertiary font-mono tracking-tighter uppercase opacity-60">ID:{pool.id.substring(0,8)}</span>
+                      <div className="flex items-center gap-2 max-w-[200px]">
+                        <span className="text-base font-bold text-white tracking-tight leading-tight truncate">{pool.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>

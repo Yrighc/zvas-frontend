@@ -27,7 +27,7 @@ import {
   MagnifyingGlassIcon,
   ShieldExclamationIcon,
 } from '@heroicons/react/24/outline'
-import { type SetURLSearchParams, useSearchParams } from 'react-router-dom'
+import { type SetURLSearchParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { type FindingSummaryView, useAssetPoolFindings } from '@/api/adapters/asset'
 
@@ -323,6 +323,7 @@ type AssetPoolFindingsTabContentProps = {
 }
 
 function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, urlFilters }: AssetPoolFindingsTabContentProps) {
+  const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [draftFilters, setDraftFilters] = useState<FindingFilterState>(urlFilters)
   const [selectedItem, setSelectedItem] = useState<FindingSummaryView | null>(null)
@@ -499,10 +500,18 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
                   </Chip>
                 </TableCell>
                 <TableCell>
-                  <div className="space-y-1">
-                    <div><RenderTextCell value={item.task_id || '-'} limit={28} mono /></div>
-                    <div className="font-mono text-[10px] text-apple-text-tertiary">快照 {truncateText(item.snapshot_id || '-', 26)}</div>
-                  </div>
+                  {item.task_id ? (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      className="h-8 min-w-0 rounded-lg px-3 text-[12px] font-bold text-apple-blue-light hover:bg-apple-blue/10 hover:text-white"
+                      onPress={() => navigate(`/tasks/${item.task_id}`)}
+                    >
+                      查看任务
+                    </Button>
+                  ) : (
+                    <span className="text-apple-text-tertiary">-</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Button size="sm" variant="flat" className="rounded-xl bg-white/6 font-bold text-white hover:bg-white/10" onPress={() => setSelectedItem(item)}>

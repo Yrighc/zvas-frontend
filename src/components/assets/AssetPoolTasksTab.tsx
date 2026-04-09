@@ -132,8 +132,7 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                     className="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1.2fr_130px] gap-4 px-6 py-5 items-center border-b border-white/5 hover:bg-white/[0.03] transition-colors leading-tight"
                   >
                     <div className="flex flex-col gap-1 overflow-hidden font-medium">
-                      <span className="font-bold text-[14px] text-white truncate tracking-tight">{item.name || item.id}</span>
-                      <span className="text-[11px] font-mono text-apple-text-secondary truncate">{item.id}</span>
+                      <span className="font-bold text-[14px] text-white truncate tracking-tight">{item.name || '未命名任务'}</span>
                     </div>
                     <div className="flex flex-col gap-1 overflow-hidden font-medium">
                       <span className="text-[13px] font-bold text-white truncate">{item.template_name || getTemplateCodeLabel(item.template_code)}</span>

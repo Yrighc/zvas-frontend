@@ -95,7 +95,6 @@ export function AssetPoolReportsTab({ poolId }: { poolId: string }) {
               <TableRow key={it.id}>
                 <TableCell>
                   <span className="font-bold text-[14px] text-white tracking-tight leading-tight block truncate">{it.name}</span>
-                  <span className="text-[10px] text-apple-text-tertiary font-mono">{it.id}</span>
                 </TableCell>
                 <TableCell>
                   <span className="text-[10px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{it.scope_type}</span>

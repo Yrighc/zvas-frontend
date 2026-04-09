@@ -55,12 +55,6 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                 return (
                     <span className="text-apple-text-secondary text-[13px]">{log.resource_type || "N/A"}</span>
                 );
-            case "resource_id":
-                return (
-                    <span className="font-mono text-[12px] text-apple-text-primary truncate max-w-[120px] block" title={log.resource_id}>
-                        {log.resource_id || "-"}
-                    </span>
-                );
             case "risk_level":
                 return (
                     <Chip
@@ -127,14 +121,14 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
 
     return (
         <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default">
-            <Table
-                aria-label="审计日志表格"
-                layout="fixed"
-                removeWrapper
-                isHeaderSticky
-                classNames={{
-                    base: "p-4 overflow-x-auto custom-scrollbar",
-                    table: "min-w-[1200px] table-fixed",
+                <Table
+                    aria-label="审计日志表格"
+                    layout="fixed"
+                    removeWrapper
+                    isHeaderSticky
+                    classNames={{
+                        base: "p-4 overflow-x-auto custom-scrollbar",
+                        table: "min-w-[1080px] table-fixed",
                     thead: "[&>tr]:first:rounded-xl",
                     th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
                     tr: "hover:bg-white/[0.03] transition-colors cursor-default",
@@ -146,10 +140,9 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                     <TableColumn key="actor" width={140} align="start">操作人</TableColumn>
                     <TableColumn key="action" width={200} align="start">行为</TableColumn>
                     <TableColumn key="resource_type" width={110} align="start">资产类型</TableColumn>
-                    <TableColumn key="resource_id" width={150} align="start">资产 ID</TableColumn>
                     <TableColumn key="risk_level" width={100} align="start">风险</TableColumn>
                     <TableColumn key="result" width={80} align="start">结果</TableColumn>
-                    <TableColumn key="trace_id" width={120} align="start">溯源码</TableColumn>
+                    <TableColumn key="trace_id" width={110} align="start">溯源码</TableColumn>
                     <TableColumn key="actions" width={50} align="end"> </TableColumn>
                 </TableHeader>
                 <TableBody

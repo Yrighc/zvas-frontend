@@ -113,10 +113,7 @@ export function ReportsPage() {
                 {items.map((rpt) => (
                   <TableRow key={rpt.id}>
                     <TableCell>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-bold text-white tracking-tight truncate block">{rpt.name}</span>
-                        <span className="text-[11px] text-apple-text-tertiary font-mono tracking-tighter uppercase opacity-60">ID:{rpt.id.substring(0,8)}</span>
-                      </div>
+                      <span className="text-sm font-bold text-white tracking-tight truncate block">{rpt.name}</span>
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-apple-text-secondary text-[10px] font-black uppercase tracking-wider">

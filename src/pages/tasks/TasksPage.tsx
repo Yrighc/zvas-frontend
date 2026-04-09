@@ -161,19 +161,13 @@ export function TasksPage() {
               return (
                 <TableRow key={rowKey}>
                   <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis block tracking-tight">{task.name || 'Untitled Task'}</span>
-                      <span className="text-[10px] font-mono text-apple-text-tertiary uppercase opacity-50">ID:{task.id.substring(0, 8)}</span>
-                    </div>
+                    <span className="text-sm font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis block tracking-tight">{task.name || 'Untitled Task'}</span>
                   </TableCell>
                   <TableCell>
                     <span className="text-[10px] bg-white/10 border border-white/10 text-apple-text-secondary px-2 py-0.5 rounded font-black font-mono uppercase tracking-widest leading-none">{getTemplateCodeLabel(task.template_code)}</span>
                   </TableCell>
                   <TableCell>
-                    <div className="text-xs text-apple-text-secondary flex flex-col gap-1">
-                      <span className="text-white font-bold truncate tracking-tight" title={task.asset_pool_name}>{task.asset_pool_name || '-'}</span>
-                      <span className="font-mono text-[9px] opacity-40 truncate">REF_{task.target_set_id?.substring(0, 8)}</span>
-                    </div>
+                    <span className="text-xs text-white font-bold truncate tracking-tight block" title={task.asset_pool_name}>{task.asset_pool_name || '-'}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
