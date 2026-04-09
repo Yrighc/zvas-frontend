@@ -494,7 +494,7 @@ export function useImportAssetPoolInputs() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: ImportInputsPayload }) => {
-      const res = await httpClient.post(`/asset-pools/${id}/inputs:import`, payload)
+      const res = await httpClient.post(`/asset-pools/${id}/inputs/import`, payload)
       return res.data
     },
     onSuccess: (_, vars) => {
