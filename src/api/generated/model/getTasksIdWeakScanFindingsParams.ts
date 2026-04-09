@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type GetAssetPoolsIdFindingsParams = {
+export type GetTasksIdWeakScanFindingsParams = {
 /**
  * 页码
  */
@@ -16,31 +16,23 @@ page?: number;
  */
 page_size?: number;
 /**
- * 按 URL 或命中链接筛选
+ * 按任务单元筛选
+ */
+unit_id?: string;
+/**
+ * 按目标 URL 筛选
  */
 url?: string;
 /**
- * 按 POC ID / 模板 ID 筛选
+ * 按规则 ID / 远端漏洞 ID 筛选
  */
-poc_id?: string;
+rule_id?: string;
 /**
  * 按级别筛选 low|medium|high|critical|info
  */
 severity?: string;
 /**
- * 状态
+ * 按远端状态筛选
  */
 status?: string;
-/**
- * 关键字
- */
-keyword?: string;
-/**
- * 排序字段
- */
-sort?: string;
-/**
- * 排序方向
- */
-order?: string;
 };

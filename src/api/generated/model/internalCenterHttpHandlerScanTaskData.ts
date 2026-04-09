@@ -8,10 +8,12 @@
 import type { InternalCenterHttpHandlerScanTaskDataParams } from './internalCenterHttpHandlerScanTaskDataParams';
 import type { InternalCenterHttpHandlerScanTaskDataStageOverrides } from './internalCenterHttpHandlerScanTaskDataStageOverrides';
 import type { InternalCenterHttpHandlerTaskGroupProgressData } from './internalCenterHttpHandlerTaskGroupProgressData';
+import type { InternalCenterHttpHandlerTaskRouteProgressData } from './internalCenterHttpHandlerTaskRouteProgressData';
 
 export interface InternalCenterHttpHandlerScanTaskData {
   active_attack_route?: string;
   active_group?: string;
+  active_route_code?: string;
   asset_pool_id?: string;
   blocked_reason?: string;
   created_at?: string;
@@ -23,6 +25,7 @@ export interface InternalCenterHttpHandlerScanTaskData {
   name?: string;
   params?: InternalCenterHttpHandlerScanTaskDataParams;
   route_plan?: string[];
+  route_progress?: InternalCenterHttpHandlerTaskRouteProgressData[];
   stage_overrides?: InternalCenterHttpHandlerScanTaskDataStageOverrides;
   stage_plan?: string[];
   started_at?: string;

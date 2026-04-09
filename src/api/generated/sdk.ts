@@ -32,8 +32,10 @@ import type {
   GetAssetPoolsIdTasksParams,
   GetAssetPoolsParams,
   GetAuditsParams,
+  GetTasksIdFindingsParams,
   GetTasksIdRecordsParams,
   GetTasksIdSnapshotAssetsParams,
+  GetTasksIdWeakScanFindingsParams,
   GetTasksParams,
   GetUsersParams,
   InternalCenterHttpHandlerAssetObservationListResponse,
@@ -72,8 +74,10 @@ import type {
   InternalCenterHttpHandlerTaskControlStateResponse,
   InternalCenterHttpHandlerTaskCreateResponse,
   InternalCenterHttpHandlerTaskDetailResponse,
+  InternalCenterHttpHandlerTaskFindingListResponse,
   InternalCenterHttpHandlerTaskListResponse,
   InternalCenterHttpHandlerTaskProgressResponse,
+  InternalCenterHttpHandlerTaskRecordDetailResponse,
   InternalCenterHttpHandlerTaskRecordListResponse,
   InternalCenterHttpHandlerTaskRouteListResponse,
   InternalCenterHttpHandlerTaskRunResponse,
@@ -81,6 +85,8 @@ import type {
   InternalCenterHttpHandlerTaskSnapshotAssetListResponse,
   InternalCenterHttpHandlerTaskTemplateItemResponse,
   InternalCenterHttpHandlerTaskTemplateListResponse,
+  InternalCenterHttpHandlerTaskWeakScanFindingDetailResponse,
+  InternalCenterHttpHandlerTaskWeakScanFindingListResponse,
   InternalCenterHttpHandlerUpdateAssetPoolRequest,
   InternalCenterHttpHandlerUpdateUserRolesRequest,
   InternalCenterHttpHandlerUpdateUserStatusRequest,
@@ -3972,6 +3978,144 @@ export function useGetTasksIdControlState<TData = Awaited<ReturnType<typeof getT
 
 
 /**
+ * @summary 查询任务漏洞清单
+ */
+export type getTasksIdFindingsResponse200 = {
+  data: InternalCenterHttpHandlerTaskFindingListResponse
+  status: 200
+}
+
+export type getTasksIdFindingsResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getTasksIdFindingsResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getTasksIdFindingsResponseSuccess = (getTasksIdFindingsResponse200) & {
+  headers: Headers;
+};
+export type getTasksIdFindingsResponseError = (getTasksIdFindingsResponse401 | getTasksIdFindingsResponse403) & {
+  headers: Headers;
+};
+
+export type getTasksIdFindingsResponse = (getTasksIdFindingsResponseSuccess | getTasksIdFindingsResponseError)
+
+export const getGetTasksIdFindingsUrl = (id: string,
+    params?: GetTasksIdFindingsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/tasks/${id}/findings?${stringifiedParams}` : `/tasks/${id}/findings`
+}
+
+export const getTasksIdFindings = async (id: string,
+    params?: GetTasksIdFindingsParams, options?: RequestInit): Promise<getTasksIdFindingsResponse> => {
+  
+  return apiClient<getTasksIdFindingsResponse>(getGetTasksIdFindingsUrl(id,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetTasksIdFindingsQueryKey = (id: string,
+    params?: GetTasksIdFindingsParams,) => {
+    return [
+    `/tasks/${id}/findings`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+    
+export const getGetTasksIdFindingsQueryOptions = <TData = Awaited<ReturnType<typeof getTasksIdFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(id: string,
+    params?: GetTasksIdFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdFindings>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTasksIdFindingsQueryKey(id,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTasksIdFindings>>> = ({ signal }) => getTasksIdFindings(id,params, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTasksIdFindings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTasksIdFindingsQueryResult = NonNullable<Awaited<ReturnType<typeof getTasksIdFindings>>>
+export type GetTasksIdFindingsQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetTasksIdFindings<TData = Awaited<ReturnType<typeof getTasksIdFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params: undefined |  GetTasksIdFindingsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdFindings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdFindings<TData = Awaited<ReturnType<typeof getTasksIdFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdFindings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdFindings<TData = Awaited<ReturnType<typeof getTasksIdFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询任务漏洞清单
+ */
+
+export function useGetTasksIdFindings<TData = Awaited<ReturnType<typeof getTasksIdFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTasksIdFindingsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
  * @summary 暂停任务
  */
 export type postTasksIdPauseResponse200 = {
@@ -4321,6 +4465,137 @@ export function useGetTasksIdRecords<TData = Awaited<ReturnType<typeof getTasksI
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetTasksIdRecordsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
+ * @summary 查询任务扫描记录详情
+ */
+export type getTasksIdRecordsUnitIdResponse200 = {
+  data: InternalCenterHttpHandlerTaskRecordDetailResponse
+  status: 200
+}
+
+export type getTasksIdRecordsUnitIdResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getTasksIdRecordsUnitIdResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getTasksIdRecordsUnitIdResponseSuccess = (getTasksIdRecordsUnitIdResponse200) & {
+  headers: Headers;
+};
+export type getTasksIdRecordsUnitIdResponseError = (getTasksIdRecordsUnitIdResponse401 | getTasksIdRecordsUnitIdResponse403) & {
+  headers: Headers;
+};
+
+export type getTasksIdRecordsUnitIdResponse = (getTasksIdRecordsUnitIdResponseSuccess | getTasksIdRecordsUnitIdResponseError)
+
+export const getGetTasksIdRecordsUnitIdUrl = (id: string,
+    unitId: string,) => {
+
+
+  
+
+  return `/tasks/${id}/records/${unitId}`
+}
+
+export const getTasksIdRecordsUnitId = async (id: string,
+    unitId: string, options?: RequestInit): Promise<getTasksIdRecordsUnitIdResponse> => {
+  
+  return apiClient<getTasksIdRecordsUnitIdResponse>(getGetTasksIdRecordsUnitIdUrl(id,unitId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetTasksIdRecordsUnitIdQueryKey = (id: string,
+    unitId: string,) => {
+    return [
+    `/tasks/${id}/records/${unitId}`
+    ] as const;
+    }
+
+    
+export const getGetTasksIdRecordsUnitIdQueryOptions = <TData = Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(id: string,
+    unitId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTasksIdRecordsUnitIdQueryKey(id,unitId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>> = ({ signal }) => getTasksIdRecordsUnitId(id,unitId, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id && unitId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTasksIdRecordsUnitIdQueryResult = NonNullable<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>>
+export type GetTasksIdRecordsUnitIdQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetTasksIdRecordsUnitId<TData = Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    unitId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdRecordsUnitId<TData = Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    unitId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdRecordsUnitId<TData = Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    unitId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询任务扫描记录详情
+ */
+
+export function useGetTasksIdRecordsUnitId<TData = Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    unitId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdRecordsUnitId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTasksIdRecordsUnitIdQueryOptions(id,unitId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -4902,6 +5177,275 @@ export const usePostTasksIdStop = <TError = ErrorType<InternalCenterHttpHandlerE
       return useMutation(getPostTasksIdStopMutationOptions(options), queryClient);
     }
     
+/**
+ * @summary 查询任务弱点扫描结果
+ */
+export type getTasksIdWeakScanFindingsResponse200 = {
+  data: InternalCenterHttpHandlerTaskWeakScanFindingListResponse
+  status: 200
+}
+
+export type getTasksIdWeakScanFindingsResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getTasksIdWeakScanFindingsResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getTasksIdWeakScanFindingsResponseSuccess = (getTasksIdWeakScanFindingsResponse200) & {
+  headers: Headers;
+};
+export type getTasksIdWeakScanFindingsResponseError = (getTasksIdWeakScanFindingsResponse401 | getTasksIdWeakScanFindingsResponse403) & {
+  headers: Headers;
+};
+
+export type getTasksIdWeakScanFindingsResponse = (getTasksIdWeakScanFindingsResponseSuccess | getTasksIdWeakScanFindingsResponseError)
+
+export const getGetTasksIdWeakScanFindingsUrl = (id: string,
+    params?: GetTasksIdWeakScanFindingsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/tasks/${id}/weak-scan-findings?${stringifiedParams}` : `/tasks/${id}/weak-scan-findings`
+}
+
+export const getTasksIdWeakScanFindings = async (id: string,
+    params?: GetTasksIdWeakScanFindingsParams, options?: RequestInit): Promise<getTasksIdWeakScanFindingsResponse> => {
+  
+  return apiClient<getTasksIdWeakScanFindingsResponse>(getGetTasksIdWeakScanFindingsUrl(id,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetTasksIdWeakScanFindingsQueryKey = (id: string,
+    params?: GetTasksIdWeakScanFindingsParams,) => {
+    return [
+    `/tasks/${id}/weak-scan-findings`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+    
+export const getGetTasksIdWeakScanFindingsQueryOptions = <TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(id: string,
+    params?: GetTasksIdWeakScanFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTasksIdWeakScanFindingsQueryKey(id,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>> = ({ signal }) => getTasksIdWeakScanFindings(id,params, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTasksIdWeakScanFindingsQueryResult = NonNullable<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>>
+export type GetTasksIdWeakScanFindingsQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetTasksIdWeakScanFindings<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params: undefined |  GetTasksIdWeakScanFindingsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdWeakScanFindings<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdWeakScanFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdWeakScanFindings<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdWeakScanFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询任务弱点扫描结果
+ */
+
+export function useGetTasksIdWeakScanFindings<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdWeakScanFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTasksIdWeakScanFindingsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
+ * @summary 查询单条弱点扫描结果详情
+ */
+export type getTasksIdWeakScanFindingsFindingIdResponse200 = {
+  data: InternalCenterHttpHandlerTaskWeakScanFindingDetailResponse
+  status: 200
+}
+
+export type getTasksIdWeakScanFindingsFindingIdResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getTasksIdWeakScanFindingsFindingIdResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getTasksIdWeakScanFindingsFindingIdResponseSuccess = (getTasksIdWeakScanFindingsFindingIdResponse200) & {
+  headers: Headers;
+};
+export type getTasksIdWeakScanFindingsFindingIdResponseError = (getTasksIdWeakScanFindingsFindingIdResponse401 | getTasksIdWeakScanFindingsFindingIdResponse403) & {
+  headers: Headers;
+};
+
+export type getTasksIdWeakScanFindingsFindingIdResponse = (getTasksIdWeakScanFindingsFindingIdResponseSuccess | getTasksIdWeakScanFindingsFindingIdResponseError)
+
+export const getGetTasksIdWeakScanFindingsFindingIdUrl = (id: string,
+    findingId: string,) => {
+
+
+  
+
+  return `/tasks/${id}/weak-scan-findings/${findingId}`
+}
+
+export const getTasksIdWeakScanFindingsFindingId = async (id: string,
+    findingId: string, options?: RequestInit): Promise<getTasksIdWeakScanFindingsFindingIdResponse> => {
+  
+  return apiClient<getTasksIdWeakScanFindingsFindingIdResponse>(getGetTasksIdWeakScanFindingsFindingIdUrl(id,findingId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetTasksIdWeakScanFindingsFindingIdQueryKey = (id: string,
+    findingId: string,) => {
+    return [
+    `/tasks/${id}/weak-scan-findings/${findingId}`
+    ] as const;
+    }
+
+    
+export const getGetTasksIdWeakScanFindingsFindingIdQueryOptions = <TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTasksIdWeakScanFindingsFindingIdQueryKey(id,findingId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>> = ({ signal }) => getTasksIdWeakScanFindingsFindingId(id,findingId, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id && findingId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTasksIdWeakScanFindingsFindingIdQueryResult = NonNullable<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>>
+export type GetTasksIdWeakScanFindingsFindingIdQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetTasksIdWeakScanFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdWeakScanFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdWeakScanFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询单条弱点扫描结果详情
+ */
+
+export function useGetTasksIdWeakScanFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdWeakScanFindingsFindingId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTasksIdWeakScanFindingsFindingIdQueryOptions(id,findingId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
 /**
  * @summary 查询用户列表
  */

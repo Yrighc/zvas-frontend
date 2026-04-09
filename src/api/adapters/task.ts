@@ -214,11 +214,49 @@ export interface TaskRecordVulScanSummaryVM {
 export interface TaskRecordWeakScanSummaryVM {
   engine: string
   target_url: string
+  site_asset_id: string
   scan_profile: string
   vulnerability_count: number
   severity_summary: Record<string, any>
   report_ref: string
+  remote_scan_id: string
+  remote_target_id: string
+  remote_profile_id: string
   error: string
+}
+
+export interface TaskWeakScanFindingVM {
+  id: string
+  task_unit_id: string
+  task_id: string
+  target_url: string
+  site_asset_id: string
+  finding_key: string
+  remote_scan_id: string
+  remote_result_id: string
+  remote_vulnerability_id: string
+  rule_id: string
+  rule_name: string
+  severity: string
+  status: string
+  tags: string[]
+  affects_url: string
+  affects_detail: string
+  cvss2: string
+  cvss3: string
+  cvss_score: string
+  description: string
+  impact: string
+  recommendation: string
+  details: string
+  request: string
+  response: string
+  source: string
+  matched_at?: string
+  classification: Record<string, any>
+  evidence: Record<string, any>
+  raw: Record<string, any>
+  updated_at: string
 }
 
 export interface TaskRecordVulnerabilityVM {
@@ -465,10 +503,14 @@ function mapToTaskRecordWeakScanSummary(dto: any, result: Record<string, any>): 
   return {
     engine: summary.engine || 'weak-scan-site',
     target_url: summary.target_url || dto.target_key || '',
+    site_asset_id: summary.site_asset_id || '',
     scan_profile: summary.scan_profile || summary.profile_code || '',
     vulnerability_count: summary.vulnerability_count ?? 0,
     severity_summary: summary.severity_summary || {},
     report_ref: summary.report_ref || summary.report_url || summary.report_id || '',
+    remote_scan_id: summary.remote_scan_id || '',
+    remote_target_id: summary.remote_target_id || '',
+    remote_profile_id: summary.remote_profile_id || '',
     error: summary.error || '',
   }
 }
@@ -695,6 +737,65 @@ export function useTaskFindings(
           classification: item.classification || {},
           evidence: item.evidence || {},
           raw: item.raw || {},
+        })),
+      }
+    },
+    enabled: Boolean(id && enabled),
+    refetchInterval: enabled ? 5000 : false,
+  })
+}
+
+export function useTaskWeakScanFindings(
+  id?: string,
+  params?: {
+    page?: number
+    page_size?: number
+    unit_id?: string
+    url?: string
+    rule_id?: string
+    severity?: string
+    status?: string
+  },
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ['tasks', id, 'weak-scan-findings', params],
+    queryFn: async () => {
+      const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>(`/tasks/${id}/weak-scan-findings`, { params })
+      return {
+        ...res.data,
+        data: (res.data.data || []).map((item: any): TaskWeakScanFindingVM => ({
+          id: item.id || '',
+          task_unit_id: item.task_unit_id || '',
+          task_id: item.task_id || '',
+          target_url: item.target_url || '',
+          site_asset_id: item.site_asset_id || '',
+          finding_key: item.finding_key || '',
+          remote_scan_id: item.remote_scan_id || '',
+          remote_result_id: item.remote_result_id || '',
+          remote_vulnerability_id: item.remote_vulnerability_id || '',
+          rule_id: item.rule_id || '',
+          rule_name: item.rule_name || '',
+          severity: item.severity || '',
+          status: item.status || '',
+          tags: item.tags || [],
+          affects_url: item.affects_url || '',
+          affects_detail: item.affects_detail || '',
+          cvss2: item.cvss2 || '',
+          cvss3: item.cvss3 || '',
+          cvss_score: item.cvss_score || '',
+          description: item.description || '',
+          impact: item.impact || '',
+          recommendation: item.recommendation || '',
+          details: item.details || '',
+          request: item.request || '',
+          response: item.response || '',
+          source: item.source || '',
+          matched_at: item.matched_at || '',
+          classification: item.classification || {},
+          evidence: item.evidence || {},
+          raw: item.raw || {},
+          updated_at: item.updated_at || '',
         })),
       }
     },

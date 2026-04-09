@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type GetAssetPoolsIdFindingsParams = {
+export type GetTasksIdFindingsParams = {
 /**
  * 页码
  */
@@ -27,20 +27,4 @@ poc_id?: string;
  * 按级别筛选 low|medium|high|critical|info
  */
 severity?: string;
-/**
- * 状态
- */
-status?: string;
-/**
- * 关键字
- */
-keyword?: string;
-/**
- * 排序字段
- */
-sort?: string;
-/**
- * 排序方向
- */
-order?: string;
 };

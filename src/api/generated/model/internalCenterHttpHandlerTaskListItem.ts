@@ -6,10 +6,12 @@
  * OpenAPI spec version: 1.0
  */
 import type { InternalCenterHttpHandlerTaskGroupProgressData } from './internalCenterHttpHandlerTaskGroupProgressData';
+import type { InternalCenterHttpHandlerTaskRouteProgressData } from './internalCenterHttpHandlerTaskRouteProgressData';
 
 export interface InternalCenterHttpHandlerTaskListItem {
   active_attack_route?: string;
   active_group?: string;
+  active_route_code?: string;
   asset_pool_id?: string;
   asset_pool_name?: string;
   blocked_reason?: string;
@@ -21,6 +23,7 @@ export interface InternalCenterHttpHandlerTaskListItem {
   id?: string;
   name?: string;
   route_plan?: string[];
+  route_progress?: InternalCenterHttpHandlerTaskRouteProgressData[];
   stage_plan?: string[];
   started_at?: string;
   status?: string;

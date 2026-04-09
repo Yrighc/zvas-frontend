@@ -13,8 +13,8 @@ import {
   Tooltip,
 } from '@heroui/react'
 
-import type { TaskRecordDetailVM, TaskRecordVM, TaskRecordVulnerabilityVM } from '@/api/adapters/task'
-import { useTaskRecordDetail } from '@/api/adapters/task'
+import type { TaskRecordDetailVM, TaskRecordVM, TaskRecordVulnerabilityVM, TaskWeakScanFindingVM } from '@/api/adapters/task'
+import { useTaskRecordDetail, useTaskWeakScanFindings } from '@/api/adapters/task'
 import { getRecordTypeLabel, useTaskRoutes } from '@/api/adapters/route'
 
 interface Props {
@@ -489,6 +489,79 @@ function renderVulnerabilityEvidence(item: TaskRecordVulnerabilityVM) {
   )
 }
 
+function renderWeakScanClassification(item: TaskWeakScanFindingVM) {
+  const rows = [
+    { label: 'CVSS 评分', value: firstNonEmptyText(item.cvss_score, item.classification.cvss_score) },
+    { label: 'CVSS 3', value: firstNonEmptyText(item.cvss3, item.classification.cvss3) },
+    { label: 'CVSS 2', value: firstNonEmptyText(item.cvss2, item.classification.cvss2) },
+    { label: '来源', value: firstNonEmptyText(item.source) },
+  ].filter((row) => row.value)
+
+  if (!rows.length) return null
+
+  return (
+    <section className="space-y-3">
+      <h4 className="text-[11px] font-bold uppercase tracking-[0.24em] text-apple-text-tertiary">弱点分类</h4>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {rows.map((row) => (
+          <DetailPair key={row.label} label={row.label} value={row.value} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function renderWeakScanEvidence(item: TaskWeakScanFindingVM) {
+  const requestText = firstNonEmptyText(item.request, item.evidence.request)
+  const responseText = firstNonEmptyText(item.response, item.evidence.response)
+  const affectsDetail = firstNonEmptyText(item.affects_detail, item.evidence.affects_detail)
+
+  if (!requestText && !responseText && !affectsDetail) {
+    return null
+  }
+
+  return (
+    <section className="space-y-4">
+      <h4 className="text-[11px] font-bold uppercase tracking-[0.24em] text-apple-text-tertiary">命中证据</h4>
+      {affectsDetail && <DetailPair label="命中片段" value={<TruncatedText value={affectsDetail} limit={160} mono />} />}
+      {requestText && <MessageBlock title="弱点请求" content={requestText} copyable collapsible collapseThreshold={1400} />}
+      {responseText && <MessageBlock title="弱点响应" content={responseText} copyable collapsible collapseThreshold={1800} />}
+    </section>
+  )
+}
+
+function renderWeakScanFindingCard(item: TaskWeakScanFindingVM) {
+  return (
+    <div key={item.id || item.finding_key} className="space-y-5 rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <Chip size="sm" variant="flat" color={severityColor(item.severity)}>
+          {item.severity || 'unknown'}
+        </Chip>
+        <Chip size="sm" variant="flat" classNames={{ base: 'border border-white/8 bg-white/[0.04]', content: 'text-[11px] text-white' }}>
+          {item.status || 'unknown'}
+        </Chip>
+        <span className="text-sm font-semibold text-white">{item.rule_name || item.rule_id || '未命名弱点'}</span>
+        {item.rule_id && <code className="font-mono text-[11px] text-apple-text-tertiary">{item.rule_id}</code>}
+      </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <DetailPair label="目标 URL" value={<TruncatedText value={item.target_url} limit={56} mono />} />
+        <DetailPair label="影响地址" value={<TruncatedText value={item.affects_url || item.target_url} limit={56} mono />} />
+        <DetailPair label="命中时间" value={formatDateTime(item.matched_at)} />
+        <DetailPair label="远端扫描 ID" value={<TruncatedText value={item.remote_scan_id} limit={24} mono />} />
+        <DetailPair label="远端结果 ID" value={<TruncatedText value={item.remote_result_id} limit={24} mono />} />
+        <DetailPair label="远端漏洞 ID" value={<TruncatedText value={item.remote_vulnerability_id} limit={24} mono />} />
+        <DetailPair label="Tags" value={renderChipList(item.tags)} />
+        <DetailPair label="风险描述" value={<TruncatedText value={item.description} limit={160} />} />
+        <DetailPair label="修复建议" value={<TruncatedText value={item.recommendation} limit={160} />} />
+      </div>
+      {item.impact && <DetailPair label="影响说明" value={<TruncatedText value={item.impact} limit={220} />} />}
+      {item.details && <DetailPair label="补充细节" value={<TruncatedText value={item.details} limit={220} />} />}
+      {renderWeakScanClassification(item)}
+      {renderWeakScanEvidence(item)}
+    </div>
+  )
+}
+
 function renderVulnerabilityCard(item: TaskRecordVulnerabilityVM) {
   return (
     <div key={item.id || item.vulnerability_key} className="space-y-5 rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
@@ -540,7 +613,7 @@ function renderVulScan(detail: TaskRecordDetailVM) {
   )
 }
 
-function renderWeakScan(detail: TaskRecordDetailVM) {
+function renderWeakScan(detail: TaskRecordDetailVM, findings: TaskWeakScanFindingVM[], findingsPending: boolean, findingsError: boolean) {
   if (!detail.weak_scan_summary) return null
 
   const summary = detail.weak_scan_summary
@@ -554,14 +627,38 @@ function renderWeakScan(detail: TaskRecordDetailVM) {
       <div className="space-y-4 rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           <DetailPair label="目标 URL" value={<TruncatedText value={summary.target_url} limit={48} mono />} />
+          <DetailPair label="资产 ID" value={<TruncatedText value={summary.site_asset_id} limit={24} mono />} />
           <DetailPair label="漏洞数量" value={summary.vulnerability_count} />
           <DetailPair label="扫描策略" value={summary.scan_profile || '-'} />
           <DetailPair label="引擎标识" value={<TruncatedText value={summary.engine} limit={24} mono />} />
           <DetailPair label="报告引用" value={<TruncatedText value={summary.report_ref} limit={48} mono />} />
+          <DetailPair label="远端扫描 ID" value={<TruncatedText value={summary.remote_scan_id} limit={24} mono />} />
+          <DetailPair label="远端目标 ID" value={<TruncatedText value={summary.remote_target_id} limit={24} mono />} />
+          <DetailPair label="远端策略 ID" value={<TruncatedText value={summary.remote_profile_id} limit={24} mono />} />
           <DetailPair label="执行错误" value={summary.error || '-'} />
         </div>
         {renderSeveritySummary(summary.severity_summary)}
       </div>
+      {findingsPending && <Skeleton className="h-48 w-full rounded-[24px] bg-white/5" />}
+      {findingsError && (
+        <div className="rounded-[24px] border border-red-500/20 bg-red-500/5 p-5 text-sm text-red-200">
+          弱点扫描明细加载失败，当前仅展示摘要结果。
+        </div>
+      )}
+      {!findingsPending && !findingsError && findings.length > 0 && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.24em] text-apple-text-tertiary">弱点明细</h4>
+            <p className="text-xs text-apple-text-tertiary">逐条展示 weakScan 采集到的远端弱点详情。</p>
+          </div>
+          {findings.map(renderWeakScanFindingCard)}
+        </div>
+      )}
+      {!findingsPending && !findingsError && findings.length === 0 && summary.vulnerability_count > 0 && (
+        <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5 text-sm text-apple-text-secondary">
+          当前扫描已返回弱点摘要，但详细明细暂未采集到，可稍后刷新重试。
+        </div>
+      )}
     </section>
   )
 }
@@ -592,8 +689,15 @@ function renderFallbackSummary(detail: TaskRecordDetailVM) {
 export function TaskRecordDetailDrawer({ taskId, record, isOpen, onClose }: Props) {
   const { data: routes } = useTaskRoutes()
   const query = useTaskRecordDetail(taskId, record?.unit_id, isOpen)
+  const isWeakScanRecord = Boolean(record && (record.task_type === 'weak_scan' || record.stage === 'weak_scan' || record.route_code === 'weak_scan.site'))
+  const weakScanFindingsQuery = useTaskWeakScanFindings(
+    taskId,
+    { unit_id: record?.unit_id, page: 1, page_size: 100 },
+    Boolean(isOpen && taskId && record?.unit_id && isWeakScanRecord),
+  )
   const [portSort, setPortSort] = useState<'port' | 'service'>('port')
   const detail = query.data
+  const weakScanFindings = weakScanFindingsQuery.data?.data || []
   const sortedPortResults = detail?.port_results ? [...detail.port_results] : []
   sortedPortResults.sort((a, b) => {
     if (portSort === 'service') {
@@ -655,7 +759,7 @@ export function TaskRecordDetailDrawer({ taskId, record, isOpen, onClose }: Prop
                 {hasHTTPDetail && (hasVulDetail || hasWeakDetail) && <Divider className="bg-white/6" />}
                 {renderVulScan(detail)}
                 {hasVulDetail && hasWeakDetail && <Divider className="bg-white/6" />}
-                {renderWeakScan(detail)}
+                {renderWeakScan(detail, weakScanFindings, weakScanFindingsQuery.isPending, weakScanFindingsQuery.isError)}
                 {!hasStructuredResult && renderFallbackSummary(detail)}
               </>
             )}

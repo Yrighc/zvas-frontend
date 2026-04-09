@@ -7,16 +7,19 @@
  */
 import type { InternalCenterHttpHandlerTaskGroupProgressData } from './internalCenterHttpHandlerTaskGroupProgressData';
 import type { InternalCenterHttpHandlerTaskProgressStageData } from './internalCenterHttpHandlerTaskProgressStageData';
+import type { InternalCenterHttpHandlerTaskRouteProgressData } from './internalCenterHttpHandlerTaskRouteProgressData';
 
 export interface InternalCenterHttpHandlerTaskProgressData {
   active_attack_route?: string;
   active_group?: string;
+  active_route_code?: string;
   blocked_reason?: string;
   canceled?: number;
   dispatched?: number;
   failed?: number;
   group_progress?: InternalCenterHttpHandlerTaskGroupProgressData[];
   queued?: number;
+  route_progress?: InternalCenterHttpHandlerTaskRouteProgressData[];
   running?: number;
   stages?: InternalCenterHttpHandlerTaskProgressStageData[];
   succeeded?: number;
