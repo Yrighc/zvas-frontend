@@ -10,7 +10,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeftIcon, EyeIcon, PlayIcon } from '@heroicons/react/24/outline'
 
 import type { TaskDetailVM } from '@/api/adapters/task'
-import { useTaskDetail, useTaskProgress, useRunTask, usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo } from '@/api/adapters/task'
+import { useTaskDetail, useTaskProgress, useTaskRecords, useRunTask, usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo } from '@/api/adapters/task'
 import { TaskOverviewTab } from '@/components/tasks/TaskOverviewTab'
 import { TaskAssetViewTab } from '@/components/tasks/TaskAssetViewTab'
 import { TaskProgressTab } from '@/components/tasks/TaskProgressTab'
@@ -45,6 +45,13 @@ export function TaskDetailPage() {
 
   const detailQuery = useTaskDetail(id)
   const progressQuery = useTaskProgress(id)
+  const weakScanRecordQuery = useTaskRecords(id, {
+    page: 1,
+    page_size: 1,
+    stage: 'weak_scan',
+    sort: 'updated_at',
+    order: 'desc',
+  })
   const runTask = useRunTask()
   const pauseTask = usePauseTask()
   const resumeTask = useResumeTask()
@@ -56,7 +63,10 @@ export function TaskDetailPage() {
   const progress = progressQuery.data
 
   const showFindingsTab = useMemo(() => hasPlan(task, VULN_SCAN_PLANS, VULN_SCAN_TEMPLATES), [task])
-  const showWeakScanTab = useMemo(() => hasPlan(task, WEAK_SCAN_PLANS, WEAK_SCAN_TEMPLATES), [task])
+  const showWeakScanTab = useMemo(() => {
+    const hasRuntimeRecords = Boolean((weakScanRecordQuery.data?.pagination?.total || 0) > 0 || (weakScanRecordQuery.data?.data || []).length > 0)
+    return hasPlan(task, WEAK_SCAN_PLANS, WEAK_SCAN_TEMPLATES) || hasRuntimeRecords
+  }, [task, weakScanRecordQuery.data])
   const visibleTabs = useMemo<TaskDetailTabKey[]>(() => {
     const tabs: TaskDetailTabKey[] = ['overview', 'assets', 'records', 'progress']
     if (showFindingsTab) tabs.push('findings')

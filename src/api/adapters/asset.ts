@@ -246,6 +246,40 @@ export interface FindingSummaryView {
   raw?: Record<string, any>
 }
 
+export interface AssetPoolWeakScanFindingVM {
+  id: string
+  task_unit_id: string
+  task_id: string
+  target_url: string
+  site_asset_id: string
+  finding_key: string
+  remote_scan_id: string
+  remote_result_id: string
+  remote_vulnerability_id: string
+  rule_id: string
+  rule_name: string
+  severity: string
+  status: string
+  tags: string[]
+  affects_url: string
+  affects_detail: string
+  cvss2: string
+  cvss3: string
+  cvss_score: string
+  description: string
+  impact: string
+  recommendation: string
+  details: string
+  request: string
+  response: string
+  source: string
+  matched_at?: string
+  classification: Record<string, any>
+  evidence: Record<string, any>
+  raw: Record<string, any>
+  updated_at: string
+}
+
 function mapToTaskSummaryView(dto: any): TaskSummaryView {
   return {
     id: dto.id || '',
@@ -336,6 +370,62 @@ export function useAssetPoolFindings(
       return {
         ...res.data,
         data: (res.data.data || []).map(mapToFindingSummaryView),
+      }
+    },
+    enabled: Boolean(id),
+  })
+}
+
+export function useAssetPoolWeakScanFindings(
+  id?: string,
+  params?: {
+    page?: number
+    page_size?: number
+    url?: string
+    rule_id?: string
+    severity?: string
+    status?: string
+  },
+) {
+  return useQuery({
+    queryKey: ['asset-pools', id, 'weak-scan-findings', params],
+    queryFn: async () => {
+      const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>(`/asset-pools/${id}/weak-scan-findings`, { params })
+      return {
+        ...res.data,
+        data: (res.data.data || []).map((item: any): AssetPoolWeakScanFindingVM => ({
+          id: item.id || '',
+          task_unit_id: item.task_unit_id || '',
+          task_id: item.task_id || '',
+          target_url: item.target_url || '',
+          site_asset_id: item.site_asset_id || '',
+          finding_key: item.finding_key || '',
+          remote_scan_id: item.remote_scan_id || '',
+          remote_result_id: item.remote_result_id || '',
+          remote_vulnerability_id: item.remote_vulnerability_id || '',
+          rule_id: item.rule_id || '',
+          rule_name: item.rule_name || '',
+          severity: item.severity || '',
+          status: item.status || '',
+          tags: item.tags || [],
+          affects_url: item.affects_url || '',
+          affects_detail: item.affects_detail || '',
+          cvss2: item.cvss2 || '',
+          cvss3: item.cvss3 || '',
+          cvss_score: item.cvss_score || '',
+          description: item.description || '',
+          impact: item.impact || '',
+          recommendation: item.recommendation || '',
+          details: item.details || '',
+          request: item.request || '',
+          response: item.response || '',
+          source: item.source || '',
+          matched_at: item.matched_at || '',
+          classification: item.classification || {},
+          evidence: item.evidence || {},
+          raw: item.raw || {},
+          updated_at: item.updated_at || '',
+        })),
       }
     },
     enabled: Boolean(id),

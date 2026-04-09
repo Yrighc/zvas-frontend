@@ -20,6 +20,7 @@ import { AssetPoolDomainTab } from '@/components/assets/AssetPoolDomainTab'
 import { AssetPoolSiteTab } from '@/components/assets/AssetPoolSiteTab'
 import { AssetPoolTasksTab } from '@/components/assets/AssetPoolTasksTab'
 import { AssetPoolFindingsTab } from '@/components/assets/AssetPoolFindingsTab'
+import { AssetPoolWeakScanFindingsTab } from '@/components/assets/AssetPoolWeakScanFindingsTab'
 import { AssetPoolReportsTab } from '@/components/assets/AssetPoolReportsTab'
 import { CreateTaskFromPoolModal } from '@/components/assets/CreateTaskFromPoolModal'
 import { ManualInputModal } from '@/components/assets/ManualInputModal'
@@ -28,7 +29,7 @@ import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { useUrlTabState } from '@/hooks/useUrlTabState'
 
-const ASSET_POOL_DETAIL_TABS = ['overview', 'inputs', 'ip', 'domain', 'site', 'tasks', 'findings', 'reports'] as const
+const ASSET_POOL_DETAIL_TABS = ['overview', 'inputs', 'ip', 'domain', 'site', 'tasks', 'findings', 'weak_scan', 'reports'] as const
 
 export function AssetPoolDetailPage() {
   const { id } = useParams()
@@ -172,7 +173,8 @@ export function AssetPoolDetailPage() {
           <Tab key="domain" title="域名树" />
           <Tab key="site" title="站点指纹" />
           <Tab key="tasks" title="任务执行" />
-          <Tab key="findings" title="弱点与漏洞" />
+          <Tab key="findings" title="漏洞结果" />
+          <Tab key="weak_scan" title="弱点扫描结果" />
           <Tab key="reports" title="分析报告" />
         </Tabs>
       </div>
@@ -188,6 +190,7 @@ export function AssetPoolDetailPage() {
           {activeTab === 'tasks' && <AssetPoolTasksTab poolId={id!} />}
 
           {activeTab === 'findings' && <AssetPoolFindingsTab poolId={id!} />}
+          {activeTab === 'weak_scan' && <AssetPoolWeakScanFindingsTab poolId={id!} />}
           {activeTab === 'reports' && <AssetPoolReportsTab poolId={id!} />}
         </div>
       </div>
@@ -214,4 +217,3 @@ export function AssetPoolDetailPage() {
     </div>
   )
 }
-
