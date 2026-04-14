@@ -5,6 +5,7 @@ import { ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useTaskSnapshotAssets, useTaskSnapshotAssetDetail, type TaskSnapshotAssetVM } from '@/api/adapters/task'
 import { parseHttpProbeSummary } from '@/api/adapters/asset'
 import { useUrlTabState } from '@/hooks/useUrlTabState'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const TASK_ASSET_KIND_TABS = ['ip', 'domain', 'site'] as const
 
@@ -410,11 +411,9 @@ export function TaskAssetViewTab({ taskId }: { taskId?: string }) {
           aria-label={`Task Asset ${ASSET_KIND_LABEL[assetKind]} Table`}
           layout="fixed"
           classNames={{
+            ...APPLE_TABLE_CLASSES,
             base: 'p-4 min-w-[980px]',
-            table: 'table-fixed',
-            th: 'bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left',
-            td: 'border-b border-white/5 py-4 text-left last:border-0 relative',
-            tr: 'hover:bg-white/[0.03] transition-colors',
+            td: `${APPLE_TABLE_CLASSES.td} relative`,
           }}
         >
           <TableHeader>{columns}</TableHeader>

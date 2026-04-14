@@ -16,6 +16,7 @@ import { useState } from 'react'
 import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 import { useReports } from '@/api/adapters/finding'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 function formatDateTime(isoStr?: string) {
   if (!isoStr) return '-'
@@ -86,12 +87,9 @@ export function ReportsPage() {
               layout="fixed"
               removeWrapper
               classNames={{
+                ...APPLE_TABLE_CLASSES,
                 base: "p-4 min-w-[1000px]",
-                table: "table-fixed",
-                thead: "[&>tr]:first:rounded-xl",
-                th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
-                td: "py-5 border-b border-white/5 last:border-0 text-left",
-                tr: "hover:bg-white/[0.03] transition-colors cursor-default"
+                tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`
               }}
             >
               <TableHeader>

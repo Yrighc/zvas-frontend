@@ -16,6 +16,7 @@ import {
     CheckCircleIcon
 } from "@heroicons/react/24/outline";
 import type { AuditLog } from "../../../api/types/audit.types";
+import { APPLE_TABLE_CLASSES } from "../../../utils/theme";
 
 interface AuditTableProps {
     data: AuditLog[];
@@ -127,12 +128,11 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                     removeWrapper
                     isHeaderSticky
                     classNames={{
+                        ...APPLE_TABLE_CLASSES,
                         base: "p-4 overflow-x-auto custom-scrollbar",
-                        table: "min-w-[1080px] table-fixed",
-                    thead: "[&>tr]:first:rounded-xl",
-                    th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
-                    tr: "hover:bg-white/[0.03] transition-colors cursor-default",
-                    td: "py-5 border-b border-white/5 last:border-0 overflow-hidden text-ellipsis whitespace-nowrap text-left",
+                        table: `${APPLE_TABLE_CLASSES.table} min-w-[1080px]`,
+                        tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
+                        td: `${APPLE_TABLE_CLASSES.td} overflow-hidden text-ellipsis whitespace-nowrap`,
                 }}
             >
                 <TableHeader>

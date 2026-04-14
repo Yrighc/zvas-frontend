@@ -3,6 +3,7 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagina
 import { MagnifyingGlassIcon, ArrowPathIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import { useAssetPoolAssets, useAssetPoolAssetDetail, type PoolAssetVM } from '@/api/adapters/asset'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 function joinTags(systemFacets: string[], customTags: string[]) {
   return [...systemFacets, ...customTags].slice(0, 4)
@@ -145,11 +146,9 @@ export function AssetPoolIpTab({ poolId }: { poolId: string }) {
           aria-label="IP Assets Table"
           layout="fixed"
           classNames={{
+            ...APPLE_TABLE_CLASSES,
             base: 'p-4 min-w-[1100px]',
-            table: 'table-fixed',
-            th: 'bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left',
-            td: 'border-b border-white/5 py-4 text-left last:border-0',
-            tr: 'hover:bg-white/[0.03] transition-colors cursor-pointer',
+            tr: `${APPLE_TABLE_CLASSES.tr} cursor-pointer`,
           }}
         >
           <TableHeader>

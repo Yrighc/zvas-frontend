@@ -38,6 +38,7 @@ import {
   type UserView,
 } from '@/api/adapters/user'
 import { useAuthStore } from '@/store/auth'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 interface CreateUserDraft {
   username: string
@@ -358,12 +359,9 @@ export function UserManagementPage() {
             layout="fixed"
             removeWrapper
             classNames={{
+              ...APPLE_TABLE_CLASSES,
               base: "p-4 min-w-[1000px]",
-              table: "table-fixed",
-              thead: "[&>tr]:first:rounded-xl",
-              th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
-              td: "py-5 border-b border-white/5 last:border-0 text-left",
-              tr: "hover:bg-white/[0.03] transition-colors cursor-default"
+              tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`
             }}
           >
             <TableHeader>

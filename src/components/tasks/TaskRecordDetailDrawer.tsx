@@ -220,7 +220,7 @@ function MessageBlock({
         </div>
       </div>
       <pre
-        className={`${expanded ? 'max-h-[min(70vh,900px)]' : 'max-h-[min(44vh,560px)]'} overflow-auto rounded-[24px] border border-white/8 bg-black/30 p-5 text-xs leading-relaxed text-apple-text-secondary font-mono whitespace-pre-wrap break-all`}
+        className={`${expanded ? 'max-h-[min(60vh,760px)]' : 'max-h-[min(34vh,400px)]'} overflow-auto overscroll-contain rounded-[22px] border border-white/8 bg-black/30 p-4 sm:p-5 text-xs leading-relaxed text-apple-text-secondary font-mono whitespace-pre-wrap break-all`}
       >
         {text}
       </pre>
@@ -381,40 +381,62 @@ function renderHTTPResult(detail: TaskRecordDetailVM) {
 
   const item = detail.http_result
   const requestMessage = buildRequestMessage(detail)
+  const responseHeaderText = firstNonEmptyText(item.response_header_text)
+  const responseBody = firstNonEmptyText(item.response_body)
   const responseMessage = buildResponseMessage(detail)
+  const statusLabel =
+    item.probe_status === 'alive'
+      ? '站点存活'
+      : item.probe_status === 'unreachable'
+        ? '站点不存活'
+        : item.probe_status || '-'
 
   return (
     <section className="space-y-4">
       <div className="space-y-1">
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.24em] text-apple-text-tertiary">站点报文详情</h3>
-        <p className="text-xs text-apple-text-tertiary">面向运维查看站点请求与响应内容。</p>
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.24em] text-apple-text-tertiary">站点识别详情</h3>
+        <p className="text-xs text-apple-text-tertiary">只展示运维查看站点结果真正关心的关键信息与报文内容。</p>
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         <DetailPair label="站点 URL" value={item.site_url || '-'} />
         <DetailPair
-          label="探测状态"
+          label="存活状态"
           value={
-            <Chip size="sm" variant="flat" color={item.probe_status === 'alive' ? 'success' : item.probe_status === 'unreachable' ? 'warning' : 'default'}>
-              {item.probe_status || '-'}
+            <Chip
+              size="sm"
+              variant="flat"
+              color={item.probe_status === 'alive' ? 'success' : item.probe_status === 'unreachable' ? 'warning' : 'default'}
+            >
+              {statusLabel}
             </Chip>
           }
         />
         <DetailPair label="HTTP 状态码" value={item.status_code || '-'} />
         <DetailPair label="标题" value={item.title || '-'} />
-        <DetailPair label="服务标识" value={item.server || '-'} />
-        <DetailPair label="内容长度" value={item.content_length || '-'} />
-        <DetailPair label="HTML Hash" value={<TruncatedText value={item.html_hash} limit={18} mono />} />
-        <DetailPair label="Favicon Hash" value={<TruncatedText value={item.favicon_hash} limit={18} mono />} />
-        <DetailPair label="ICP" value={item.icp || '-'} />
-        <DetailPair label="探测错误" value={item.probe_error || '-'} />
+        <DetailPair label="ICP 备案" value={item.icp || '-'} />
+        <DetailPair label="Server" value={item.server || '-'} />
       </div>
+      {item.probe_error && <MessageBlock title="探测错误" content={item.probe_error} />}
       <MessageBlock
         title="请求报文"
         content={requestMessage}
         hint="请求报文按 gomap 实际请求模板持久化；其中 User-Agent 由引擎随机生成，这里以占位值记录。"
         copyable
       />
-      <MessageBlock title="响应报文" content={responseMessage} copyable collapsible collapseThreshold={1600} />
+      <MessageBlock
+        title="响应头"
+        content={responseHeaderText || responseMessage}
+        copyable
+        collapsible
+        collapseThreshold={1200}
+      />
+      <MessageBlock
+        title="响应体"
+        content={responseBody || (item.probe_error ? item.probe_error : '(empty body)')}
+        copyable
+        collapsible
+        collapseThreshold={1600}
+      />
     </section>
   )
 }

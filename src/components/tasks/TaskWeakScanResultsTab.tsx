@@ -27,6 +27,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 import { type TaskWeakScanFindingVM, useTaskWeakScanFindings } from '@/api/adapters/task'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const PAGE_SIZE = 20
 
@@ -436,11 +437,10 @@ export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
           aria-label="Task Weak Scan Findings Table"
           layout="fixed"
           classNames={{
+            ...APPLE_TABLE_CLASSES,
             base: 'min-w-[1400px] p-4',
-            table: 'table-fixed',
-            th: 'h-14 border-b border-white/5 bg-transparent pb-2 text-left text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary',
-            td: 'border-b border-white/5 py-4 align-top last:border-0',
-            tr: 'cursor-default transition-colors hover:bg-white/[0.03]',
+            tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
+            td: `${APPLE_TABLE_CLASSES.td} align-top`,
           }}
         >
           <TableHeader>

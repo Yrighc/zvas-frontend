@@ -4,6 +4,7 @@ import { DocumentPlusIcon, ArrowDownTrayIcon, ArrowPathIcon } from '@heroicons/r
 
 import { useAssetPoolInputs } from '@/api/adapters/asset'
 import { ManualInputModal } from './ManualInputModal'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 function formatDateTime(value?: string) {
   if (!value) return '-'
@@ -65,12 +66,9 @@ export function AssetPoolInputsTab({ poolId }: { poolId: string }) {
           aria-label="Input Records Table" 
           layout="fixed"
           classNames={{ 
+            ...APPLE_TABLE_CLASSES,
             base: "p-4 min-w-[1000px]",
-            table: "table-fixed",
-            thead: "[&>tr]:first:rounded-xl",
-            th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
-            td: "border-b border-white/5 py-4 text-left last:border-0",
-            tr: "hover:bg-white/[0.03] transition-colors cursor-default"
+            tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`
           }}
         >
           <TableHeader>

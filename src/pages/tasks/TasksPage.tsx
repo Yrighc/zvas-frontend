@@ -21,6 +21,7 @@ import { useTasks, usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, 
 import { useAssetPools } from '@/api/adapters/asset'
 import { useTaskRoutes, getRouteActiveLabel, mapStageLabels } from '@/api/adapters/route'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 function formatDateTime(isoStr?: string) {
   if (!isoStr) return '-'
@@ -134,11 +135,8 @@ export function TasksPage() {
           layout="fixed"
           removeWrapper
           classNames={{
-            base: 'min-w-[1200px]',
-            table: 'table-fixed',
-            th: 'bg-white/5 text-apple-text-secondary uppercase text-xs tracking-wider font-semibold border-b border-white/10 py-3',
-            td: 'py-4 border-b border-white/5 last:border-0',
-            tr: 'hover:bg-white/[0.04] transition-colors',
+            ...APPLE_TABLE_CLASSES,
+            base: 'min-w-[1200px] p-4',
           }}
         >
           <TableHeader>

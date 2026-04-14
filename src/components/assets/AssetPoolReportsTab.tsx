@@ -3,6 +3,7 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagina
 import { ArrowPathIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline'
 
 import { useAssetPoolReports } from '@/api/adapters/asset'
+import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 function statusColor(status: string): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
   switch (status?.toLowerCase()) {
@@ -66,12 +67,9 @@ export function AssetPoolReportsTab({ poolId }: { poolId: string }) {
           aria-label="Reports Table" 
           layout="fixed"
           classNames={{ 
+            ...APPLE_TABLE_CLASSES,
             base: "p-4 min-w-[940px]",
-            table: "table-fixed",
-            thead: "[&>tr]:first:rounded-xl",
-            th: "bg-transparent text-apple-text-tertiary uppercase text-[10px] tracking-[0.2em] font-black h-14 border-b border-white/5 pb-2 text-left",
-            td: "border-b border-white/5 py-4 text-left last:border-0",
-            tr: "hover:bg-white/[0.03] transition-colors cursor-default"
+            tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`
           }}>
           <TableHeader>
             <TableColumn width={280}>报告名称 / 编号标识</TableColumn>
