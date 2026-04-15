@@ -49,11 +49,10 @@ function firstNonEmptyText(...values: unknown[]): string {
   return "";
 }
 
-function extractProbePayload(item: PoolAssetVM): Record<string, any> {
-  return (item.detail?.extra_payload || item.detail || {}) as Record<
-    string,
-    any
-  >;
+type ProbePayload = Record<string, unknown>;
+
+function extractProbePayload(item: PoolAssetVM): ProbePayload {
+  return (item.detail?.extra_payload || item.detail || {}) as ProbePayload;
 }
 
 function extractProbeDetail(item: PoolAssetVM) {
@@ -61,10 +60,10 @@ function extractProbeDetail(item: PoolAssetVM) {
   const summary = parseHttpProbeSummary(payload);
   return {
     summary,
-    requestMessage: firstNonEmptyText(payload.request_message),
-    responseHeaderText: firstNonEmptyText(payload.response_header_text),
-    responseBody: firstNonEmptyText(payload.response_body),
-    siteURL: firstNonEmptyText(payload.site_url, item.display_name),
+    requestMessage: firstNonEmptyText(payload["request_message"]),
+    responseHeaderText: firstNonEmptyText(payload["response_header_text"]),
+    responseBody: firstNonEmptyText(payload["response_body"]),
+    siteURL: firstNonEmptyText(payload["site_url"], item.display_name),
     statusCode: summary?.status_code ?? null,
     title: summary?.title || "",
     icp: summary?.icp || "",

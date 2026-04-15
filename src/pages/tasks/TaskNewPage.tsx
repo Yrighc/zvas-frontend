@@ -29,28 +29,18 @@ export function TaskNewPage() {
   const [templateCode, setTemplateCode] = useState(requestedTemplateCode)
   const [targets, setTargets] = useState('')
   const [adHocMode, setAdHocMode] = useState<AdHocMode>('existing')
-
-  useEffect(() => {
-    if (templates.length === 0) {
-      if (templateCode) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setTemplateCode('')
-      }
-      return
-    }
+  const selectedTemplateCode = useMemo(() => {
+    if (templates.length === 0) return ''
     if (templateCode && templates.some((item) => item.code === templateCode)) {
-      return
+      return templateCode
     }
     if (requestedTemplateCode && templates.some((item) => item.code === requestedTemplateCode)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTemplateCode(requestedTemplateCode)
-      return
+      return requestedTemplateCode
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTemplateCode(templates[0].code)
+    return templates[0].code
   }, [requestedTemplateCode, templateCode, templates])
 
-  const { data: tplDetail, isPending: isLoadingTpl } = useTaskTemplateDetail(templateCode)
+  const { data: tplDetail, isPending: isLoadingTpl } = useTaskTemplateDetail(selectedTemplateCode)
 
   // ── 模板覆盖参数 (Overrides) ───────────────────────────────────
   const [portMode, setPortMode] = useState('')
@@ -87,7 +77,7 @@ export function TaskNewPage() {
     if (!taskName.trim()) return false
     if (!targets.trim()) return false
     if (!hasAvailableTemplates) return false
-    if (!templateCode) return false
+    if (!selectedTemplateCode) return false
     if (adHocMode === 'existing' && !existingPoolId) return false
     if (adHocMode === 'create' && !newPoolName.trim()) return false
     if (tplDetail?.supports_vul_scan && vulScanSeverity.length === 0) return false
@@ -95,7 +85,7 @@ export function TaskNewPage() {
   }
 
   const handleSubmit = () => {
-    if (!hasAvailableTemplates || !templateCode) return
+    if (!hasAvailableTemplates || !selectedTemplateCode) return
     const items = targets.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
     const tags = newPoolTags
       .split(/[\n,，]+/)
@@ -136,7 +126,7 @@ export function TaskNewPage() {
       {
         mode: 'ad_hoc',
         name: taskName.trim(),
-        template_code: templateCode,
+        template_code: selectedTemplateCode,
         asset_pool:
           adHocMode === 'existing'
             ? { mode: 'existing', asset_pool_id: existingPoolId }
@@ -220,7 +210,7 @@ export function TaskNewPage() {
               aria-label="扫描模板"
               isLoading={isLoadingTemplates}
               isDisabled={!hasAvailableTemplates}
-              selectedKeys={templateCode ? [templateCode] : []}
+              selectedKeys={selectedTemplateCode ? [selectedTemplateCode] : []}
               onChange={(e) => setTemplateCode(e.target.value)}
               className="flex-1"
               classNames={{ trigger: 'bg-white/5 border border-white/10 h-12 pr-10 rounded-[16px]', value: 'truncate' }}
@@ -259,7 +249,7 @@ export function TaskNewPage() {
                      <SelectItem key="full" textValue={getPortModeLabel('full')}>{getPortModeLabel('full')}</SelectItem>
                      <SelectItem key="custom" textValue={getPortModeLabel('custom')}>{getPortModeLabel('custom')}</SelectItem>
                    </Select>
-                   {isHighCostPortTemplate(templateCode) && (
+                   {isHighCostPortTemplate(selectedTemplateCode) && (
                      <p className="text-[11px] text-apple-amber font-bold mt-1">⚠ {FULL_PORT_WARNING}</p>
                    )}
                </div>

@@ -23,23 +23,15 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
 
   const [taskName, setTaskName] = useState('')
   const [templateCode, setTemplateCode] = useState('')
-
-  useEffect(() => {
-    if (templates.length === 0) {
-      if (templateCode) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setTemplateCode('')
-      }
-      return
-    }
+  const selectedTemplateCode = useMemo(() => {
+    if (templates.length === 0) return ''
     if (templateCode && templates.some((item) => item.code === templateCode)) {
-      return
+      return templateCode
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTemplateCode(templates[0].code)
+    return templates[0].code
   }, [templateCode, templates])
 
-  const { data: tplDetail, isPending: isLoadingTpl } = useTaskTemplateDetail(templateCode)
+  const { data: tplDetail, isPending: isLoadingTpl } = useTaskTemplateDetail(selectedTemplateCode)
 
   const [portMode, setPortMode] = useState('')
   const [httpProbe, setHttpProbe] = useState(false)
@@ -63,7 +55,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
   const vulScanSeveritySummary = useMemo(() => formatVulScanSeverityLabels(vulScanSeverity), [vulScanSeverity])
 
   const handleSubmit = () => {
-    if (!hasAvailableTemplates || !templateCode) return
+    if (!hasAvailableTemplates || !selectedTemplateCode) return
     const name = taskName.trim() || `基于「${poolName || poolId}」的扫描任务`
 
 
@@ -100,7 +92,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
       {
         mode: 'from_pool',
         name,
-        template_code: templateCode,
+        template_code: selectedTemplateCode,
         asset_pool_id: poolId,
         target_set_request: {
           generation_source: 'pool_filter',
@@ -178,7 +170,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
                       aria-label="扫描模板"
                       isLoading={isLoadingTemplates}
                       isDisabled={!hasAvailableTemplates}
-                      selectedKeys={templateCode ? [templateCode] : []}
+                      selectedKeys={selectedTemplateCode ? [selectedTemplateCode] : []}
                       onChange={(e) => setTemplateCode(e.target.value)}
                       className="flex-1"
                       classNames={{ trigger: 'bg-white/5 border border-white/10 h-10 pr-10 rounded-xl', value: 'text-sm font-bold truncate pl-1' }}
@@ -204,7 +196,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
                      <div className="flex flex-col gap-3 p-4 bg-white/5 border border-white/5 rounded-2xl relative overflow-hidden group">
                        <div className="flex items-center justify-between">
                          <label className="text-apple-text-secondary text-[10px] font-black uppercase tracking-[0.2em]">端口扫描模式 (覆盖)</label>
-                         {isHighCostPortTemplate(templateCode) && (
+                         {isHighCostPortTemplate(selectedTemplateCode) && (
                            <Chip size="sm" variant="dot" color="warning" classNames={{ base: "border-0 p-0 h-4", content: "text-[9px] font-black" }}>RISK</Chip>
                          )}
                        </div>
