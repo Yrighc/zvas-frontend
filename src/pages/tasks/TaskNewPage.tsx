@@ -5,7 +5,7 @@ import { PlusCircleIcon, FolderOpenIcon, BeakerIcon } from '@heroicons/react/24/
 
 import { useCreateTask } from '@/api/adapters/task'
 import { useAssetPools } from '@/api/adapters/asset'
-import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, isHighCostPortTemplate, FULL_PORT_WARNING, VUL_SCAN_SEVERITY_OPTIONS, buildVulScanSeverityParam, formatVulScanSeverityLabels } from '@/api/adapters/template'
+import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, getTaskTemplatePreviewSummary, isHighCostPortTemplate, isSiteBasedTemplate, FULL_PORT_WARNING, VUL_SCAN_SEVERITY_OPTIONS, buildVulScanSeverityParam, formatVulScanSeverityLabels } from '@/api/adapters/template'
 
 /** 模式 A：归并到已有资产池；模式 B：创建新资产池并启动 */
 type AdHocMode = 'existing' | 'create'
@@ -64,6 +64,8 @@ export function TaskNewPage() {
   }, [tplDetail])
 
   const vulScanSeveritySummary = useMemo(() => formatVulScanSeverityLabels(vulScanSeverity), [vulScanSeverity])
+  const isSiteBasedSelectedTemplate = isSiteBasedTemplate(selectedTemplateCode)
+  const previewSummary = getTaskTemplatePreviewSummary(tplDetail) || '未定义模板细节行为。'
 
   // ── 模式 A：归并到已有资产池 ──────────────────────────────────
   const [existingPoolId, setExistingPoolId] = useState('')
@@ -362,13 +364,15 @@ export function TaskNewPage() {
 
       {/* ─── 本次扫描目标 ── */}
       <div className="bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[28px] p-6 flex flex-col gap-5">
-        <p className="text-[10px] text-apple-text-tertiary uppercase tracking-[0.2em] font-black mb-1">本次扫描目标</p>
+        <p className="text-[10px] text-apple-text-tertiary uppercase tracking-[0.2em] font-black mb-1">{isSiteBasedSelectedTemplate ? '站点输入归集' : '本次扫描目标'}</p>
         <p className="text-[12px] text-apple-text-tertiary">
-          每行一个目标，支持 IP / CIDR / 域名 / URL，也可以用逗号分隔。
+          {isSiteBasedSelectedTemplate
+            ? '该模板会先将这里录入的内容归集到资产池，最终仅对归一化后的站点资产执行，不会重新补跑端口扫描和首页识别。'
+            : '每行一个目标，支持 IP / CIDR / 域名 / URL，也可以用逗号分隔。'}
         </p>
         <Textarea
           variant="flat"
-          placeholder={'example.com\n192.0.2.0/24\nhttps://demo.site.com'}
+          placeholder={isSiteBasedSelectedTemplate ? 'https://demo.site.com\nhttps://portal.example.com/login' : 'example.com\n192.0.2.0/24\nhttps://demo.site.com'}
           minRows={5}
           value={targets}
           onValueChange={setTargets}
@@ -387,9 +391,10 @@ export function TaskNewPage() {
            <p className="text-[12px] text-apple-text-tertiary">正在拉取模板评述...</p>
          ) : (
            <div className="flex flex-col gap-3">
-             <p className="text-[13px] text-apple-text-secondary leading-relaxed">{tplDetail.preview_summary || '未定义模板细节行为。'}</p>
+             <p className="text-[13px] text-apple-text-secondary leading-relaxed">{previewSummary}</p>
              <div className="flex gap-2 flex-wrap">
-                <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white font-mono h-6">{getPortModeLabel(portMode)}</Chip>
+                {!!tplDetail.default_port_scan_mode && <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white font-mono h-6">{getPortModeLabel(portMode)}</Chip>}
+                {isSiteBasedSelectedTemplate && <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white h-6">站点直扫</Chip>}
                 {httpProbe && <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white font-mono h-6">http probe enabled</Chip>}
                 {tplDetail.supports_vul_scan && <Chip size="sm" variant="flat" className="bg-white/5 border-white/10 text-white h-6">漏洞等级: {vulScanSeveritySummary}</Chip>}
              </div>

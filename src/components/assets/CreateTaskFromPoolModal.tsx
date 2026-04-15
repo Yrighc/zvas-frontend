@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { RocketLaunchIcon, BeakerIcon } from '@heroicons/react/24/outline'
 
 import { useCreateTask } from '@/api/adapters/task'
-import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, isHighCostPortTemplate, FULL_PORT_WARNING, VUL_SCAN_SEVERITY_OPTIONS, buildVulScanSeverityParam, formatVulScanSeverityLabels } from '@/api/adapters/template'
+import { useTaskTemplates, useTaskTemplateDetail, getPortModeLabel, getTaskTemplatePreviewSummary, isHighCostPortTemplate, isSiteBasedTemplate, FULL_PORT_WARNING, VUL_SCAN_SEVERITY_OPTIONS, buildVulScanSeverityParam, formatVulScanSeverityLabels } from '@/api/adapters/template'
 
 interface Props {
   poolId: string
@@ -53,6 +53,8 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
   }, [tplDetail])
 
   const vulScanSeveritySummary = useMemo(() => formatVulScanSeverityLabels(vulScanSeverity), [vulScanSeverity])
+  const isSiteBasedSelectedTemplate = isSiteBasedTemplate(selectedTemplateCode)
+  const previewSummary = getTaskTemplatePreviewSummary(tplDetail) || '无特殊预览说明。'
 
   const handleSubmit = () => {
     if (!hasAvailableTemplates || !selectedTemplateCode) return
@@ -321,9 +323,10 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
                    <p className="text-[11px] text-apple-text-tertiary">正在获取模板元数据...</p>
                  ) : (
                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                     <p className="max-w-full text-[11px] text-apple-text-secondary leading-tight sm:max-w-[70%]">{tplDetail.preview_summary || '无特殊预览说明。'}</p>
+                     <p className="max-w-full text-[11px] text-apple-text-secondary leading-tight sm:max-w-[70%]">{previewSummary}</p>
                      <div className="flex flex-wrap items-center gap-1.5 bg-white/5 p-1 rounded-lg border border-white/5 sm:shrink-0">
-                        <Chip size="sm" variant="flat" classNames={{ base: "bg-transparent border-0 h-4", content: "text-[10px] font-mono font-black border-r border-white/10 pr-2 mr-0.5" }}>{getPortModeLabel(portMode)}</Chip>
+                        {!!tplDetail.default_port_scan_mode && <Chip size="sm" variant="flat" classNames={{ base: "bg-transparent border-0 h-4", content: "text-[10px] font-mono font-black border-r border-white/10 pr-2 mr-0.5" }}>{getPortModeLabel(portMode)}</Chip>}
+                        {isSiteBasedSelectedTemplate && <Chip size="sm" variant="flat" classNames={{ base: "bg-transparent border-0 h-4", content: "text-[10px] font-black" }}>站点直扫</Chip>}
                         {httpProbe && <div className="w-1.5 h-1.5 rounded-full bg-apple-green animate-pulse" title="HomePage Probe Mode On" />}
                         {tplDetail.supports_vul_scan && <Chip size="sm" variant="flat" classNames={{ base: "bg-transparent border-0 h-4", content: "text-[10px] font-black pl-1" }}>等级: {vulScanSeveritySummary}</Chip>}
                      </div>

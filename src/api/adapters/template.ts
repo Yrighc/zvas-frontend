@@ -47,6 +47,13 @@ const VUL_SCAN_SEVERITY_LABELS: Record<string, string> = {
 
 const VUL_SCAN_SEVERITY_ORDER = VUL_SCAN_SEVERITY_OPTIONS.map((item) => item.value)
 const VUL_SCAN_STAGE_KEYS = new Set(['vuln_scan', 'vul_scan'])
+const SITE_BASED_TEMPLATE_CODES = new Set(['site_http_probe', 'site_vuln_scan', 'site_attack_scan', 'site_weak_scan'])
+const TEMPLATE_PREVIEW_SUMMARY_MAP: Record<string, string> = {
+  site_http_probe: '直接使用资产池已有站点执行首页识别，不补跑端口扫描。',
+  site_vuln_scan: '直接使用资产池已有站点执行漏洞扫描，不补跑端口扫描与首页识别。',
+  site_attack_scan: '直接使用资产池已有站点，依次执行漏洞扫描与弱点扫描，不补跑端口扫描与首页识别。',
+  site_weak_scan: '直接使用资产池已有站点执行弱点扫描，不补跑端口扫描与首页识别。',
+}
 
 function mapToTaskTemplateListItemVM(dto: any): TaskTemplateListItemVM {
   return {
@@ -121,6 +128,16 @@ export function formatVulScanSeverityLabels(values: string[]): string {
     return '未设置'
   }
   return normalized.map(getVulScanSeverityLabel).join(' / ')
+}
+
+export function isSiteBasedTemplate(templateCode: string): boolean {
+  return SITE_BASED_TEMPLATE_CODES.has(String(templateCode || '').trim())
+}
+
+export function getTaskTemplatePreviewSummary(template: Pick<TaskTemplateListItemVM, 'code' | 'preview_summary'> | Pick<TaskTemplateDetailVM, 'code' | 'preview_summary'> | null | undefined): string {
+  if (!template) return ''
+  const code = String(template.code || '').trim()
+  return TEMPLATE_PREVIEW_SUMMARY_MAP[code] || template.preview_summary || ''
 }
 
 export function useTaskTemplates(params?: { keyword?: string; page?: number; page_size?: number }) {

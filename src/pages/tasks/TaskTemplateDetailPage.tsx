@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Button, Chip, Spinner } from '@heroui/react'
 import { ArrowLeftIcon, CheckCircleIcon, RocketLaunchIcon, XCircleIcon } from '@heroicons/react/24/outline'
 
-import { FULL_PORT_WARNING, getPortModeLabel, getTemplatePresetBadge, getVulScanSeverityLabel, isHighCostPortTemplate, useTaskTemplateDetail, useUpdateTaskTemplateStatus } from '@/api/adapters/template'
+import { FULL_PORT_WARNING, getPortModeLabel, getTaskTemplatePreviewSummary, getTemplatePresetBadge, getVulScanSeverityLabel, isHighCostPortTemplate, isSiteBasedTemplate, useTaskTemplateDetail, useUpdateTaskTemplateStatus } from '@/api/adapters/template'
 import { getRouteLabel, useTaskRoutes } from '@/api/adapters/route'
 import { useAuthStore } from '@/store/auth'
 
@@ -29,6 +29,16 @@ export function TaskTemplateDetailPage() {
 
   const presetBadge = getTemplatePresetBadge(detail.code)
   const isHighCost = isHighCostPortTemplate(detail.code)
+  const isSiteBased = isSiteBasedTemplate(detail.code)
+  const siteDirectExecution = isSiteBased && !detail.allow_http_probe_override && !detail.default_http_probe_enabled
+  const portModeLabel = detail.default_port_scan_mode ? getPortModeLabel(detail.default_port_scan_mode) : (isSiteBased ? '不适用' : '-')
+  const httpProbeLabel = detail.default_stage_plan.includes('http_probe')
+    ? (isSiteBased && !detail.allow_http_probe_override ? '直接执行' : detail.default_http_probe_enabled ? '开启' : '关闭')
+    : (isSiteBased ? '不适用' : detail.default_http_probe_enabled ? '开启' : '关闭')
+  const concurrencyLabel = siteDirectExecution ? '不适用' : String(detail.default_concurrency)
+  const rateLabel = siteDirectExecution ? '不适用' : String(detail.default_rate)
+  const timeoutLabel = siteDirectExecution ? '不适用' : (detail.default_timeout_ms >= 60000 ? `${detail.default_timeout_ms / 1000} 秒` : `${detail.default_timeout_ms} ms`)
+  const previewSummary = getTaskTemplatePreviewSummary(detail) || '无执行预览信息。'
 
   return (
     <div className="flex flex-col gap-6 w-full text-apple-text-primary animate-in fade-in slide-in-from-bottom-4 duration-1000 max-w-[1280px] mx-auto pb-20 px-8 pt-8">
@@ -111,11 +121,11 @@ export function TaskTemplateDetailPage() {
             <div className="grid grid-cols-2 gap-x-8 gap-y-6">
               <div>
                 <div className="text-[12px] text-apple-text-secondary mb-1">默认端口模式</div>
-                <div className="text-[14px] font-bold text-apple-text-primary">{getPortModeLabel(detail.default_port_scan_mode)}</div>
+                <div className="text-[14px] font-bold text-apple-text-primary">{portModeLabel}</div>
               </div>
               <div>
                 <div className="text-[12px] text-apple-text-secondary mb-1">默认首页识别</div>
-                <div className="text-[14px] font-bold text-apple-text-primary">{detail.default_http_probe_enabled ? '开启' : '关闭'}</div>
+                <div className="text-[14px] font-bold text-apple-text-primary">{httpProbeLabel}</div>
               </div>
               {detail.default_port_scan_mode === 'custom' && (
                 <div className="col-span-2">
@@ -125,15 +135,15 @@ export function TaskTemplateDetailPage() {
               )}
               <div>
                 <div className="text-[12px] text-apple-text-secondary mb-1">默认并发度</div>
-                <div className="text-[14px] font-bold text-apple-text-primary">{detail.default_concurrency}</div>
+                <div className="text-[14px] font-bold text-apple-text-primary">{concurrencyLabel}</div>
               </div>
               <div>
                 <div className="text-[12px] text-apple-text-secondary mb-1">默认速率</div>
-                <div className="text-[14px] font-bold text-apple-text-primary">{detail.default_rate}</div>
+                <div className="text-[14px] font-bold text-apple-text-primary">{rateLabel}</div>
               </div>
               <div>
                 <div className="text-[12px] text-apple-text-secondary mb-1">默认超时</div>
-                <div className="text-[14px] font-bold text-apple-text-primary">{detail.default_timeout_ms >= 60000 ? `${detail.default_timeout_ms / 1000} 秒` : `${detail.default_timeout_ms} ms`}</div>
+                <div className="text-[14px] font-bold text-apple-text-primary">{timeoutLabel}</div>
               </div>
               {detail.supports_vul_scan && (
                 <div className="col-span-2">
@@ -156,7 +166,7 @@ export function TaskTemplateDetailPage() {
         <div className="flex flex-col gap-6">
           <div className="bg-apple-blue/5 border border-apple-blue/10 backdrop-blur-3xl rounded-[32px] p-8">
             <h2 className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-blue-light mb-4 flex items-center gap-2"><RocketLaunchIcon className="w-4 h-4" />执行预览摘要</h2>
-            <div className="text-[13px] leading-relaxed text-apple-text-secondary whitespace-pre-wrap">{detail.preview_summary || '无执行预览信息。'}</div>
+            <div className="text-[13px] leading-relaxed text-apple-text-secondary whitespace-pre-wrap">{previewSummary}</div>
           </div>
 
           <div className="bg-white/[0.02] border border-white/5 backdrop-blur-3xl rounded-[32px] p-8">
