@@ -182,15 +182,9 @@ function WeakScanDrawer({ item, onClose }: { item: TaskWeakScanFindingVM | null;
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   <InfoCard label="规则 ID" value={item.rule_id || item.finding_key || '-'} />
                   <InfoCard label="发现时间" value={formatDateTime(item.matched_at || item.updated_at)} />
-                  <InfoCard label="目标 URL" value={item.target_url || '-'} />
+                  <InfoCard label="目标站点" value={item.target_url || '-'} />
                   <InfoCard label="影响地址" value={item.affects_url || item.target_url || '-'} />
-                  <InfoCard label="任务单元" value={item.task_unit_id || '-'} />
-                  <InfoCard label="站点资产" value={item.site_asset_id || '-'} />
-                  <InfoCard label="远端扫描 ID" value={item.remote_scan_id || '-'} />
-                  <InfoCard label="远端结果 ID" value={item.remote_result_id || '-'} />
-                  <InfoCard label="远端漏洞 ID" value={item.remote_vulnerability_id || '-'} />
                   <InfoCard label="CVSS 评分" value={firstNonEmptyText(item.cvss_score, item.cvss3, item.cvss2)} />
-                  <InfoCard label="来源引擎" value={item.source || '-'} />
                   <InfoCard label="标签" value={item.tags.length ? item.tags.join(', ') : '-'} />
                 </div>
 
@@ -316,7 +310,7 @@ export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
             <ShieldExclamationIcon className="h-6 w-6 text-apple-blue-light drop-shadow-[0_0_8px_rgba(10,132,255,0.45)]" />
             <span>任务弱点扫描结果</span>
           </h3>
-          <p className="text-[13px] font-medium text-apple-text-tertiary">这里直接展示当前任务产出的弱点扫描结果明细，一条漏洞一条记录，不再按扫描记录或目标站点聚合查看。</p>
+          <p className="text-[13px] font-medium text-apple-text-tertiary">这里直接展示当前任务产出的弱点扫描结果明细，一条弱点一条记录，不再按扫描记录或目标站点聚合查看。</p>
         </div>
         <Button
           variant="flat"
@@ -444,7 +438,7 @@ export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
           }}
         >
           <TableHeader>
-            <TableColumn width={280}>目标 URL</TableColumn>
+            <TableColumn width={280}>影响地址</TableColumn>
             <TableColumn width={200}>规则 ID</TableColumn>
             <TableColumn width={240}>弱点名称</TableColumn>
             <TableColumn width={110}>级别</TableColumn>
@@ -458,9 +452,9 @@ export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
             emptyContent={(
               <div className="flex flex-col items-center gap-3 py-20 text-sm font-bold text-apple-text-tertiary">
                 <ShieldExclamationIcon className="h-12 w-12 text-apple-blue-light opacity-60 drop-shadow-[0_0_12px_rgba(10,132,255,0.35)]" />
-                <span className="text-[13px] font-black tracking-[0.08em] text-white">暂无弱点扫描结果</span>
+                <span className="text-[13px] font-black tracking-[0.08em] text-white">暂无弱点结果</span>
                 <span className="text-[12px] font-medium text-apple-text-tertiary">
-                  {hasActiveFilters ? '当前筛选条件下没有匹配的弱点扫描结果。' : '当前任务还没有产出弱点扫描结果。'}
+                  {hasActiveFilters ? '当前筛选条件下没有匹配的弱点结果。' : '当前任务还没有产出弱点结果。'}
                 </span>
               </div>
             )}
