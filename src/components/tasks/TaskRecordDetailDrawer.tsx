@@ -101,6 +101,14 @@ function getInProgressDetailLabel(status: string): string {
   }
 }
 
+function getVulnerabilityBaseURL(item: TaskRecordVulnerabilityVM): string {
+  return firstNonEmptyText(item.base_url, item.target_url, item.host)
+}
+
+function getVulnerabilityLink(item: TaskRecordVulnerabilityVM): string {
+  return firstNonEmptyText(item.link, item.raw?.['matched-at'], item.target_url, item.host)
+}
+
 function normalizeStringArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.map((item) => firstNonEmptyText(item)).filter(Boolean)
@@ -602,6 +610,9 @@ function renderWeakScanFindingCard(item: TaskWeakScanFindingVM) {
 }
 
 function renderVulnerabilityCard(item: TaskRecordVulnerabilityVM) {
+  const baseURL = getVulnerabilityBaseURL(item)
+  const link = getVulnerabilityLink(item)
+
   return (
     <div key={item.id || item.vulnerability_key} className="space-y-5 rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
       <div className="flex flex-wrap items-center gap-2">
@@ -612,7 +623,8 @@ function renderVulnerabilityCard(item: TaskRecordVulnerabilityVM) {
         {item.rule_id && <code className="font-mono text-[11px] text-apple-text-tertiary">{item.rule_id}</code>}
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <DetailPair label="目标 URL" value={item.target_url || '-'} />
+        <DetailPair label="基础 URL" value={baseURL || '-'} />
+        <DetailPair label="命中链接" value={link || '-'} />
         <DetailPair label="匹配器" value={item.matcher_name || '-'} />
         <DetailPair label="主机 / IP" value={[item.host, item.ip].filter(Boolean).join(' / ') || '-'} />
         <DetailPair label="协议 / 端口" value={[item.scheme, item.port || ''].filter(Boolean).join(' : ') || '-'} />
