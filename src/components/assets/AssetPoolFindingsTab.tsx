@@ -139,8 +139,12 @@ function getRawInfoMap(item: FindingSummaryView): Record<string, unknown> {
   return info && typeof info === 'object' && !Array.isArray(info) ? (info as Record<string, unknown>) : {}
 }
 
+function getBaseURL(item: FindingSummaryView): string {
+  return firstNonEmptyText(item.base_url, item.target_url, item.asset_ref, item.host)
+}
+
 function getMatchedLink(item: FindingSummaryView): string {
-  return firstNonEmptyText(item.raw?.['matched-at'], item.target_url, item.asset_ref, item.host)
+  return firstNonEmptyText(item.link, item.raw?.['matched-at'], item.target_url, item.asset_ref, item.host)
 }
 
 function getDescription(item: FindingSummaryView): string {
@@ -238,6 +242,7 @@ function RenderTextCell({ value, limit = 56, mono = false }: { value: string; li
 }
 
 function FindingsDrawer({ item, onClose }: { item: FindingSummaryView | null; onClose: () => void }) {
+  const baseURL = item ? getBaseURL(item) : ''
   const matchedLink = item ? getMatchedLink(item) : ''
   const description = item ? getDescription(item) : ''
   const remediation = item ? getRemediation(item) : ''
@@ -269,7 +274,7 @@ function FindingsDrawer({ item, onClose }: { item: FindingSummaryView | null; on
                 {item?.severity || '-'}
               </Chip>
             </div>
-            <p className="break-all font-mono text-sm text-apple-text-secondary">{item?.target_url || item?.asset_ref || '-'}</p>
+            <p className="break-all font-mono text-sm text-apple-text-secondary">{baseURL || item?.asset_ref || '-'}</p>
           </DrawerHeader>
           <DrawerBody className="space-y-8 overflow-y-auto">
             {item && (
@@ -277,7 +282,7 @@ function FindingsDrawer({ item, onClose }: { item: FindingSummaryView | null; on
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   <InfoCard label="POC ID" value={item.rule_id || '-'} />
                   <InfoCard label="发现时间" value={formatDateTime(item.created_at)} />
-                  <InfoCard label="目标 URL" value={item.target_url || item.asset_ref || '-'} />
+                  <InfoCard label="基础站点 URL" value={baseURL || item.asset_ref || '-'} />
                   <InfoCard label="IP" value={item.ip || '-'} />
                   <InfoCard label="命中链接" value={matchedLink || '-'} />
                   <InfoCard label="匹配器" value={firstNonEmptyText(item.matcher_name, `${item.scheme || '-'}:${item.port || '-'}`)} />
@@ -470,7 +475,8 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
           }}
         >
           <TableHeader>
-            <TableColumn width={280}>URL</TableColumn>
+            <TableColumn width={260}>基础 URL</TableColumn>
+            <TableColumn width={280}>命中链接</TableColumn>
             <TableColumn width={180}>POC ID</TableColumn>
             <TableColumn width={220}>漏洞名称</TableColumn>
             <TableColumn width={110}>级别</TableColumn>
@@ -491,7 +497,8 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
           >
             {items.map((item) => (
               <TableRow key={item.finding_id}>
-                <TableCell><RenderTextCell value={item.target_url || item.asset_ref || '-'} limit={44} mono /></TableCell>
+                <TableCell><RenderTextCell value={getBaseURL(item) || item.asset_ref || '-'} limit={40} mono /></TableCell>
+                <TableCell><RenderTextCell value={getMatchedLink(item) || '-'} limit={44} mono /></TableCell>
                 <TableCell><RenderTextCell value={item.rule_id || '-'} limit={24} mono /></TableCell>
                 <TableCell><RenderTextCell value={item.title || '-'} limit={34} /></TableCell>
                 <TableCell>

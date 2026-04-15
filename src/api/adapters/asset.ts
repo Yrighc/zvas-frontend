@@ -232,6 +232,8 @@ export interface FindingSummaryView {
   snapshot_id: string
   asset_id: string
   rule_id: string
+  base_url: string
+  link: string
   target_url: string
   host: string
   ip: string
@@ -332,7 +334,9 @@ function mapToFindingSummaryView(dto: any): FindingSummaryView {
   const classification = detail.classification && typeof detail.classification === 'object' && !Array.isArray(detail.classification) ? detail.classification : {}
   const evidence = detail.evidence && typeof detail.evidence === 'object' && !Array.isArray(detail.evidence) ? detail.evidence : {}
   const raw = detail.raw && typeof detail.raw === 'object' && !Array.isArray(detail.raw) ? detail.raw : {}
-  const assetRef = detail.target_url || detail.host || detail.url || dto.asset_id || '-'
+  const baseURL = detail.base_url || detail.target_url || detail.site_url || detail.url || ''
+  const link = detail.link || raw['matched-at'] || baseURL || detail.host || ''
+  const assetRef = baseURL || detail.host || detail.url || dto.asset_id || '-'
   return {
     finding_id: dto.id || '',
     finding_type: dto.finding_type || '',
@@ -344,6 +348,8 @@ function mapToFindingSummaryView(dto: any): FindingSummaryView {
     snapshot_id: dto.snapshot_id || '',
     asset_id: dto.asset_id || '',
     rule_id: detail.rule_id || '',
+    base_url: baseURL,
+    link,
     target_url: detail.target_url || '',
     host: detail.host || '',
     ip: detail.ip || '',
