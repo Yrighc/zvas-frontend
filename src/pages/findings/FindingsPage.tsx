@@ -159,7 +159,7 @@ export function FindingsPage() {
             loadingContent={<Skeleton className="rounded-xl w-full h-40 bg-white/5" />}
           >
             {items.map((item) => {
-              const target = item.base_url || item.target_url || item.link || item.asset_ref || '-'
+              const target = item.base_url || item.asset_ref || item.host || '-'
               return (
                 <TableRow key={item.finding_id}>
                   <TableCell>

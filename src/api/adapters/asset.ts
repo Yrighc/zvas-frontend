@@ -340,9 +340,9 @@ function mapToFindingSummaryView(dto: any): FindingSummaryView {
   const classification = detail.classification && typeof detail.classification === 'object' && !Array.isArray(detail.classification) ? detail.classification : {}
   const evidence = detail.evidence && typeof detail.evidence === 'object' && !Array.isArray(detail.evidence) ? detail.evidence : {}
   const raw = detail.raw && typeof detail.raw === 'object' && !Array.isArray(detail.raw) ? detail.raw : {}
-  const baseURL = detail.base_url || detail.target_url || detail.site_url || detail.url || ''
-  const link = detail.link || raw['matched-at'] || baseURL || detail.host || ''
-  const assetRef = baseURL || detail.host || detail.url || dto.asset_id || '-'
+  const baseURL = detail.base_url || detail.site_url || detail.url || ''
+  const link = detail.link || raw['matched-at'] || detail.target_url || baseURL || detail.host || ''
+  const assetRef = baseURL || detail.host || detail.url || detail.target_url || dto.asset_id || '-'
   return {
     finding_id: dto.id || '',
     finding_type: dto.finding_type || '',

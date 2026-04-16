@@ -485,8 +485,8 @@ function mapToTaskRecordDetailVM(dto: any): TaskRecordDetailVM {
     } : undefined,
     weak_scan_summary: mapToTaskRecordWeakScanSummary(dto, result),
     vulnerabilities: (dto.vulnerabilities || []).map((item: any) => {
-      const baseURL = item.base_url || item.target_url || item.site_url || ''
-      const link = item.link || item.raw?.['matched-at'] || baseURL || item.host || ''
+      const baseURL = item.base_url || item.site_url || ''
+      const link = item.link || item.raw?.['matched-at'] || item.target_url || baseURL || item.host || ''
       return {
       id: item.id || '',
       vulnerability_key: item.vulnerability_key || '',
@@ -741,8 +741,8 @@ export function useTaskFindings(
       return {
         ...res.data,
         data: (res.data.data || []).map((item: any) => {
-          const baseURL = item.base_url || item.target_url || item.site_url || ''
-          const link = item.link || item.raw?.['matched-at'] || baseURL || item.host || ''
+          const baseURL = item.base_url || item.site_url || ''
+          const link = item.link || item.raw?.['matched-at'] || item.target_url || baseURL || item.host || ''
           return {
           id: item.id || '',
           vulnerability_key: item.vulnerability_key || '',

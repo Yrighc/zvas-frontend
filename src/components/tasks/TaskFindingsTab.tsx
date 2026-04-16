@@ -99,7 +99,7 @@ function getRawInfoMap(item: TaskRecordVulnerabilityVM): Record<string, unknown>
 }
 
 function getBaseURL(item: TaskRecordVulnerabilityVM): string {
-  return firstNonEmptyText(item.base_url, item.target_url, item.host)
+  return firstNonEmptyText(item.base_url, item.host)
 }
 
 function getMatchedLink(item: TaskRecordVulnerabilityVM): string {

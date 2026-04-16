@@ -140,7 +140,7 @@ function getRawInfoMap(item: FindingSummaryView): Record<string, unknown> {
 }
 
 function getBaseURL(item: FindingSummaryView): string {
-  return firstNonEmptyText(item.base_url, item.target_url, item.asset_ref, item.host)
+  return firstNonEmptyText(item.base_url, item.asset_ref, item.host)
 }
 
 function getMatchedLink(item: FindingSummaryView): string {
