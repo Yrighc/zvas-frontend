@@ -110,7 +110,7 @@ export function WeakScanFindingsPage() {
           >
             <SelectItem key="all">全部资产池</SelectItem>
             {(poolsQuery.data?.data || []).map((pool) => (
-              <SelectItem key={pool.id}>{pool.name || pool.id}</SelectItem>
+              <SelectItem key={pool.id} textValue={pool.name || pool.id}>{pool.name || pool.id}</SelectItem>
             ))}
           </Select>
           <Input

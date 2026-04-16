@@ -699,3 +699,30 @@ export function useAssetPoolObservations(poolId?: string, assetId?: string) {
     enabled: Boolean(poolId && assetId),
   })
 }
+
+export async function downloadAssetPoolVulnerabilityReport(
+  poolId: string,
+  format: 'word' | 'excel',
+  params?: { url?: string; poc_id?: string; severity?: string; status?: string; keyword?: string },
+): Promise<void> {
+  const endpoint = format === 'word' ? `/asset-pools/${poolId}/reports/vulnerability-word` : `/asset-pools/${poolId}/reports/vulnerability-excel`
+  const response = await httpClient.get<Blob>(endpoint, {
+    params,
+    responseType: 'blob',
+  })
+  const disposition = String(response.headers['content-disposition'] || '')
+  const matched = disposition.match(/filename\*=UTF-8''([^;]+)/i)
+  const fallback = format === 'word' ? 'asset-pool-vulnerability-report.docx' : 'asset-pool-vulnerability-checklist.xlsx'
+  const fileName = matched ? decodeURIComponent(matched[1]) : fallback
+  const blob = new Blob([response.data], {
+    type: response.headers['content-type'] || 'application/octet-stream',
+  })
+  const href = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = href
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(href)
+}
