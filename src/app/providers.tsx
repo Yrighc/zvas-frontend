@@ -1,7 +1,10 @@
 import { HeroUIProvider } from '@heroui/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import type { PropsWithChildren } from 'react'
+
+import { getCurrentUser } from '@/api/adapters/auth'
+import { useAuthStore } from '@/store/auth'
 
 const THEME_KEY = 'zvas.console.theme'
 
@@ -38,7 +41,51 @@ export function AppProviders({ children }: PropsWithChildren) {
 
   return (
     <HeroUIProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthBootstrap />
+        {children}
+      </QueryClientProvider>
     </HeroUIProvider>
   )
+}
+
+function AuthBootstrap() {
+  const token = useAuthStore((state) => state.token)
+  const setCurrentUser = useAuthStore((state) => state.setCurrentUser)
+  const setHydrating = useAuthStore((state) => state.setHydrating)
+  const clearSession = useAuthStore((state) => state.clearSession)
+
+  useEffect(() => {
+    let active = true
+
+    async function syncSession() {
+      if (!token) {
+        setHydrating(false)
+        return
+      }
+
+      setHydrating(true)
+      try {
+        const user = await getCurrentUser()
+        if (!active) {
+          return
+        }
+        setCurrentUser(user)
+        setHydrating(false)
+      } catch {
+        if (!active) {
+          return
+        }
+        clearSession()
+      }
+    }
+
+    void syncSession()
+
+    return () => {
+      active = false
+    }
+  }, [clearSession, setCurrentUser, setHydrating, token])
+
+  return null
 }

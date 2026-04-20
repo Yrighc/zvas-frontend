@@ -21,7 +21,9 @@ import { useTasks, usePauseTask, useResumeTask, useStopTask, useDeleteTask, getT
 import { useAssetPools } from '@/api/adapters/asset'
 import { useTaskRoutes, getRouteActiveLabel, mapStageLabels } from '@/api/adapters/route'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
+import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 
 function formatDateTime(isoStr?: string) {
@@ -31,6 +33,7 @@ function formatDateTime(isoStr?: string) {
 
 export function TasksPage() {
   const navigate = useNavigate()
+  const currentUser = useAuthStore((state) => state.currentUser)
   const [searchParams] = useSearchParams()
 
   const [page, setPage] = useState(1)
@@ -58,6 +61,7 @@ export function TasksPage() {
   const { data: routesData } = useTaskRoutes()
   const poolsQuery = useAssetPools({ page: 1, page_size: 100 })
   const poolItems = poolsQuery.data?.data || []
+  const canControlTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskUpdate)
 
   const items = tasksQuery.data?.data || []
   const total = tasksQuery.data?.pagination?.total || 0
@@ -210,17 +214,17 @@ export function TasksPage() {
                     <div className="flex justify-end gap-2 pr-2">
                       <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5 mr-2">
                         {statusInfo.canPause && (
-                          <Button isIconOnly size="sm" variant="light" className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(task.id)}>
+                          <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(task.id)}>
                             <PauseIcon className="w-4 h-4" />
                           </Button>
                         )}
                         {statusInfo.canResume && (
-                          <Button isIconOnly size="sm" variant="light" className="h-7 w-7 min-w-0 text-apple-green hover:bg-apple-green/20" onPress={() => resumeTask.mutate(task.id)}>
+                          <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-green hover:bg-apple-green/20" onPress={() => resumeTask.mutate(task.id)}>
                             <PlayIcon className="w-4 h-4" />
                           </Button>
                         )}
                         {statusInfo.canStop && (
-                          <Button isIconOnly size="sm" variant="light" className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20" onPress={() => stopTask.mutate(task.id)}>
+                          <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20" onPress={() => stopTask.mutate(task.id)}>
                             <StopIcon className="w-4 h-4" />
                           </Button>
                         )}

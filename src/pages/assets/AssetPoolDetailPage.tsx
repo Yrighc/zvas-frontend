@@ -8,7 +8,7 @@ import {
   DropdownMenu,
   DropdownItem,
 } from '@heroui/react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeftIcon, CloudArrowDownIcon, DocumentPlusIcon, ArrowDownTrayIcon, ServerStackIcon, RocketLaunchIcon } from '@heroicons/react/24/outline'
 
@@ -28,12 +28,15 @@ import { FileImportModal } from '@/components/assets/FileImportModal'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { TrashIcon } from '@heroicons/react/24/outline'
 import { useUrlTabState } from '@/hooks/useUrlTabState'
+import { useAuthStore } from '@/store/auth'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 const ASSET_POOL_DETAIL_TABS = ['overview', 'inputs', 'ip', 'domain', 'site', 'tasks', 'findings', 'weak_scan', 'reports'] as const
 
 export function AssetPoolDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const currentUser = useAuthStore((state) => state.currentUser)
 
   const poolQuery = useAssetPoolDetail(id)
   const pool = poolQuery.data
@@ -45,6 +48,28 @@ export function AssetPoolDetailPage() {
   const [deleteVisible, setDeleteVisible] = useState(false)
 
   const deleteMutation = useDeleteAssetPool()
+  const canImportAssets = hasPermission(currentUser?.permissions, PERMISSIONS.assetImport)
+  const canCreateTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskCreate)
+  const canManagePool = hasPermission(currentUser?.permissions, PERMISSIONS.assetUpdate)
+  const canReadFindings = hasPermission(currentUser?.permissions, PERMISSIONS.findingRead)
+  const canReadReports = hasPermission(currentUser?.permissions, PERMISSIONS.reportRead)
+  const visibleTabs = useMemo(() => {
+    return ASSET_POOL_DETAIL_TABS.filter((tab) => {
+      if ((tab === 'findings' || tab === 'weak_scan') && !canReadFindings) {
+        return false
+      }
+      if (tab === 'reports' && !canReadReports) {
+        return false
+      }
+      return true
+    })
+  }, [canReadFindings, canReadReports])
+
+  useEffect(() => {
+    if (!visibleTabs.includes(activeTab)) {
+      setActiveTab('overview')
+    }
+  }, [activeTab, setActiveTab, visibleTabs])
 
   if (poolQuery.isPending) {
     return (
@@ -100,6 +125,7 @@ export function AssetPoolDetailPage() {
             <DropdownTrigger>
               <Button
                 variant="flat"
+                isDisabled={!canImportAssets}
                 className="h-14 w-full sm:w-auto rounded-2xl font-black px-6 border border-white/5 bg-apple-tertiary-bg/10 backdrop-blur-md text-white hover:bg-white/10 transition-colors"
               >
                 <ArrowDownTrayIcon className="w-5 h-5 text-apple-blue-light" />
@@ -134,6 +160,7 @@ export function AssetPoolDetailPage() {
 
           <Button
             color="primary"
+            isDisabled={!canCreateTask}
             className="h-14 w-full sm:w-auto rounded-2xl font-black px-8 shadow-2xl shadow-apple-blue/20 flex items-center gap-2"
             onPress={() => setTaskModalOpen(true)}
           >
@@ -144,6 +171,7 @@ export function AssetPoolDetailPage() {
           <Button
             variant="flat"
             color="danger"
+            isDisabled={!canManagePool}
             className="h-14 w-full sm:w-auto rounded-2xl bg-apple-red/10 border border-apple-red/20 font-black px-6 text-apple-red-light hover:bg-apple-red/20 transition-colors"
             onPress={() => setDeleteVisible(true)}
           >
@@ -173,9 +201,9 @@ export function AssetPoolDetailPage() {
           <Tab key="domain" title="域名树" />
           <Tab key="site" title="站点指纹" />
           <Tab key="tasks" title="任务执行" />
-          <Tab key="findings" title="漏洞结果" />
-          <Tab key="weak_scan" title="弱点扫描结果" />
-          <Tab key="reports" title="分析报告" />
+          {canReadFindings && <Tab key="findings" title="漏洞结果" />}
+          {canReadFindings && <Tab key="weak_scan" title="弱点扫描结果" />}
+          {canReadReports && <Tab key="reports" title="分析报告" />}
         </Tabs>
       </div>
 
@@ -189,9 +217,9 @@ export function AssetPoolDetailPage() {
           {activeTab === 'site' && <AssetPoolSiteTab poolId={id!} />}
           {activeTab === 'tasks' && <AssetPoolTasksTab poolId={id!} />}
 
-          {activeTab === 'findings' && <AssetPoolFindingsTab poolId={id!} />}
-          {activeTab === 'weak_scan' && <AssetPoolWeakScanFindingsTab poolId={id!} />}
-          {activeTab === 'reports' && <AssetPoolReportsTab poolId={id!} />}
+          {activeTab === 'findings' && canReadFindings && <AssetPoolFindingsTab poolId={id!} />}
+          {activeTab === 'weak_scan' && canReadFindings && <AssetPoolWeakScanFindingsTab poolId={id!} />}
+          {activeTab === 'reports' && canReadReports && <AssetPoolReportsTab poolId={id!} />}
         </div>
       </div>
 

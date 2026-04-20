@@ -6,11 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface InternalCenterHttpHandlerRoleItem {
-  code?: string;
-  description?: string;
-  id?: string;
-  is_builtin?: boolean;
-  name?: string;
+export interface InternalCenterHttpHandlerUserPermissionSnapshotData {
   permissions?: string[];
+  role_codes?: string[];
+  user_id?: string;
 }

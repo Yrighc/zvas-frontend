@@ -21,6 +21,8 @@ import { TaskWeakScanResultsTab } from '@/components/tasks/TaskWeakScanResultsTa
 import { PauseIcon, PlayIcon as PlayIconSolid, StopIcon } from '@heroicons/react/24/solid'
 import { useUrlTabState } from '@/hooks/useUrlTabState'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { useAuthStore } from '@/store/auth'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 const TASK_DETAIL_TABS = ['overview', 'assets', 'records', 'progress', 'findings', 'weak_scan', 'reports'] as const
 type TaskDetailTabKey = (typeof TASK_DETAIL_TABS)[number]
@@ -44,6 +46,7 @@ function hasPlan(task: TaskDetailVM | undefined, plans: Set<string>, templates: 
 export function TaskDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const currentUser = useAuthStore((state) => state.currentUser)
 
   const detailQuery = useTaskDetail(id)
   const progressQuery = useTaskProgress(id)
@@ -65,6 +68,9 @@ export function TaskDetailPage() {
   const [deleteVisible, setDeleteVisible] = useState(false)
   const task = detailQuery.data
   const progress = progressQuery.data
+  const canCreateTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskCreate)
+  const canControlTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskUpdate)
+  const canReadReports = hasPermission(currentUser?.permissions, PERMISSIONS.reportRead)
 
   const showFindingsTab = useMemo(() => hasPlan(task, VULN_SCAN_PLANS, VULN_SCAN_TEMPLATES), [task])
   const showWeakScanTab = useMemo(() => {
@@ -75,9 +81,9 @@ export function TaskDetailPage() {
     const tabs: TaskDetailTabKey[] = ['overview', 'assets', 'records', 'progress']
     if (showFindingsTab) tabs.push('findings')
     if (showWeakScanTab) tabs.push('weak_scan')
-    tabs.push('reports')
+    if (canReadReports) tabs.push('reports')
     return tabs
-  }, [showFindingsTab, showWeakScanTab])
+  }, [canReadReports, showFindingsTab, showWeakScanTab])
   const selectedTab: TaskDetailTabKey = visibleTabs.includes(activeTab) ? activeTab : 'overview'
 
   useEffect(() => {
@@ -144,31 +150,32 @@ export function TaskDetailPage() {
           
           <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-[18px] p-1 shadow-inner">
              {statusInfo.canPause && (
-               <Button variant="flat" size="sm" className="h-10 rounded-xl bg-apple-warning/20 text-apple-warning-light font-black px-4 flex items-center gap-2" onPress={() => pauseTask.mutate(id!)}>
+               <Button variant="flat" size="sm" isDisabled={!canControlTask} className="h-10 rounded-xl bg-apple-warning/20 text-apple-warning-light font-black px-4 flex items-center gap-2" onPress={() => pauseTask.mutate(id!)}>
                  <PauseIcon className="w-4 h-4" />
                  <span>暂停</span>
                </Button>
              )}
              {statusInfo.canResume && (
-               <Button variant="flat" size="sm" className="h-10 rounded-xl bg-apple-green/20 text-apple-green-light font-black px-4 flex items-center gap-2" onPress={() => resumeTask.mutate(id!)}>
+               <Button variant="flat" size="sm" isDisabled={!canControlTask} className="h-10 rounded-xl bg-apple-green/20 text-apple-green-light font-black px-4 flex items-center gap-2" onPress={() => resumeTask.mutate(id!)}>
                  <PlayIconSolid className="w-4 h-4" />
                  <span>恢复</span>
                </Button>
              )}
              {statusInfo.canStop && (
-               <Button variant="flat" size="sm" className="h-10 rounded-xl bg-apple-red/20 text-apple-red-light font-black px-4 flex items-center gap-2" onPress={() => stopTask.mutate(id!)}>
+               <Button variant="flat" size="sm" isDisabled={!canControlTask} className="h-10 rounded-xl bg-apple-red/20 text-apple-red-light font-black px-4 flex items-center gap-2" onPress={() => stopTask.mutate(id!)}>
                  <StopIcon className="w-4 h-4" />
                  <span>终止</span>
                </Button>
              )}
              {task.status === 'draft' && (
-               <Button color="primary" className="h-10 rounded-[14px] font-black px-6 shadow-xl shadow-apple-blue/20 flex items-center gap-2" isLoading={runTask.isPending} isDisabled={runTask.isPending} onPress={handleRunTask} startContent={!runTask.isPending ? <PlayIcon className="w-4 h-4" /> : undefined}>
+               <Button color="primary" className="h-10 rounded-[14px] font-black px-6 shadow-xl shadow-apple-blue/20 flex items-center gap-2" isLoading={runTask.isPending} isDisabled={runTask.isPending || !canCreateTask} onPress={handleRunTask} startContent={!runTask.isPending ? <PlayIcon className="w-4 h-4" /> : undefined}>
                  启动任务
                </Button>
              )}
              <Button
                variant="flat"
                size="sm"
+               isDisabled={!canControlTask}
                className="h-10 rounded-xl bg-apple-red/10 text-apple-red-light font-black px-4 flex items-center gap-2"
                onPress={() => setDeleteVisible(true)}
              >
@@ -194,7 +201,7 @@ export function TaskDetailPage() {
           <Tab key="progress" title="执行进度" />
           {showFindingsTab && <Tab key="findings" title="漏洞结果" />}
           {showWeakScanTab && <Tab key="weak_scan" title="弱点扫描结果" />}
-          <Tab key="reports" title="报告" />
+          {canReadReports && <Tab key="reports" title="报告" />}
         </Tabs>
       </div>
 
@@ -205,7 +212,7 @@ export function TaskDetailPage() {
         {selectedTab === 'progress' && <TaskProgressTab progress={progress} />}
         {selectedTab === 'findings' && <TaskFindingsTab taskId={task.id} />}
         {selectedTab === 'weak_scan' && <TaskWeakScanResultsTab taskId={task.id} />}
-        {selectedTab === 'reports' && <TaskReportsTab taskId={task.id} />}
+        {selectedTab === 'reports' && canReadReports && <TaskReportsTab taskId={task.id} />}
       </div>
 
       <ConfirmModal

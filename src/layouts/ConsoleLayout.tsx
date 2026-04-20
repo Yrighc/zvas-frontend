@@ -19,6 +19,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { logout } from '@/api/adapters/auth'
 import { useAuthStore } from '@/store/auth'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 type SubMenu = {
   key: string
@@ -46,40 +47,40 @@ const MENU_CONFIG: MainMenu[] = [
   {
      key: 'assets', label: '资产管理', icon: <CubeTransparentIcon className="w-[18px] h-[18px]" />,
      children: [
-       { key: 'asset-pools', path: '/assets', label: '资产池', kicker: 'ASSET POOLS' }
+       { key: 'asset-pools', path: '/assets', label: '资产池', kicker: 'ASSET POOLS', permission: PERMISSIONS.assetSearch }
      ]
   },
   {
      key: 'tasks', label: '任务管理', icon: <RocketLaunchIcon className="w-[18px] h-[18px]" />,
      children: [
-       { key: 'tasks-list', path: '/tasks', label: '任务管理', kicker: 'TASKS & OPS' },
-       { key: 'tasks-new', path: '/tasks/new', label: '新建任务', kicker: 'NEW TASK' },
-       { key: 'tasks-templates', path: '/tasks/templates', label: '任务模板', kicker: 'TEMPLATES' },
-       { key: 'tasks-workers', path: '/tasks/workers', label: 'Worker 节点', kicker: 'WORKERS' }
+       { key: 'tasks-list', path: '/tasks', label: '任务管理', kicker: 'TASKS & OPS', permission: PERMISSIONS.taskRead },
+       { key: 'tasks-new', path: '/tasks/new', label: '新建任务', kicker: 'NEW TASK', permission: PERMISSIONS.taskCreate },
+       { key: 'tasks-templates', path: '/tasks/templates', label: '任务模板', kicker: 'TEMPLATES', permission: PERMISSIONS.taskRead },
+       { key: 'tasks-workers', path: '/tasks/workers', label: 'Worker 节点', kicker: 'WORKERS', permission: PERMISSIONS.taskRead }
      ]
   },
   {
      key: 'findings', label: '漏洞管理', icon: <ShieldExclamationIcon className="w-[18px] h-[18px]" />,
      children: [
-       { key: 'findings-list', path: '/findings', label: '漏洞结果', kicker: 'THREAT INTELLIGENCE' },
-       { key: 'findings-weak-scan', path: '/findings/weak-scan', label: '弱点扫描结果', kicker: 'WEAK SCAN' }
+       { key: 'findings-list', path: '/findings', label: '漏洞结果', kicker: 'THREAT INTELLIGENCE', permission: PERMISSIONS.findingRead },
+       { key: 'findings-weak-scan', path: '/findings/weak-scan', label: '弱点扫描结果', kicker: 'WEAK SCAN', permission: PERMISSIONS.findingRead }
      ]
   },
   {
      key: 'iam', label: '用户管理', icon: <UsersIcon className="w-[18px] h-[18px]" />,
      children: [
-       { key: 'iam-users', path: '/iam/users', label: '用户管理', kicker: 'USERS' },
-       { key: 'iam-roles', path: '/iam/roles', label: '角色与权限', kicker: 'ROLES' },
-       { key: 'iam-audits', path: '/iam/audits', label: '审计日志', kicker: 'AUDIT TRAIL' }
+       { key: 'iam-users', path: '/iam/users', label: '用户管理', kicker: 'USERS', permission: PERMISSIONS.userRead },
+       { key: 'iam-roles', path: '/iam/roles', label: '角色与权限', kicker: 'ROLES', permission: PERMISSIONS.roleRead },
+       { key: 'iam-audits', path: '/iam/audits', label: '审计日志', kicker: 'AUDIT TRAIL', permission: PERMISSIONS.auditRead }
      ]
   },
   {
      key: 'system', label: '系统管理', icon: <WrenchScrewdriverIcon className="w-[18px] h-[18px]" />,
      children: [
        { key: 'system-health', path: '/system/health', label: '系统健康', kicker: 'HEALTH' },
-       { key: 'system-network', path: '/system/network', label: '网络管理', kicker: 'NETWORK', permission: 'settings:manage' },
+       { key: 'system-network', path: '/system/network', label: '网络管理', kicker: 'NETWORK', permission: PERMISSIONS.settingsManage },
        { key: 'system-version', path: '/system/version', label: '系统版本', kicker: 'VERSION' },
-       { key: 'system-settings', path: '/system/settings', label: '系统设置', kicker: 'SETTINGS', permission: 'settings:manage' }
+       { key: 'system-settings', path: '/system/settings', label: '系统设置', kicker: 'SETTINGS', permission: PERMISSIONS.settingsManage }
      ]
   }
 ]
@@ -115,10 +116,10 @@ export function ConsoleLayout() {
   const filteredMenu: SubMenuSection[] = useMemo(() => {
     return MENU_CONFIG.map(section => {
       // 检测父权限
-      if (section.permission && !permissions.includes(section.permission)) return null
+      if (section.permission && !hasPermission(permissions, section.permission)) return null
 
       // 过滤子项权限
-      const visibleChildren = section.children.filter(c => !c.permission || permissions.includes(c.permission))
+      const visibleChildren = section.children.filter(c => !c.permission || hasPermission(permissions, c.permission))
 
       if (visibleChildren.length === 0) return null
 

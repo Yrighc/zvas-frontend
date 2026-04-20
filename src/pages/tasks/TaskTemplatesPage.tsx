@@ -5,12 +5,14 @@ import { DocumentDuplicateIcon, MagnifyingGlassIcon, RocketLaunchIcon } from '@h
 
 import { getPortModeLabel, getTemplatePresetBadge, isHighCostPortTemplate, useTaskTemplates, useUpdateTaskTemplateStatus } from '@/api/adapters/template'
 import { useAuthStore } from '@/store/auth'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 export function TaskTemplatesPage() {
   const [keyword, setKeyword] = useState('')
   const [pendingCode, setPendingCode] = useState('')
   const currentUser = useAuthStore((state) => state.currentUser)
   const canManageTemplates = Boolean(currentUser?.permissions?.includes('settings:manage'))
+  const canCreateTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskCreate)
   const { data: qData, isPending } = useTaskTemplates()
   const updateStatus = useUpdateTaskTemplateStatus()
 
@@ -114,7 +116,7 @@ export function TaskTemplatesPage() {
                       </div>
                     </div>
                     <div className="mt-6 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
-                      <span className="text-[12px] text-apple-blue-light font-bold flex items-center gap-1">
+                      <span className={`text-[12px] font-bold flex items-center gap-1 ${canCreateTask ? 'text-apple-blue-light' : 'text-apple-text-tertiary'}`}>
                         <RocketLaunchIcon className="w-4 h-4" /> 查看详情与配置
                       </span>
                     </div>

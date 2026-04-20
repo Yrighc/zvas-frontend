@@ -14,6 +14,8 @@ import { useAssetPoolTasks } from '@/api/adapters/asset'
 import { usePauseTask, useResumeTask, useStopTask, useDeleteTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, getTemplateCodeLabel, isTerminalTaskStatus, taskHasWeakScanPlan } from '@/api/adapters/task'
 import { useTaskRoutes, mapStageLabels, getRouteActiveLabel } from '@/api/adapters/route'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { useAuthStore } from '@/store/auth'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 function formatTime(value?: string): string {
   if (!value) return '-'
@@ -24,6 +26,7 @@ function formatTime(value?: string): string {
 
 export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
   const navigate = useNavigate()
+  const currentUser = useAuthStore((state) => state.currentUser)
   const [createVisible, setCreateVisible] = useState(false)
   const [page, setPage] = useState(1)
   const [deleteVisible, setDeleteVisible] = useState(false)
@@ -41,6 +44,8 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
   const stopTask = useStopTask()
   const deleteTask = useDeleteTask()
   const { data: routes } = useTaskRoutes()
+  const canCreateTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskCreate)
+  const canControlTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskUpdate)
 
   const items = data?.data || []
   const pagination = data?.pagination
@@ -83,6 +88,7 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
           <Button
             color="primary"
             variant="shadow"
+            isDisabled={!canCreateTask}
             onPress={() => setCreateVisible(true)}
             className="h-12 rounded-[16px] px-6 font-bold shadow-apple-blue/30 bg-apple-blue"
           >
@@ -122,7 +128,7 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
               <RocketLaunchIcon className="w-12 h-12 text-apple-blue-light opacity-30 drop-shadow-[0_0_12px_rgba(0,113,227,0.5)]" />
               <p className="text-[13px] font-black tracking-[0.1em] text-white uppercase">NULL_TARGETED_TASKS</p>
               <p className="text-[12px] text-apple-text-tertiary max-w-sm font-medium">当前资产池未关联任何存量扫描或探测任务，立刻创建以启动防护检查。</p>
-              <Button color="primary" variant="flat" onPress={() => setCreateVisible(true)} className="mt-2 font-black rounded-xl">
+              <Button color="primary" variant="flat" isDisabled={!canCreateTask} onPress={() => setCreateVisible(true)} className="mt-2 font-black rounded-xl">
                 INITIATE TASK
               </Button>
             </div>
@@ -172,17 +178,17 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                     <div className="flex items-center justify-end gap-1.5">
                        <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                           {statusInfo.canPause && (
-                            <Button isIconOnly size="sm" variant="light" className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(item.id)}>
+                            <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(item.id)}>
                               <PauseIcon className="w-4 h-4" />
                             </Button>
                           )}
                           {statusInfo.canResume && (
-                            <Button isIconOnly size="sm" variant="light" className="h-7 w-7 min-w-0 text-apple-green hover:bg-apple-green/20" onPress={() => resumeTask.mutate(item.id)}>
+                            <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-green hover:bg-apple-green/20" onPress={() => resumeTask.mutate(item.id)}>
                               <PlayIcon className="w-4 h-4" />
                             </Button>
                           )}
                           {statusInfo.canStop && (
-                            <Button isIconOnly size="sm" variant="light" className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20" onPress={() => stopTask.mutate(item.id)}>
+                            <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20" onPress={() => stopTask.mutate(item.id)}>
                               <StopIcon className="w-4 h-4" />
                             </Button>
                           )}
@@ -200,6 +206,7 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                         isIconOnly
                         size="sm"
                         variant="light"
+                        isDisabled={!canControlTask}
                         className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20"
                         onPress={() => {
                           setTargetTask({ id: item.id, name: item.name || '未命名任务' })

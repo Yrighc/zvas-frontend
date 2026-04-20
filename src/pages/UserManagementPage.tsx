@@ -33,12 +33,14 @@ import {
   resetUserPassword,
   updateUserStatus,
   useRoleOptionsView,
+  useUserPermissionSnapshotView,
   useUserListView,
   type CreateUserPayload,
   type UserView,
 } from '@/api/adapters/user'
 import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 interface CreateUserDraft {
   username: string
@@ -106,6 +108,7 @@ export function UserManagementPage() {
     status: statusFilter === 'all' ? undefined : statusFilter
   })
   const rolesQuery = useRoleOptionsView()
+  const permissionSnapshotQuery = useUserPermissionSnapshotView(detailTarget?.id)
 
   useEffect(() => {
     const error = usersQuery.error || rolesQuery.error
@@ -176,8 +179,8 @@ export function UserManagementPage() {
     },
   })
 
-  const canManageUsers = hasPermission(currentUser?.permissions, 'user:manage')
-  const canManageRoles = hasPermission(currentUser?.permissions, 'role:manage')
+  const canManageUsers = hasPermission(currentUser?.permissions, PERMISSIONS.userManage)
+  const canManageRoles = hasPermission(currentUser?.permissions, PERMISSIONS.roleManage)
   const roleOptions = rolesQuery.data || []
 
   const filteredItems = usersQuery.data?.items || []
@@ -822,15 +825,25 @@ export function UserManagementPage() {
                         <span className="text-[9px] text-apple-text-tertiary uppercase font-black tracking-widest">权级状态</span>
                       </div>
                       <div className="max-h-[300px] overflow-y-auto">
-                        {detailTarget?.roles.flatMap(r => r.code).length === 0 ? (
+                        {permissionSnapshotQuery.isPending ? (
+                          <div className="p-8 text-center text-xs text-apple-text-tertiary italic">权限快照同步中...</div>
+                        ) : permissionSnapshotQuery.isError ? (
+                          <div className="p-8 text-center">
+                            <p className="text-xs text-apple-red-light italic">权限快照加载失败</p>
+                            <p className="text-[10px] text-apple-text-tertiary/50 mt-1">请稍后刷新重试</p>
+                          </div>
+                        ) : (permissionSnapshotQuery.data?.permissions || []).length === 0 ? (
                           <div className="p-8 text-center text-xs text-apple-text-tertiary italic">未检测到任何活动权能内容更新完成。</div>
                         ) : (
                           <div className="p-2 space-y-1">
-                            {/* 权限快照需要独立明细接口支持，当前 list API 不下发权限详情 */}
-                            <div className="p-8 text-center">
-                              <p className="text-xs text-apple-text-tertiary italic">权限快照暂未接入独立明细接口</p>
-                              <p className="text-[10px] text-apple-text-tertiary/50 mt-1">角色已授予：{detailTarget?.roles.map(r => r.name).join('、') || '无'}</p>
-                            </div>
+                            {(permissionSnapshotQuery.data?.permissions || []).map((permission) => (
+                              <div key={permission} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
+                                <span className="font-mono text-[12px] font-bold text-white">{permission}</span>
+                                <span className="rounded-full border border-apple-green/20 bg-apple-green/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-apple-green-light">
+                                  Enabled
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -843,7 +856,7 @@ export function UserManagementPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-[11px] font-medium">
                         <span>创建时间</span>
-                        <span className="text-white">—</span>
+                        <span className="text-white">{detailTarget?.id || '—'}</span>
                       </div>
                       <div className="flex justify-between text-[11px] font-medium">
                         <span>最后访问</span>
@@ -927,10 +940,6 @@ function toCreatePayload(draft: CreateUserDraft): CreateUserPayload {
     password: draft.password,
     roleCodes: draft.roleCodes,
   }
-}
-
-function hasPermission(permissions: string[] | undefined, permission: string) {
-  return Boolean(permissions?.includes(permission))
 }
 
 async function refreshUsersAndAudits(queryClient: ReturnType<typeof useQueryClient>, includeAudits = true) {

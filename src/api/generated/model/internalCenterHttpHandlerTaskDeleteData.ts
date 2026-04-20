@@ -6,11 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface InternalCenterHttpHandlerRoleItem {
-  code?: string;
-  description?: string;
+export interface InternalCenterHttpHandlerTaskDeleteData {
   id?: string;
-  is_builtin?: boolean;
-  name?: string;
-  permissions?: string[];
+  success?: boolean;
 }

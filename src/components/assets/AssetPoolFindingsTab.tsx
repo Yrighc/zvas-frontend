@@ -30,8 +30,10 @@ import {
 import { type SetURLSearchParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { deleteAssetPoolFinding, type FindingSummaryView, useAssetPoolFindings } from '@/api/adapters/asset'
+import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 const PAGE_SIZE = 20
 
@@ -331,6 +333,7 @@ type AssetPoolFindingsTabContentProps = {
 
 function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, urlFilters }: AssetPoolFindingsTabContentProps) {
   const navigate = useNavigate()
+  const currentUser = useAuthStore((state) => state.currentUser)
   const [page, setPage] = useState(1)
   const [draftFilters, setDraftFilters] = useState<FindingFilterState>(urlFilters)
   const [selectedItem, setSelectedItem] = useState<FindingSummaryView | null>(null)
@@ -351,6 +354,7 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
   const total = data?.pagination?.total || 0
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total])
   const hasActiveFilters = Boolean(urlFilters.url || urlFilters.pocID || urlFilters.severity !== 'all')
+  const canDeleteFinding = hasPermission(currentUser?.permissions, PERMISSIONS.assetUpdate)
 
   function handleApplyFilters() {
     const nextFilters = {
@@ -543,7 +547,7 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
                     <Button size="sm" variant="flat" className="rounded-xl bg-white/6 font-bold text-white hover:bg-white/10" onPress={() => setSelectedItem(item)}>
                       查看详情
                     </Button>
-                    <Button size="sm" color="danger" variant="flat" className="rounded-xl font-bold" onPress={() => setPendingDeleteItem(item)}>
+                    <Button size="sm" color="danger" variant="flat" isDisabled={!canDeleteFinding} className="rounded-xl font-bold" onPress={() => setPendingDeleteItem(item)}>
                       删除
                     </Button>
                   </div>

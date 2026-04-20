@@ -33,7 +33,9 @@ import { CreateAssetPoolModal } from '@/components/assets/CreateAssetPoolModal'
 import { ManualInputModal } from '@/components/assets/ManualInputModal'
 import { FileImportModal } from '@/components/assets/FileImportModal'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 function formatDateTime(isoStr?: string) {
   if (!isoStr) return '-'
@@ -43,6 +45,7 @@ function formatDateTime(isoStr?: string) {
 
 export function AssetPoolsPage() {
   const navigate = useNavigate()
+  const currentUser = useAuthStore((state) => state.currentUser)
   const [page, setPage] = useState(1)
   const [pageSize] = useState(20)
   const [keyword, setKeyword] = useState('')
@@ -56,6 +59,8 @@ export function AssetPoolsPage() {
   const [targetPool, setTargetPool] = useState<{ id: string; name: string } | null>(null)
 
   const deleteMutation = useDeleteAssetPool()
+  const canImportAssets = hasPermission(currentUser?.permissions, PERMISSIONS.assetImport)
+  const canManagePools = hasPermission(currentUser?.permissions, PERMISSIONS.assetUpdate)
 
   const poolsQuery = useAssetPools({
     page,
@@ -165,6 +170,7 @@ export function AssetPoolsPage() {
             <DropdownTrigger>
               <Button 
                 variant="flat"
+                isDisabled={!canImportAssets}
                 className="h-14 rounded-2xl font-black px-6 border border-white/5 bg-apple-tertiary-bg/10 backdrop-blur-md text-white hover:bg-apple-tertiary-bg/20 transition-colors"
               >
                 <ArrowDownTrayIcon className="w-5 h-5 text-apple-blue-light" />
@@ -199,6 +205,7 @@ export function AssetPoolsPage() {
 
           <Button
             color="primary"
+            isDisabled={!canManagePools}
             className="h-14 rounded-2xl font-black px-8 shadow-2xl shadow-apple-blue/20 flex items-center gap-2"
             onPress={() => setCreateVisible(true)}
           >
@@ -314,6 +321,7 @@ export function AssetPoolsPage() {
                           size="sm"
                           variant="flat"
                           color="danger"
+                          isDisabled={!canManagePools}
                           className="rounded-full bg-apple-red/10 text-apple-red-light border border-apple-red/20 font-bold h-8 px-4"
                           onPress={() => { setTargetPool(pool); setDeleteVisible(true) }}
                         >

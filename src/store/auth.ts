@@ -5,8 +5,10 @@ import type { AuthUserView } from '@/types/auth'
 interface AuthState {
   token: string
   currentUser: AuthUserView | null
+  hydrating: boolean
   setSession: (token: string, user: AuthUserView | null) => void
   setCurrentUser: (user: AuthUserView | null) => void
+  setHydrating: (hydrating: boolean) => void
   clearSession: () => void
 }
 
@@ -19,20 +21,24 @@ const USER_STORAGE_KEY = 'zvas.console.auth.user'
 export const useAuthStore = create<AuthState>((set) => ({
   token: readToken(),
   currentUser: readUser(),
+  hydrating: Boolean(readToken()),
   setSession: (token, user) => {
     const normalized = token.trim()
     writeToken(normalized)
     writeUser(user)
-    set({ token: normalized, currentUser: user })
+    set({ token: normalized, currentUser: user, hydrating: false })
   },
   setCurrentUser: (user) => {
     writeUser(user)
     set((state) => ({ ...state, currentUser: user }))
   },
+  setHydrating: (hydrating) => {
+    set((state) => ({ ...state, hydrating }))
+  },
   clearSession: () => {
     removeToken()
     removeUser()
-    set({ token: '', currentUser: null })
+    set({ token: '', currentUser: null, hydrating: false })
   },
 }))
 

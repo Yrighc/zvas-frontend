@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 
@@ -7,7 +8,8 @@ import { ErrorPage } from '@/pages/ErrorPage'
 import { ForbiddenPage } from '@/pages/ForbiddenPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
-import { RequireAuth, RouterErrorFallback } from '@/router/guards'
+import { RequireAuth, RequirePermissions, RouterErrorFallback } from '@/router/guards'
+import { PERMISSIONS } from '@/utils/permissions'
 
 // 路由懒加载，优化打包体积
 const OverviewPage = lazy(() => import('@/pages/OverviewPage').then(m => ({ default: m.OverviewPage })))
@@ -66,151 +68,184 @@ export const router = createBrowserRouter(
           children: [
             {
               index: true,
-              element: <Navigate replace to="/assets" />,
+              element: <Navigate replace to="/overview" />,
             },
             {
               path: 'overview',
-              element: (
+              handle: { requiredPermissions: [] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <OverviewPage />
-                </Suspense>
+                </Suspense>,
               ),
             },
             {
               path: 'system/health',
-              element: (
+              handle: { requiredPermissions: [] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <SystemHealthPage />
-                </Suspense>
+                </Suspense>,
               ),
             },
             {
               path: 'system/network',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.settingsManage] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <SystemNetworkPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.settingsManage],
               ),
             },
             {
               path: 'system/version',
-              element: (
+              handle: { requiredPermissions: [] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <SystemVersionPage />
-                </Suspense>
+                </Suspense>,
               ),
             },
             {
               path: 'system/settings',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.settingsManage] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <SystemSettingsPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.settingsManage],
               ),
             },
             {
               path: 'iam/users',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.userRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <UserManagementPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.userRead],
               ),
             },
             {
               path: 'iam/roles',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.roleRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <RolesPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.roleRead],
               ),
             },
             {
               path: 'iam/audits',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.auditRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <AuditLogPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.auditRead],
               ),
             },
             {
               path: 'assets',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.assetSearch] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <AssetPoolsPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.assetSearch],
               ),
             },
 
             {
               path: 'assets/:id',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.assetRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <AssetPoolDetailPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.assetRead],
               ),
             },
             {
               path: 'tasks',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.taskRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <TasksPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.taskRead],
               ),
             },
             {
               path: 'tasks/new',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.taskCreate] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <TaskNewPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.taskCreate],
               ),
             },
             {
               path: 'tasks/templates',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.taskRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <TaskTemplatesPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.taskRead],
               ),
             },
             {
               path: 'tasks/templates/:code',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.taskRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <TaskTemplateDetailPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.taskRead],
               ),
             },
             {
               path: 'tasks/workers',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.taskRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <WorkersPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.taskRead],
               ),
             },
             {
               path: 'tasks/:id',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.taskRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <TaskDetailPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.taskRead],
               ),
             },
             {
               path: 'findings',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.findingRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <FindingsPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.findingRead],
               ),
             },
             {
               path: 'findings/weak-scan',
-              element: (
+              handle: { requiredPermissions: [PERMISSIONS.findingRead] },
+              element: renderProtectedPage(
                 <Suspense fallback={renderPageLoader()}>
                   <WeakScanFindingsPage />
-                </Suspense>
+                </Suspense>,
+                [PERMISSIONS.findingRead],
               ),
             },
           ],
@@ -234,3 +269,7 @@ export const router = createBrowserRouter(
     basename: appEnv.basePath,
   },
 )
+
+function renderProtectedPage(element: ReactNode, requiredPermissions: string[] = []) {
+  return <RequirePermissions requiredPermissions={requiredPermissions}>{element}</RequirePermissions>
+}

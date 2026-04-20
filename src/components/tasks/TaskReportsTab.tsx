@@ -3,7 +3,9 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagina
 import { ArrowDownTrayIcon, ArrowPathIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline'
 
 import { downloadTaskVulnerabilityReport, useTaskReports } from '@/api/adapters/task'
+import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 function statusColor(status: string): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
   switch (status?.toLowerCase()) {
@@ -38,6 +40,7 @@ function scopeLabel(scopeType: string, scopeID: string): string {
 }
 
 export function TaskReportsTab({ taskId }: { taskId: string }) {
+  const currentUser = useAuthStore((state) => state.currentUser)
   const [page, setPage] = useState(1)
   const [pageSize] = useState(20)
   const [exporting, setExporting] = useState<'word' | 'excel' | ''>('')
@@ -51,6 +54,7 @@ export function TaskReportsTab({ taskId }: { taskId: string }) {
   const items = data?.data || []
   const total = data?.pagination?.total || 0
   const totalPages = Math.ceil(total / pageSize)
+  const canExportReports = hasPermission(currentUser?.permissions, PERMISSIONS.reportExport)
 
   async function handleExport(format: 'word' | 'excel') {
     try {
@@ -82,6 +86,7 @@ export function TaskReportsTab({ taskId }: { taskId: string }) {
             startContent={<ArrowDownTrayIcon className="w-4 h-4" />}
             className="h-12 rounded-[16px] bg-apple-blue/20 border border-apple-blue/30 text-white font-bold"
             isLoading={exporting === 'word'}
+            isDisabled={!canExportReports}
             onPress={() => handleExport('word')}
           >
             导出漏洞扫描报告
@@ -91,6 +96,7 @@ export function TaskReportsTab({ taskId }: { taskId: string }) {
             startContent={<ArrowDownTrayIcon className="w-4 h-4" />}
             className="h-12 rounded-[16px] bg-white/8 border border-white/10 text-white font-bold"
             isLoading={exporting === 'excel'}
+            isDisabled={!canExportReports}
             onPress={() => handleExport('excel')}
           >
             导出漏洞扫描清单

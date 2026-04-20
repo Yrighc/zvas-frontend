@@ -5,12 +5,14 @@ import { ArrowLeftIcon, CheckCircleIcon, RocketLaunchIcon, XCircleIcon } from '@
 import { FULL_PORT_WARNING, getPortModeLabel, getTaskTemplatePreviewSummary, getTemplatePresetBadge, getVulScanSeverityLabel, isHighCostPortTemplate, isSiteBasedTemplate, useTaskTemplateDetail, useUpdateTaskTemplateStatus } from '@/api/adapters/template'
 import { getRouteLabel, useTaskRoutes } from '@/api/adapters/route'
 import { useAuthStore } from '@/store/auth'
+import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
 export function TaskTemplateDetailPage() {
   const { code } = useParams()
   const navigate = useNavigate()
   const currentUser = useAuthStore((state) => state.currentUser)
   const canManageTemplates = Boolean(currentUser?.permissions?.includes('settings:manage'))
+  const canCreateTask = hasPermission(currentUser?.permissions, PERMISSIONS.taskCreate)
   const { data: detail, isPending, isError } = useTaskTemplateDetail(code)
   const { data: routes } = useTaskRoutes()
   const updateStatus = useUpdateTaskTemplateStatus()
@@ -84,7 +86,7 @@ export function TaskTemplateDetailPage() {
               className="rounded-2xl h-12 px-8 font-black shadow-lg shadow-apple-blue/20"
               startContent={<RocketLaunchIcon className="w-5 h-5" />}
               onPress={() => navigate(`/tasks/new?template_code=${detail.code}`)}
-              isDisabled={!detail.is_enabled}
+              isDisabled={!detail.is_enabled || !canCreateTask}
             >
               基于此模板创建任务
             </Button>

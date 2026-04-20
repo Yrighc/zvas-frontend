@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import type {
   GetUsersParams,
   InternalHandlerCommonActionResponse,
@@ -20,6 +21,7 @@ import {
   useGetUsers,
   putUsersIdRoles,
 } from '@/api/generated/sdk'
+import { httpClient } from '@/api/client'
 
 export interface UserView {
   id: string
@@ -37,6 +39,7 @@ export interface RoleView {
   name: string
   description: string
   isBuiltin: boolean
+  permissions: string[]
 }
 
 export interface UserListView {
@@ -66,6 +69,12 @@ export interface ReplaceRolesPayload {
 
 export interface UpdateStatusPayload {
   status: 'active' | 'disabled'
+}
+
+export interface UserPermissionSnapshotView {
+  userID: string
+  roleCodes: string[]
+  permissions: string[]
 }
 
 /**
@@ -100,6 +109,31 @@ export function useRoleOptionsView() {
         const payload = response.data as InternalHandlerRoleListResponse
         return (payload.data || []).map(toRoleView)
       },
+    },
+  })
+}
+
+/**
+ * useUserPermissionSnapshotView 读取指定用户的权限快照。
+ */
+export function useUserPermissionSnapshotView(userID?: string) {
+  return useQuery({
+    queryKey: ['user-permissions', userID],
+    enabled: Boolean(userID),
+    queryFn: async (): Promise<UserPermissionSnapshotView> => {
+      const response = await httpClient.get(`/users/${userID}/permissions`)
+      const body = response.data as {
+        data?: {
+          user_id?: string
+          role_codes?: string[]
+          permissions?: string[]
+        }
+      }
+      return {
+        userID: body.data?.user_id || '',
+        roleCodes: body.data?.role_codes || [],
+        permissions: body.data?.permissions || [],
+      }
     },
   })
 }
@@ -194,11 +228,13 @@ function toUserView(user?: InternalHandlerUserListItem | null): UserView {
 }
 
 function toRoleView(role?: InternalHandlerRoleItem | null): RoleView {
+  const roleWithPermissions = role as (InternalHandlerRoleItem & { permissions?: string[] }) | null | undefined
   return {
     id: role?.id || '',
     code: role?.code || '',
     name: role?.name || '',
     description: role?.description || '',
     isBuiltin: Boolean(role?.is_builtin),
+    permissions: roleWithPermissions?.permissions || [],
   }
 }
