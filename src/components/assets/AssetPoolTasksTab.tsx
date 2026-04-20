@@ -5,13 +5,15 @@ import {
   RocketLaunchIcon,
   BoltIcon,
   ArrowPathIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
 
 import { CreateTaskFromPoolModal } from '@/components/assets/CreateTaskFromPoolModal'
 import { useAssetPoolTasks } from '@/api/adapters/asset'
-import { usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, getTemplateCodeLabel, isTerminalTaskStatus, taskHasWeakScanPlan } from '@/api/adapters/task'
+import { usePauseTask, useResumeTask, useStopTask, useDeleteTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, getTemplateCodeLabel, isTerminalTaskStatus, taskHasWeakScanPlan } from '@/api/adapters/task'
 import { useTaskRoutes, mapStageLabels, getRouteActiveLabel } from '@/api/adapters/route'
+import { ConfirmModal } from '@/components/common/ConfirmModal'
 
 function formatTime(value?: string): string {
   if (!value) return '-'
@@ -24,6 +26,8 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
   const navigate = useNavigate()
   const [createVisible, setCreateVisible] = useState(false)
   const [page, setPage] = useState(1)
+  const [deleteVisible, setDeleteVisible] = useState(false)
+  const [targetTask, setTargetTask] = useState<{ id: string; name: string } | null>(null)
 
   const { data, isLoading, isError, refetch } = useAssetPoolTasks(poolId, {
     page,
@@ -35,6 +39,7 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
   const pauseTask = usePauseTask()
   const resumeTask = useResumeTask()
   const stopTask = useStopTask()
+  const deleteTask = useDeleteTask()
   const { data: routes } = useTaskRoutes()
 
   const items = data?.data || []
@@ -191,6 +196,18 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                       >
                         详情
                       </Button>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20"
+                        onPress={() => {
+                          setTargetTask({ id: item.id, name: item.name || '未命名任务' })
+                          setDeleteVisible(true)
+                        }}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 )
@@ -222,6 +239,24 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
       </div>
 
       <CreateTaskFromPoolModal isOpen={createVisible} onClose={() => setCreateVisible(false)} poolId={poolId} />
+      <ConfirmModal
+        isOpen={deleteVisible}
+        onClose={() => {
+          setDeleteVisible(false)
+          setTargetTask(null)
+        }}
+        title="确认删除当前任务？"
+        message={`将只删除任务 "${targetTask?.name || '未命名任务'}"，不会删除当前资产池。任务会立即从列表中移除，关联执行数据将在后台异步清理。`}
+        confirmText="确认删除"
+        confirmColor="danger"
+        isLoading={deleteTask.isPending}
+        onConfirm={async () => {
+          if (!targetTask) return
+          await deleteTask.mutateAsync(targetTask.id)
+          setDeleteVisible(false)
+          setTargetTask(null)
+        }}
+      />
     </div>
   )
 }

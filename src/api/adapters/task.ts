@@ -983,6 +983,20 @@ export function useStopTask() {
   })
 }
 
+export function useDeleteTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (taskId: string): Promise<void> => {
+      await httpClient.delete(`/tasks/${taskId}`)
+    },
+    onSuccess: (_, taskId) => {
+      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['tasks', taskId] })
+      qc.invalidateQueries({ queryKey: ['asset-pools'] })
+    },
+  })
+}
+
 // ─── 单条快照资产详情（懒加载，仅展开时触发）────────────────────────────────
 export function useTaskSnapshotAssetDetail(taskId?: string, assetId?: string) {
   return useQuery({

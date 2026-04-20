@@ -15,13 +15,14 @@ import {
 } from '@heroui/react'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline'
 
-import { useTasks, usePauseTask, useResumeTask, useStopTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, isTerminalTaskStatus, getTemplateCodeLabel, taskHasWeakScanPlan } from '@/api/adapters/task'
+import { useTasks, usePauseTask, useResumeTask, useStopTask, useDeleteTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, isTerminalTaskStatus, getTemplateCodeLabel, taskHasWeakScanPlan } from '@/api/adapters/task'
 import { useAssetPools } from '@/api/adapters/asset'
 import { useTaskRoutes, getRouteActiveLabel, mapStageLabels } from '@/api/adapters/route'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
+import { ConfirmModal } from '@/components/common/ConfirmModal'
 
 function formatDateTime(isoStr?: string) {
   if (!isoStr) return '-'
@@ -38,6 +39,8 @@ export function TasksPage() {
   const [poolFilter, setPoolFilter] = useState(searchParams.get('asset_pool_id') || 'all')
   const [templateFilter, setTemplateFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [deleteVisible, setDeleteVisible] = useState(false)
+  const [targetTask, setTargetTask] = useState<{ id: string; name: string } | null>(null)
 
   const tasksQuery = useTasks({
     page,
@@ -51,6 +54,7 @@ export function TasksPage() {
   const pauseTask = usePauseTask()
   const resumeTask = useResumeTask()
   const stopTask = useStopTask()
+  const deleteTask = useDeleteTask()
   const { data: routesData } = useTaskRoutes()
   const poolsQuery = useAssetPools({ page: 1, page_size: 100 })
   const poolItems = poolsQuery.data?.data || []
@@ -230,6 +234,18 @@ export function TasksPage() {
                       >
                         监控
                       </Button>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20"
+                        onPress={() => {
+                          setTargetTask({ id: task.id, name: task.name || '未命名任务' })
+                          setDeleteVisible(true)
+                        }}
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -257,6 +273,25 @@ export function TasksPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={deleteVisible}
+        onClose={() => {
+          setDeleteVisible(false)
+          setTargetTask(null)
+        }}
+        title="确认删除当前任务？"
+        message={`将只删除任务 "${targetTask?.name || '未命名任务'}"，不会删除归属资产池。该任务会立即从列表中移除，关联执行数据将在后台异步清理。`}
+        confirmText="确认删除"
+        confirmColor="danger"
+        isLoading={deleteTask.isPending}
+        onConfirm={async () => {
+          if (!targetTask) return
+          await deleteTask.mutateAsync(targetTask.id)
+          setDeleteVisible(false)
+          setTargetTask(null)
+        }}
+      />
     </div>
   )
 }
