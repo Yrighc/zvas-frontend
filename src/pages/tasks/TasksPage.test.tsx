@@ -86,7 +86,7 @@ function mockTasksPageData() {
     },
     isPending: false,
     refetch: refetchMock,
-  } as ReturnType<typeof useTasks>)
+  } as unknown as ReturnType<typeof useTasks>)
 
   vi.mocked(useTaskRoutes).mockReturnValue({
     data: [
@@ -107,7 +107,7 @@ function mockTasksPageData() {
         siteLike: true,
       },
     ],
-  } as ReturnType<typeof useTaskRoutes>)
+  } as unknown as ReturnType<typeof useTaskRoutes>)
 
   vi.mocked(useAssetPools).mockReturnValue({
     data: {
@@ -118,15 +118,15 @@ function mockTasksPageData() {
         total: 0,
       },
     },
-  } as ReturnType<typeof useAssetPools>)
+  } as unknown as ReturnType<typeof useAssetPools>)
 
-  vi.mocked(usePauseTask).mockReturnValue({ mutate: pauseMutateMock } as ReturnType<typeof usePauseTask>)
-  vi.mocked(useResumeTask).mockReturnValue({ mutate: resumeMutateMock } as ReturnType<typeof useResumeTask>)
-  vi.mocked(useStopTask).mockReturnValue({ mutate: stopMutateMock } as ReturnType<typeof useStopTask>)
+  vi.mocked(usePauseTask).mockReturnValue({ mutate: pauseMutateMock } as unknown as ReturnType<typeof usePauseTask>)
+  vi.mocked(useResumeTask).mockReturnValue({ mutate: resumeMutateMock } as unknown as ReturnType<typeof useResumeTask>)
+  vi.mocked(useStopTask).mockReturnValue({ mutate: stopMutateMock } as unknown as ReturnType<typeof useStopTask>)
   vi.mocked(useDeleteTask).mockReturnValue({
     mutateAsync: deleteMutateAsyncMock,
     isPending: false,
-  } as ReturnType<typeof useDeleteTask>)
+  } as unknown as ReturnType<typeof useDeleteTask>)
 }
 
 describe('TasksPage', () => {
