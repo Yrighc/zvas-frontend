@@ -153,8 +153,8 @@ function getMatchedLink(item: FindingSummaryView): string {
 function getDescription(item: FindingSummaryView): string {
   const info = getRawInfoMap(item)
   return firstNonEmptyText(
-    info.description,
     item.classification?.description,
+    info.description,
     item.raw?.description,
     item.title,
   )
@@ -164,10 +164,10 @@ function getRemediation(item: FindingSummaryView): string {
   const info = getRawInfoMap(item)
   const reference = info.reference
   return firstNonEmptyText(
-    info.remediation,
-    Array.isArray(reference) ? reference.filter(Boolean).join('\n') : reference,
     item.classification?.remediation,
     item.classification?.solution,
+    info.remediation,
+    Array.isArray(reference) ? reference.filter(Boolean).join('\n') : reference,
   )
 }
 

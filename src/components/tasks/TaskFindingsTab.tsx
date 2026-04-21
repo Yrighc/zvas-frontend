@@ -109,8 +109,8 @@ function getMatchedLink(item: TaskRecordVulnerabilityVM): string {
 function getDescription(item: TaskRecordVulnerabilityVM): string {
   const info = getRawInfoMap(item)
   return firstNonEmptyText(
-    info.description,
     item.classification?.description,
+    info.description,
     item.raw?.description,
     item.rule_name,
   )
@@ -120,10 +120,10 @@ function getRemediation(item: TaskRecordVulnerabilityVM): string {
   const info = getRawInfoMap(item)
   const reference = info.reference
   return firstNonEmptyText(
-    info.remediation,
-    Array.isArray(reference) ? reference.filter(Boolean).join('\n') : reference,
     item.classification?.remediation,
     item.classification?.solution,
+    info.remediation,
+    Array.isArray(reference) ? reference.filter(Boolean).join('\n') : reference,
   )
 }
 
