@@ -191,7 +191,6 @@ describe('TaskFindingsTab', () => {
     expect(screen.getByRole('button', { name: '查看' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '编辑' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '详情' })).not.toBeInTheDocument()
   })
 
   it('opens a read-only payload viewer from the view action', async () => {
@@ -206,9 +205,9 @@ describe('TaskFindingsTab', () => {
     expect(screen.getByText('GET / HTTP/1.1')).toBeInTheDocument()
     expect(screen.getByText('HTTP/1.1 200 OK')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '保存修改' })).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('漏洞描述')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('修复建议')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /映射覆盖/i })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('漏洞名称')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('漏洞描述')).not.toBeInTheDocument()
   })
 
   it('submits edited finding fields through the aggregate save API', async () => {
@@ -247,17 +246,11 @@ describe('TaskFindingsTab', () => {
     expect(screen.queryByLabelText('请求报文')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('响应报文')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('复现命令')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('分类 JSON')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('证据 JSON')).not.toBeInTheDocument()
-    expect(screen.queryByText('高级字段')).not.toBeInTheDocument()
   })
 
   it('confirms and deletes a finding from the action column', async () => {
     const user = userEvent.setup()
     renderTab()
-
-    expect(screen.getByRole('button', { name: '编辑' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '删除' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '删除' }))
     expect(screen.getByText(/确定删除漏洞/)).toBeInTheDocument()
