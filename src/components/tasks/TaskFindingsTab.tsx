@@ -46,6 +46,7 @@ import {
   useUpdateTaskFinding,
 } from '@/api/adapters/task'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { PayloadViewerDrawer } from '@/components/tasks/PayloadViewerDrawer'
 import { useAuthStore } from '@/store/auth'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
@@ -263,6 +264,30 @@ function RenderTextCell({ value, limit = 64, mono = false }: { value: string; li
     <Tooltip content={<div className="max-w-[420px] break-all text-xs">{text}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
       <span className={className}>{display}</span>
     </Tooltip>
+  )
+}
+
+function PayloadSummaryCell({ request, response }: { request: unknown; response: unknown }) {
+  const requestText = formatPlainValue(request).trim()
+  const responseText = formatPlainValue(response).trim()
+  const requestSummary = requestText ? `已捕获 ${requestText.length} 字符` : '暂无请求'
+  const responseSummary = responseText ? `已捕获 ${responseText.length} 字符` : '暂无响应'
+
+  return (
+    <div className="min-w-0 space-y-2">
+      <div className="flex items-start gap-2">
+        <span className="shrink-0 text-[11px] font-black uppercase tracking-[0.16em] text-apple-text-tertiary">请求摘要</span>
+        <div className="min-w-0 flex-1">
+          <span className="text-[12px] text-white">{requestSummary}</span>
+        </div>
+      </div>
+      <div className="flex items-start gap-2">
+        <span className="shrink-0 text-[11px] font-black uppercase tracking-[0.16em] text-apple-text-tertiary">响应摘要</span>
+        <div className="min-w-0 flex-1">
+          <span className="text-[12px] text-white">{responseSummary}</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -780,6 +805,7 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
   const [draftFilters, setDraftFilters] = useState<FindingFilterState>(EMPTY_FILTERS)
   const [filters, setFilters] = useState<FindingFilterState>(EMPTY_FILTERS)
   const [selectedItem, setSelectedItem] = useState<TaskRecordVulnerabilityVM | null>(null)
+  const [payloadViewerItem, setPayloadViewerItem] = useState<TaskRecordVulnerabilityVM | null>(null)
   const [selectedFindingId, setSelectedFindingId] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [mappingExpanded, setMappingExpanded] = useState(false)
@@ -822,10 +848,23 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
     }
   }
 
-  function handleOpenDrawer(item: TaskRecordVulnerabilityVM, editing = false) {
+  function handleOpenPayloadViewer(item: TaskRecordVulnerabilityVM) {
+    setPayloadViewerItem(item)
+    setSelectedItem(null)
+    setSelectedFindingId('')
+    setIsEditing(false)
+    setMappingExpanded(false)
+  }
+
+  function handleClosePayloadViewer() {
+    setPayloadViewerItem(null)
+  }
+
+  function handleOpenDrawer(item: TaskRecordVulnerabilityVM) {
+    setPayloadViewerItem(null)
     setSelectedItem(item)
     setSelectedFindingId(item.id)
-    setIsEditing(editing)
+    setIsEditing(true)
     setMappingExpanded(false)
   }
 
@@ -843,6 +882,9 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
     await deleteFindingMutation.mutateAsync({ taskId, findingId: pendingDeleteItem.id })
     if (selectedFindingId === pendingDeleteItem.id) {
       handleCloseDrawer()
+    }
+    if (payloadViewerItem?.id === pendingDeleteItem.id) {
+      handleClosePayloadViewer()
     }
     setPendingDeleteItem(null)
     void refetch()
@@ -946,7 +988,7 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
           layout="fixed"
           classNames={{
             ...APPLE_TABLE_CLASSES,
-            base: 'min-w-[1580px] p-4',
+            base: 'min-w-[1820px] p-4',
             tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
             td: `${APPLE_TABLE_CLASSES.td} align-top`,
           }}
@@ -959,6 +1001,7 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
             <TableColumn width={110}>级别</TableColumn>
             <TableColumn width={260}>漏洞描述</TableColumn>
             <TableColumn width={260}>修复建议</TableColumn>
+            <TableColumn width={280}>请求与响应</TableColumn>
             <TableColumn width={180}>发现时间</TableColumn>
             <TableColumn width={220}>操作</TableColumn>
           </TableHeader>
@@ -1000,19 +1043,22 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
                   <TableCell><RenderTextCell value={description || '-'} limit={72} /></TableCell>
                   <TableCell><RenderTextCell value={remediation || '-'} limit={72} /></TableCell>
                   <TableCell>
+                    <PayloadSummaryCell request={item.evidence?.request} response={item.evidence?.response} />
+                  </TableCell>
+                  <TableCell>
                     <span className="font-mono text-[12px] text-apple-text-secondary">{formatDateTime(item.matched_at)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-2">
-                      <Button size="sm" variant="flat" className="rounded-xl bg-white/6 font-bold text-white hover:bg-white/10" onPress={() => handleOpenDrawer(item, false)}>
-                        详情
+                      <Button size="sm" variant="flat" className="rounded-xl bg-white/6 font-bold text-white hover:bg-white/10" onPress={() => handleOpenPayloadViewer(item)}>
+                        查看
                       </Button>
                       <Button
                         size="sm"
                         color="primary"
                         variant="flat"
                         className="rounded-xl font-bold"
-                        onPress={() => handleOpenDrawer(item, true)}
+                        onPress={() => handleOpenDrawer(item)}
                       >
                         编辑
                       </Button>
@@ -1056,6 +1102,13 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
           </div>
         ) : null}
       </div>
+
+      <PayloadViewerDrawer
+        isOpen={Boolean(payloadViewerItem)}
+        request={payloadViewerItem?.evidence?.request}
+        response={payloadViewerItem?.evidence?.response}
+        onClose={handleClosePayloadViewer}
+      />
 
       <FindingsDrawer
         isOpen={Boolean(selectedFindingId)}
