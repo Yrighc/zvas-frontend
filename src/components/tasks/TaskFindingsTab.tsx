@@ -46,7 +46,11 @@ import {
   useUpdateTaskFinding,
 } from '@/api/adapters/task'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
-import { PayloadViewerDrawer } from '@/components/tasks/PayloadViewerDrawer'
+import {
+  formatPayloadValue,
+  PayloadViewerDrawer,
+  summarizePayloadValue,
+} from '@/components/tasks/PayloadViewerDrawer'
 import { useAuthStore } from '@/store/auth'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
@@ -158,21 +162,6 @@ function firstNonEmptyText(...values: unknown[]): string {
   return ''
 }
 
-function formatPlainValue(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  if (typeof value === 'string') return value
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
-  if (Array.isArray(value)) return value.length ? value.map((item) => formatPlainValue(item)).join(', ') : ''
-  if (typeof value === 'object') {
-    try {
-      return JSON.stringify(value, null, 2)
-    } catch {
-      return String(value)
-    }
-  }
-  return String(value)
-}
-
 function getRawInfoMap(item: TaskRecordVulnerabilityVM): Record<string, unknown> {
   const info = item.raw?.info
   return info && typeof info === 'object' && !Array.isArray(info) ? (info as Record<string, unknown>) : {}
@@ -244,11 +233,11 @@ function buildEditorState(item: TaskRecordVulnerabilityVM | null): FindingEditor
     port: item.port ? String(item.port) : '',
     scheme: item.scheme || '',
     matcherName: item.matcher_name || '',
-    description: formatPlainValue(classification.description),
-    remediation: formatPlainValue(classification.remediation ?? classification.solution),
-    request: formatPlainValue(evidence.request),
-    response: formatPlainValue(evidence.response),
-    curlCommand: formatPlainValue(evidence.curl_command),
+    description: formatPayloadValue(classification.description),
+    remediation: formatPayloadValue(classification.remediation ?? classification.solution),
+    request: formatPayloadValue(evidence.request),
+    response: formatPayloadValue(evidence.response),
+    curlCommand: formatPayloadValue(evidence.curl_command),
   }
 }
 
@@ -268,10 +257,8 @@ function RenderTextCell({ value, limit = 64, mono = false }: { value: string; li
 }
 
 function PayloadSummaryCell({ request, response }: { request: unknown; response: unknown }) {
-  const requestText = formatPlainValue(request).trim()
-  const responseText = formatPlainValue(response).trim()
-  const requestSummary = requestText ? `已捕获 ${requestText.length} 字符` : '暂无请求'
-  const responseSummary = responseText ? `已捕获 ${responseText.length} 字符` : '暂无响应'
+  const requestSummary = summarizePayloadValue(request, '暂无请求')
+  const responseSummary = summarizePayloadValue(response, '暂无响应')
 
   return (
     <div className="min-w-0 space-y-2">
@@ -849,11 +836,10 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
   }
 
   function handleOpenPayloadViewer(item: TaskRecordVulnerabilityVM) {
+    if (selectedFindingId) {
+      handleCloseDrawer()
+    }
     setPayloadViewerItem(item)
-    setSelectedItem(null)
-    setSelectedFindingId('')
-    setIsEditing(false)
-    setMappingExpanded(false)
   }
 
   function handleClosePayloadViewer() {
@@ -861,7 +847,9 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
   }
 
   function handleOpenDrawer(item: TaskRecordVulnerabilityVM) {
-    setPayloadViewerItem(null)
+    if (payloadViewerItem) {
+      handleClosePayloadViewer()
+    }
     setSelectedItem(item)
     setSelectedFindingId(item.id)
     setIsEditing(true)

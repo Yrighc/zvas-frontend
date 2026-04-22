@@ -7,10 +7,15 @@ import {
   DrawerHeader,
 } from '@heroui/react'
 
-function formatPayloadContent(value: unknown): string {
+function hasMeaningfulPayloadText(value: string): boolean {
+  return value.trim().length > 0
+}
+
+export function formatPayloadValue(value: unknown): string {
   if (value === null || value === undefined) return ''
   if (typeof value === 'string') return value
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) return value.length ? value.map((item) => formatPayloadValue(item)).join(', ') : ''
 
   try {
     return JSON.stringify(value, null, 2)
@@ -19,13 +24,38 @@ function formatPayloadContent(value: unknown): string {
   }
 }
 
+export function summarizePayloadValue(value: unknown, emptyLabel: string): string {
+  if (value === null || value === undefined) return emptyLabel
+
+  if (typeof value === 'string') {
+    return hasMeaningfulPayloadText(value) ? `已捕获 ${value.length} 字符` : emptyLabel
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return `已捕获标量值（${String(value).length} 字符）`
+  }
+
+  if (Array.isArray(value)) {
+    return value.length ? `已捕获数组（${value.length} 项）` : emptyLabel
+  }
+
+  if (typeof value === 'object') {
+    const keys = Object.keys(value as Record<string, unknown>)
+    return keys.length ? `已捕获对象（${keys.length} 个字段）` : emptyLabel
+  }
+
+  const text = String(value)
+  return hasMeaningfulPayloadText(text) ? `已捕获 ${text.length} 字符` : emptyLabel
+}
+
 function PayloadBlock({ title, content }: { title: string; content: unknown }) {
-  const text = formatPayloadContent(content).trim()
+  const text = formatPayloadValue(content)
+  const hasContent = hasMeaningfulPayloadText(text)
 
   return (
     <section className="min-w-0 rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
       <div className="mb-3 text-[11px] font-black uppercase tracking-[0.24em] text-apple-text-tertiary">{title}</div>
-      {text ? (
+      {hasContent ? (
         <pre
           className="min-w-0 bg-transparent font-mono text-[13px] leading-6 text-white"
           style={{
