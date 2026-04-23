@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type Key, type ReactNode } from 'react'
+import { useMemo, useState, type Key, type ReactNode } from 'react'
 
 import {
   Autocomplete,
@@ -32,25 +32,17 @@ import {
 import {
   getSeverityColor,
   normalizeSeverityDisplay,
-  normalizeSeverityValue,
   VULNERABILITY_SEVERITY_OPTIONS,
 } from '@/utils/vulnerability'
-
-const NO_MAPPING_VALUE = '__none__'
-
-type FindingEditorState = {
-  ruleName: string
-  severity: string
-  description: string
-  remediation: string
-}
-
-const EMPTY_EDITOR_STATE: FindingEditorState = {
-  ruleName: '',
-  severity: 'info',
-  description: '',
-  remediation: '',
-}
+import {
+  buildEditorState,
+  buildFindingPatchPayload,
+  buildInitialMappingQuery,
+  buildInitialMappingSelection,
+  buildMappingPatch,
+  type FindingEditorState,
+  NO_MAPPING_VALUE,
+} from '@/components/tasks/FindingReportEditModal.helpers'
 
 const inputClassNames = {
   base: 'min-w-0 w-full',
@@ -97,138 +89,6 @@ function CompactInfoField({
   )
 }
 
-function formatPayloadValue(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  if (typeof value === 'string') return value
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
-  if (Array.isArray(value)) return value.length ? value.map((item) => formatPayloadValue(item)).join(', ') : ''
-
-  try {
-    return JSON.stringify(value, null, 2)
-  } catch {
-    return String(value)
-  }
-}
-
-function firstNonEmptyPayloadText(...values: unknown[]): string {
-  for (const value of values) {
-    const text = formatPayloadValue(value).trim()
-    if (text) {
-      return text
-    }
-  }
-  return ''
-}
-
-function getRawInfoMap(item: TaskRecordVulnerabilityVM | null): Record<string, unknown> {
-  const info = item?.raw?.info
-  return info && typeof info === 'object' && !Array.isArray(info) ? info as Record<string, unknown> : {}
-}
-
-function getOriginalFindingDescription(item: TaskRecordVulnerabilityVM | null): string {
-  const info = getRawInfoMap(item)
-  return firstNonEmptyPayloadText(info.description, item?.raw?.description)
-}
-
-function getOriginalFindingRemediation(item: TaskRecordVulnerabilityVM | null): string {
-  const info = getRawInfoMap(item)
-  const reference = Array.isArray(info.reference) ? info.reference.filter(Boolean).join('\n') : info.reference
-  return firstNonEmptyPayloadText(info.remediation, info.solution, item?.raw?.remediation, reference)
-}
-
-function getOriginalFindingRuleName(item: TaskRecordVulnerabilityVM | null): string {
-  const info = getRawInfoMap(item)
-  return firstNonEmptyPayloadText(info.name, item?.raw?.rule_name, item?.rule_name)
-}
-
-function getOriginalFindingSeverity(item: TaskRecordVulnerabilityVM | null): string {
-  const info = getRawInfoMap(item)
-  return normalizeSeverityValue(firstNonEmptyPayloadText(info.severity, item?.raw?.severity, item?.severity, 'info')) || 'info'
-}
-
-function buildEditorState(item: TaskRecordVulnerabilityVM | null): FindingEditorState {
-  if (!item) {
-    return { ...EMPTY_EDITOR_STATE }
-  }
-
-  const classification = { ...(item.classification || {}) }
-  return {
-    ruleName: item.rule_name || '',
-    severity: normalizeSeverityValue(item.severity || 'info') || 'info',
-    description: formatPayloadValue(classification.description),
-    remediation: formatPayloadValue(classification.remediation ?? classification.solution),
-  }
-}
-
-export function buildMappingPatch(
-  selection: string,
-  ruleMap?: TaskFindingRuleMapVM,
-): UpdateTaskFindingPayload['mapping_patch'] | undefined {
-  const currentID = ruleMap?.current?.vul_type_id ? String(ruleMap.current.vul_type_id) : NO_MAPPING_VALUE
-  if (selection === currentID) {
-    return undefined
-  }
-  if (selection === NO_MAPPING_VALUE) {
-    return currentID === NO_MAPPING_VALUE ? undefined : { clear_mapping: true }
-  }
-
-  const vulTypeID = Number(selection)
-  if (!Number.isInteger(vulTypeID) || vulTypeID <= 0) {
-    return undefined
-  }
-  return { vul_type_id: vulTypeID }
-}
-
-export function buildFindingPatchPayload(
-  item: TaskRecordVulnerabilityVM,
-  formState: FindingEditorState,
-  mappingPatch?: UpdateTaskFindingPayload['mapping_patch'],
-): NonNullable<UpdateTaskFindingPayload['finding_patch']> {
-  const displayedState = buildEditorState(item)
-  const shouldRestoreOriginalFields = Boolean(mappingPatch)
-
-  const nextRuleName = shouldRestoreOriginalFields && formState.ruleName.trim() === displayedState.ruleName.trim()
-    ? getOriginalFindingRuleName(item)
-    : formState.ruleName.trim()
-  const nextSeverity = shouldRestoreOriginalFields && normalizeSeverityValue(formState.severity) === displayedState.severity
-    ? getOriginalFindingSeverity(item)
-    : normalizeSeverityValue(formState.severity)
-  const nextDescription = shouldRestoreOriginalFields && formState.description.trim() === displayedState.description.trim()
-    ? getOriginalFindingDescription(item)
-    : formState.description.trim()
-  const nextRemediation = shouldRestoreOriginalFields && formState.remediation.trim() === displayedState.remediation.trim()
-    ? getOriginalFindingRemediation(item)
-    : formState.remediation.trim()
-
-  const classification = { ...(item.classification || {}) }
-
-  if (nextDescription) {
-    classification.description = nextDescription
-  } else {
-    delete classification.description
-  }
-
-  if (nextRemediation) {
-    classification.remediation = nextRemediation
-  } else {
-    delete classification.remediation
-  }
-
-  return {
-    rule_name: nextRuleName,
-    severity: nextSeverity,
-    matched_at: item.matched_at || undefined,
-    target_url: item.target_url || undefined,
-    host: item.host || undefined,
-    ip: item.ip || undefined,
-    port: typeof item.port === 'number' ? item.port : undefined,
-    scheme: item.scheme || undefined,
-    matcher_name: item.matcher_name || undefined,
-    classification,
-    evidence: item.evidence || undefined,
-  }
-}
-
 function readSingleSelectionValue(keys: 'all' | Set<Key>): string | undefined {
   if (keys === 'all') {
     return undefined
@@ -258,41 +118,73 @@ export function FindingReportEditModal({
   const {
     data: ruleMap,
     isPending: isRuleMapPending,
-    refetch: refetchRuleMap,
   } = useTaskFindingRuleMap(ruleID, Boolean(isOpen && ruleID))
+  const editorKey = [
+    isOpen ? 'open' : 'closed',
+    findingId || 'new',
+    detailItem ? 'detail' : 'fallback',
+    ruleID || 'none',
+    ruleMap?.current?.vul_type_id ?? 'none',
+  ].join(':')
+
+  return (
+    <FindingReportEditModalContent
+      key={editorKey}
+      isOpen={isOpen}
+      taskId={taskId}
+      findingId={findingId}
+      item={item}
+      activeItem={activeItem}
+      displayTemplateID={displayTemplateID}
+      ruleMap={ruleMap}
+      isRuleMapPending={isRuleMapPending}
+      isPending={isPending}
+      isError={isError}
+      error={error}
+      refetch={refetch}
+      onClose={onClose}
+      onSaved={onSaved}
+    />
+  )
+}
+
+function FindingReportEditModalContent({
+  isOpen,
+  taskId,
+  findingId,
+  item,
+  activeItem,
+  displayTemplateID,
+  ruleMap,
+  isRuleMapPending,
+  isPending,
+  isError,
+  error,
+  refetch,
+  onClose,
+  onSaved,
+}: {
+  isOpen: boolean
+  taskId: string
+  findingId: string
+  item: TaskRecordVulnerabilityVM | null
+  activeItem: TaskRecordVulnerabilityVM | null
+  displayTemplateID: string
+  ruleMap?: TaskFindingRuleMapVM
+  isRuleMapPending: boolean
+  isPending: boolean
+  isError: boolean
+  error: unknown
+  refetch: () => void
+  onClose: () => void
+  onSaved: (item: TaskRecordVulnerabilityVM) => void
+}) {
   const updateFindingMutation = useUpdateTaskFinding()
-
-  const [formState, setFormState] = useState<FindingEditorState>(EMPTY_EDITOR_STATE)
+  const [formState, setFormState] = useState<FindingEditorState>(() => buildEditorState(activeItem))
   const [mappingExpanded, setMappingExpanded] = useState(false)
-  const [mappingSelection, setMappingSelection] = useState(NO_MAPPING_VALUE)
-  const [mappingQuery, setMappingQuery] = useState('')
+  const [mappingSelection, setMappingSelection] = useState(() => buildInitialMappingSelection(ruleMap))
+  const [mappingQuery, setMappingQuery] = useState(() => buildInitialMappingQuery(ruleMap))
   const [saveError, setSaveError] = useState('')
-  const [saveSuccess, setSaveSuccess] = useState('')
-
-  useEffect(() => {
-    if (!isOpen) {
-      setFormState({ ...EMPTY_EDITOR_STATE })
-      setMappingExpanded(false)
-      setMappingSelection(NO_MAPPING_VALUE)
-      setMappingQuery('')
-      setSaveError('')
-      setSaveSuccess('')
-      return
-    }
-    setFormState(buildEditorState(activeItem || null))
-  }, [activeItem, isOpen])
-
-  useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-    const nextSelection = ruleMap?.current?.vul_type_id ? String(ruleMap.current.vul_type_id) : NO_MAPPING_VALUE
-    setMappingSelection(nextSelection)
-    const nextLabel = nextSelection === NO_MAPPING_VALUE
-      ? '无映射'
-      : ruleMap?.candidates.find((candidate) => String(candidate.vul_type_id) === nextSelection)?.vul_type || ''
-    setMappingQuery(nextLabel)
-  }, [isOpen, ruleMap])
 
   const mappingOptions = useMemo(
     () => [{ key: NO_MAPPING_VALUE, label: '无映射' }, ...((ruleMap?.candidates || []).map((candidate) => ({ key: String(candidate.vul_type_id), label: candidate.vul_type })))],
@@ -316,7 +208,6 @@ export function FindingReportEditModal({
     }
 
     setSaveError('')
-    setSaveSuccess('')
 
     try {
       const mappingPatch = buildMappingPatch(mappingSelection, ruleMap)
@@ -563,11 +454,6 @@ export function FindingReportEditModal({
             {saveError ? (
               <div className="rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-200">
                 {saveError}
-              </div>
-            ) : null}
-            {saveSuccess ? (
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-200">
-                {saveSuccess}
               </div>
             ) : null}
             <div className="flex flex-wrap items-center justify-end gap-3">

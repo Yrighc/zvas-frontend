@@ -11,7 +11,7 @@ import {
   useUpdateTaskFinding,
 } from '@/api/adapters/task'
 import { AppProviders } from '@/app/providers'
-import { buildFindingPatchPayload, buildMappingPatch } from '@/components/tasks/FindingReportEditModal'
+import { buildFindingPatchPayload, buildMappingPatch } from '@/components/tasks/FindingReportEditModal.helpers'
 import { TaskFindingsTab } from '@/components/tasks/TaskFindingsTab'
 import { useAuthStore } from '@/store/auth'
 

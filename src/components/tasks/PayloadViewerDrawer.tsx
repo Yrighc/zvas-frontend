@@ -11,7 +11,7 @@ function hasMeaningfulPayloadText(value: string): boolean {
   return value.trim().length > 0
 }
 
-export function formatPayloadValue(value: unknown): string {
+function formatPayloadValue(value: unknown): string {
   if (value === null || value === undefined) return ''
   if (typeof value === 'string') return value
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
