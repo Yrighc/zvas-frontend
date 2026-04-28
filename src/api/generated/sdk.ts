@@ -32,11 +32,13 @@ import type {
   GetAssetPoolsIdReportsVulnerabilityExcelParams,
   GetAssetPoolsIdReportsVulnerabilityHtmlParams,
   GetAssetPoolsIdReportsVulnerabilityWordParams,
+  GetAssetPoolsIdSecprobeFindingsParams,
   GetAssetPoolsIdTasksParams,
   GetAssetPoolsIdWeakScanFindingsParams,
   GetAssetPoolsParams,
   GetAuditsParams,
   GetFindingsParams,
+  GetFindingsSecprobeParams,
   GetFindingsWeakScanParams,
   GetTasksIdFindingsParams,
   GetTasksIdRecordsParams,
@@ -44,6 +46,7 @@ import type {
   GetTasksIdReportsVulnerabilityExcelParams,
   GetTasksIdReportsVulnerabilityHtmlParams,
   GetTasksIdReportsVulnerabilityWordParams,
+  GetTasksIdSecprobeFindingsParams,
   GetTasksIdSnapshotAssetsParams,
   GetTasksIdWeakScanFindingsParams,
   GetTasksParams,
@@ -56,6 +59,7 @@ import type {
   InternalCenterHttpHandlerAssetPoolFindingListResponse,
   InternalCenterHttpHandlerAssetPoolListResponse,
   InternalCenterHttpHandlerAssetPoolReportListResponse,
+  InternalCenterHttpHandlerAssetPoolSecprobeFindingListResponse,
   InternalCenterHttpHandlerAssetPoolTaskCreateResponse,
   InternalCenterHttpHandlerAssetPoolWeakScanFindingListResponse,
   InternalCenterHttpHandlerAssetRelationListResponse,
@@ -65,6 +69,7 @@ import type {
   InternalCenterHttpHandlerCommonActionResponse,
   InternalCenterHttpHandlerCreateAssetPoolRequest,
   InternalCenterHttpHandlerCreateAssetPoolTaskRequest,
+  InternalCenterHttpHandlerCreateManualTaskFindingRequest,
   InternalCenterHttpHandlerCreatePermissionRequest,
   InternalCenterHttpHandlerCreateRoleRequest,
   InternalCenterHttpHandlerCreateTargetSetRequest,
@@ -103,6 +108,8 @@ import type {
   InternalCenterHttpHandlerTaskRecordVulnerabilityItem,
   InternalCenterHttpHandlerTaskRouteListResponse,
   InternalCenterHttpHandlerTaskRunResponse,
+  InternalCenterHttpHandlerTaskSecprobeFindingDetailResponse,
+  InternalCenterHttpHandlerTaskSecprobeFindingListResponse,
   InternalCenterHttpHandlerTaskSnapshotAssetItemResponse,
   InternalCenterHttpHandlerTaskSnapshotAssetListResponse,
   InternalCenterHttpHandlerTaskTemplateItemResponse,
@@ -2232,6 +2239,149 @@ export function useGetAssetPoolsIdReportsVulnerabilityWord<TData = Awaited<Retur
 
 
 /**
+ * @summary 查询资产池弱口令结果列表
+ */
+export type getAssetPoolsIdSecprobeFindingsResponse200 = {
+  data: InternalCenterHttpHandlerAssetPoolSecprobeFindingListResponse
+  status: 200
+}
+
+export type getAssetPoolsIdSecprobeFindingsResponse400 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 400
+}
+
+export type getAssetPoolsIdSecprobeFindingsResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getAssetPoolsIdSecprobeFindingsResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getAssetPoolsIdSecprobeFindingsResponseSuccess = (getAssetPoolsIdSecprobeFindingsResponse200) & {
+  headers: Headers;
+};
+export type getAssetPoolsIdSecprobeFindingsResponseError = (getAssetPoolsIdSecprobeFindingsResponse400 | getAssetPoolsIdSecprobeFindingsResponse401 | getAssetPoolsIdSecprobeFindingsResponse403) & {
+  headers: Headers;
+};
+
+export type getAssetPoolsIdSecprobeFindingsResponse = (getAssetPoolsIdSecprobeFindingsResponseSuccess | getAssetPoolsIdSecprobeFindingsResponseError)
+
+export const getGetAssetPoolsIdSecprobeFindingsUrl = (id: string,
+    params?: GetAssetPoolsIdSecprobeFindingsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/asset-pools/${id}/secprobe-findings?${stringifiedParams}` : `/asset-pools/${id}/secprobe-findings`
+}
+
+export const getAssetPoolsIdSecprobeFindings = async (id: string,
+    params?: GetAssetPoolsIdSecprobeFindingsParams, options?: RequestInit): Promise<getAssetPoolsIdSecprobeFindingsResponse> => {
+  
+  return apiClient<getAssetPoolsIdSecprobeFindingsResponse>(getGetAssetPoolsIdSecprobeFindingsUrl(id,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetAssetPoolsIdSecprobeFindingsQueryKey = (id: string,
+    params?: GetAssetPoolsIdSecprobeFindingsParams,) => {
+    return [
+    `/asset-pools/${id}/secprobe-findings`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+    
+export const getGetAssetPoolsIdSecprobeFindingsQueryOptions = <TData = Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(id: string,
+    params?: GetAssetPoolsIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssetPoolsIdSecprobeFindingsQueryKey(id,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>> = ({ signal }) => getAssetPoolsIdSecprobeFindings(id,params, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAssetPoolsIdSecprobeFindingsQueryResult = NonNullable<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>>
+export type GetAssetPoolsIdSecprobeFindingsQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetAssetPoolsIdSecprobeFindings<TData = Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params: undefined |  GetAssetPoolsIdSecprobeFindingsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssetPoolsIdSecprobeFindings<TData = Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetAssetPoolsIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssetPoolsIdSecprobeFindings<TData = Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetAssetPoolsIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询资产池弱口令结果列表
+ */
+
+export function useGetAssetPoolsIdSecprobeFindings<TData = Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetAssetPoolsIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssetPoolsIdSecprobeFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAssetPoolsIdSecprobeFindingsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
  * @summary 导入资产池种子
  */
 export type postAssetPoolsIdSeedsImportResponse200 = {
@@ -3457,6 +3607,141 @@ export function useGetFindings<TData = Awaited<ReturnType<typeof getFindings>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetFindingsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
+ * @summary 查询全局弱口令结果列表
+ */
+export type getFindingsSecprobeResponse200 = {
+  data: InternalCenterHttpHandlerAssetPoolSecprobeFindingListResponse
+  status: 200
+}
+
+export type getFindingsSecprobeResponse400 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 400
+}
+
+export type getFindingsSecprobeResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getFindingsSecprobeResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getFindingsSecprobeResponseSuccess = (getFindingsSecprobeResponse200) & {
+  headers: Headers;
+};
+export type getFindingsSecprobeResponseError = (getFindingsSecprobeResponse400 | getFindingsSecprobeResponse401 | getFindingsSecprobeResponse403) & {
+  headers: Headers;
+};
+
+export type getFindingsSecprobeResponse = (getFindingsSecprobeResponseSuccess | getFindingsSecprobeResponseError)
+
+export const getGetFindingsSecprobeUrl = (params?: GetFindingsSecprobeParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/findings/secprobe?${stringifiedParams}` : `/findings/secprobe`
+}
+
+export const getFindingsSecprobe = async (params?: GetFindingsSecprobeParams, options?: RequestInit): Promise<getFindingsSecprobeResponse> => {
+  
+  return apiClient<getFindingsSecprobeResponse>(getGetFindingsSecprobeUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetFindingsSecprobeQueryKey = (params?: GetFindingsSecprobeParams,) => {
+    return [
+    `/findings/secprobe`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+    
+export const getGetFindingsSecprobeQueryOptions = <TData = Awaited<ReturnType<typeof getFindingsSecprobe>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(params?: GetFindingsSecprobeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFindingsSecprobe>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFindingsSecprobeQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFindingsSecprobe>>> = ({ signal }) => getFindingsSecprobe(params, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFindingsSecprobe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFindingsSecprobeQueryResult = NonNullable<Awaited<ReturnType<typeof getFindingsSecprobe>>>
+export type GetFindingsSecprobeQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetFindingsSecprobe<TData = Awaited<ReturnType<typeof getFindingsSecprobe>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ params: undefined |  GetFindingsSecprobeParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFindingsSecprobe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFindingsSecprobe>>,
+          TError,
+          Awaited<ReturnType<typeof getFindingsSecprobe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFindingsSecprobe<TData = Awaited<ReturnType<typeof getFindingsSecprobe>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ params?: GetFindingsSecprobeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFindingsSecprobe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFindingsSecprobe>>,
+          TError,
+          Awaited<ReturnType<typeof getFindingsSecprobe>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFindingsSecprobe<TData = Awaited<ReturnType<typeof getFindingsSecprobe>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ params?: GetFindingsSecprobeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFindingsSecprobe>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询全局弱口令结果列表
+ */
+
+export function useGetFindingsSecprobe<TData = Awaited<ReturnType<typeof getFindingsSecprobe>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ params?: GetFindingsSecprobeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFindingsSecprobe>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFindingsSecprobeQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -6655,6 +6940,107 @@ export function useGetTasksIdFindings<TData = Awaited<ReturnType<typeof getTasks
 
 
 /**
+ * @summary 手动导入任务漏洞
+ */
+export type postTasksIdFindingsManualResponse200 = {
+  data: InternalCenterHttpHandlerTaskRecordVulnerabilityItem
+  status: 200
+}
+
+export type postTasksIdFindingsManualResponse400 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 400
+}
+
+export type postTasksIdFindingsManualResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type postTasksIdFindingsManualResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type postTasksIdFindingsManualResponseSuccess = (postTasksIdFindingsManualResponse200) & {
+  headers: Headers;
+};
+export type postTasksIdFindingsManualResponseError = (postTasksIdFindingsManualResponse400 | postTasksIdFindingsManualResponse401 | postTasksIdFindingsManualResponse403) & {
+  headers: Headers;
+};
+
+export type postTasksIdFindingsManualResponse = (postTasksIdFindingsManualResponseSuccess | postTasksIdFindingsManualResponseError)
+
+export const getPostTasksIdFindingsManualUrl = (id: string,) => {
+
+
+  
+
+  return `/tasks/${id}/findings/manual`
+}
+
+export const postTasksIdFindingsManual = async (id: string,
+    internalCenterHttpHandlerCreateManualTaskFindingRequest: InternalCenterHttpHandlerCreateManualTaskFindingRequest, options?: RequestInit): Promise<postTasksIdFindingsManualResponse> => {
+  
+  return apiClient<postTasksIdFindingsManualResponse>(getPostTasksIdFindingsManualUrl(id),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      internalCenterHttpHandlerCreateManualTaskFindingRequest,)
+  }
+);}
+  
+
+
+
+export const getPostTasksIdFindingsManualMutationOptions = <TError = ErrorType<InternalCenterHttpHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postTasksIdFindingsManual>>, TError,{id: string;data: InternalCenterHttpHandlerCreateManualTaskFindingRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postTasksIdFindingsManual>>, TError,{id: string;data: InternalCenterHttpHandlerCreateManualTaskFindingRequest}, TContext> => {
+
+const mutationKey = ['postTasksIdFindingsManual'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postTasksIdFindingsManual>>, {id: string;data: InternalCenterHttpHandlerCreateManualTaskFindingRequest}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postTasksIdFindingsManual(id,data,)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostTasksIdFindingsManualMutationResult = NonNullable<Awaited<ReturnType<typeof postTasksIdFindingsManual>>>
+    export type PostTasksIdFindingsManualMutationBody = InternalCenterHttpHandlerCreateManualTaskFindingRequest
+    export type PostTasksIdFindingsManualMutationError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+    /**
+ * @summary 手动导入任务漏洞
+ */
+export const usePostTasksIdFindingsManual = <TError = ErrorType<InternalCenterHttpHandlerErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postTasksIdFindingsManual>>, TError,{id: string;data: InternalCenterHttpHandlerCreateManualTaskFindingRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postTasksIdFindingsManual>>,
+        TError,
+        {id: string;data: InternalCenterHttpHandlerCreateManualTaskFindingRequest},
+        TContext
+      > => {
+      return useMutation(getPostTasksIdFindingsManualMutationOptions(options), queryClient);
+    }
+    
+/**
  * @summary 查询任务漏洞详情
  */
 export type getTasksIdFindingsFindingIdResponse200 = {
@@ -8225,6 +8611,285 @@ export const usePostTasksIdRun = <TError = ErrorType<InternalCenterHttpHandlerEr
       return useMutation(getPostTasksIdRunMutationOptions(options), queryClient);
     }
     
+/**
+ * @summary 查询任务弱口令结果
+ */
+export type getTasksIdSecprobeFindingsResponse200 = {
+  data: InternalCenterHttpHandlerTaskSecprobeFindingListResponse
+  status: 200
+}
+
+export type getTasksIdSecprobeFindingsResponse400 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 400
+}
+
+export type getTasksIdSecprobeFindingsResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getTasksIdSecprobeFindingsResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getTasksIdSecprobeFindingsResponseSuccess = (getTasksIdSecprobeFindingsResponse200) & {
+  headers: Headers;
+};
+export type getTasksIdSecprobeFindingsResponseError = (getTasksIdSecprobeFindingsResponse400 | getTasksIdSecprobeFindingsResponse401 | getTasksIdSecprobeFindingsResponse403) & {
+  headers: Headers;
+};
+
+export type getTasksIdSecprobeFindingsResponse = (getTasksIdSecprobeFindingsResponseSuccess | getTasksIdSecprobeFindingsResponseError)
+
+export const getGetTasksIdSecprobeFindingsUrl = (id: string,
+    params?: GetTasksIdSecprobeFindingsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/tasks/${id}/secprobe-findings?${stringifiedParams}` : `/tasks/${id}/secprobe-findings`
+}
+
+export const getTasksIdSecprobeFindings = async (id: string,
+    params?: GetTasksIdSecprobeFindingsParams, options?: RequestInit): Promise<getTasksIdSecprobeFindingsResponse> => {
+  
+  return apiClient<getTasksIdSecprobeFindingsResponse>(getGetTasksIdSecprobeFindingsUrl(id,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetTasksIdSecprobeFindingsQueryKey = (id: string,
+    params?: GetTasksIdSecprobeFindingsParams,) => {
+    return [
+    `/tasks/${id}/secprobe-findings`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+    
+export const getGetTasksIdSecprobeFindingsQueryOptions = <TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(id: string,
+    params?: GetTasksIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTasksIdSecprobeFindingsQueryKey(id,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>> = ({ signal }) => getTasksIdSecprobeFindings(id,params, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTasksIdSecprobeFindingsQueryResult = NonNullable<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>>
+export type GetTasksIdSecprobeFindingsQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetTasksIdSecprobeFindings<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params: undefined |  GetTasksIdSecprobeFindingsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdSecprobeFindings<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdSecprobeFindings<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询任务弱口令结果
+ */
+
+export function useGetTasksIdSecprobeFindings<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    params?: GetTasksIdSecprobeFindingsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindings>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTasksIdSecprobeFindingsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+/**
+ * @summary 查询单条弱口令结果详情
+ */
+export type getTasksIdSecprobeFindingsFindingIdResponse200 = {
+  data: InternalCenterHttpHandlerTaskSecprobeFindingDetailResponse
+  status: 200
+}
+
+export type getTasksIdSecprobeFindingsFindingIdResponse400 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 400
+}
+
+export type getTasksIdSecprobeFindingsFindingIdResponse401 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 401
+}
+
+export type getTasksIdSecprobeFindingsFindingIdResponse403 = {
+  data: InternalCenterHttpHandlerErrorResponse
+  status: 403
+}
+
+export type getTasksIdSecprobeFindingsFindingIdResponseSuccess = (getTasksIdSecprobeFindingsFindingIdResponse200) & {
+  headers: Headers;
+};
+export type getTasksIdSecprobeFindingsFindingIdResponseError = (getTasksIdSecprobeFindingsFindingIdResponse400 | getTasksIdSecprobeFindingsFindingIdResponse401 | getTasksIdSecprobeFindingsFindingIdResponse403) & {
+  headers: Headers;
+};
+
+export type getTasksIdSecprobeFindingsFindingIdResponse = (getTasksIdSecprobeFindingsFindingIdResponseSuccess | getTasksIdSecprobeFindingsFindingIdResponseError)
+
+export const getGetTasksIdSecprobeFindingsFindingIdUrl = (id: string,
+    findingId: string,) => {
+
+
+  
+
+  return `/tasks/${id}/secprobe-findings/${findingId}`
+}
+
+export const getTasksIdSecprobeFindingsFindingId = async (id: string,
+    findingId: string, options?: RequestInit): Promise<getTasksIdSecprobeFindingsFindingIdResponse> => {
+  
+  return apiClient<getTasksIdSecprobeFindingsFindingIdResponse>(getGetTasksIdSecprobeFindingsFindingIdUrl(id,findingId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetTasksIdSecprobeFindingsFindingIdQueryKey = (id: string,
+    findingId: string,) => {
+    return [
+    `/tasks/${id}/secprobe-findings/${findingId}`
+    ] as const;
+    }
+
+    
+export const getGetTasksIdSecprobeFindingsFindingIdQueryOptions = <TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTasksIdSecprobeFindingsFindingIdQueryKey(id,findingId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>> = ({ signal }) => getTasksIdSecprobeFindingsFindingId(id,findingId, { signal });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id && findingId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTasksIdSecprobeFindingsFindingIdQueryResult = NonNullable<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>>
+export type GetTasksIdSecprobeFindingsFindingIdQueryError = ErrorType<InternalCenterHttpHandlerErrorResponse>
+
+
+export function useGetTasksIdSecprobeFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdSecprobeFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>,
+          TError,
+          Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTasksIdSecprobeFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 查询单条弱口令结果详情
+ */
+
+export function useGetTasksIdSecprobeFindingsFindingId<TData = Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError = ErrorType<InternalCenterHttpHandlerErrorResponse>>(
+ id: string,
+    findingId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTasksIdSecprobeFindingsFindingId>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTasksIdSecprobeFindingsFindingIdQueryOptions(id,findingId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
 /**
  * @summary 查询任务快照资产
  */

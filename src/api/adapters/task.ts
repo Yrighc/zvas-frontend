@@ -7,6 +7,8 @@ import { parseHttpProbeSummary } from './asset'
 export const TERMINAL_TASK_STATUSES = ['succeeded', 'failed', 'stopped', 'deleted']
 const WEAK_SCAN_TASK_PLANS = new Set(['weak_scan', 'weak_scan.site'])
 const WEAK_SCAN_TASK_TEMPLATES = new Set(['site_weak_scan', 'weak_scan'])
+const SECPROBE_TASK_PLANS = new Set(['secprobe', 'secprobe.host'])
+const SECPROBE_TASK_TEMPLATES = new Set(['secprobe'])
 
 export function isTerminalTaskStatus(status: string): boolean {
   return TERMINAL_TASK_STATUSES.includes(status)
@@ -21,6 +23,25 @@ export function taskHasWeakScanPlan(task: Pick<TaskListItemVM, 'template_code' |
   }
 
   return WEAK_SCAN_TASK_TEMPLATES.has(task.template_code || '')
+}
+
+export function taskHasSecprobePlan(task: Pick<TaskListItemVM, 'template_code' | 'route_plan' | 'stage_plan'> | TaskDetailVM | null | undefined): boolean {
+  if (!task) return false
+
+  const plans = [...(task.route_plan || []), ...(task.stage_plan || [])]
+  if (plans.some((item) => SECPROBE_TASK_PLANS.has(item))) {
+    return true
+  }
+
+  return SECPROBE_TASK_TEMPLATES.has(task.template_code || '')
+}
+
+export function getTaskPreferredDetailPath(task: Pick<TaskListItemVM, 'id' | 'template_code' | 'route_plan' | 'stage_plan'> | TaskDetailVM | null | undefined): string {
+  const taskID = task?.id || ''
+  if (!taskID) return '/tasks'
+  if (taskHasSecprobePlan(task)) return `/tasks/${taskID}?tab=secprobe`
+  if (taskHasWeakScanPlan(task)) return `/tasks/${taskID}?tab=weak_scan`
+  return `/tasks/${taskID}`
 }
 
 export interface HttpProbeObservation {
@@ -238,6 +259,21 @@ export interface TaskRecordWeakScanSummaryVM {
   error: string
 }
 
+export interface TaskRecordSecprobeSummaryVM {
+  engine: string
+  target_host: string
+  resolved_ip: string
+  source_asset_kind: string
+  source_asset_key: string
+  service_count: number
+  attempted_count: number
+  matched_count: number
+  failed_count: number
+  partial_result: boolean
+  error: string
+  stats: Record<string, any>
+}
+
 export interface TaskWeakScanFindingVM {
   id: string
   task_unit_id: string
@@ -269,6 +305,33 @@ export interface TaskWeakScanFindingVM {
   classification: Record<string, any>
   evidence: Record<string, any>
   raw: Record<string, any>
+  updated_at: string
+}
+
+export interface TaskSecprobeFindingVM {
+  id: string
+  task_unit_id: string
+  task_id: string
+  task_name: string
+  asset_pool_id: string
+  asset_pool_name: string
+  finding_key: string
+  target_host: string
+  resolved_ip: string
+  source_asset_kind: string
+  source_asset_key: string
+  port: number
+  service: string
+  probe_kind: string
+  finding_type: string
+  success: boolean
+  username: string
+  password: string
+  evidence: string
+  error: string
+  enrichment: Record<string, any>
+  raw: Record<string, any>
+  matched_at?: string
   updated_at: string
 }
 
@@ -348,7 +411,9 @@ export interface TaskRecordDetailVM extends TaskRecordVM {
   http_result?: TaskRecordHTTPResultVM
   vul_scan_summary?: TaskRecordVulScanSummaryVM
   weak_scan_summary?: TaskRecordWeakScanSummaryVM
+  secprobe_summary?: TaskRecordSecprobeSummaryVM
   vulnerabilities: TaskRecordVulnerabilityVM[]
+  secprobe_findings: TaskSecprobeFindingVM[]
 }
 
 function mapGroupProgress(arr: any[]): GroupProgressVM[] {
@@ -532,7 +597,9 @@ function mapToTaskRecordDetailVM(dto: any): TaskRecordDetailVM {
       stats: dto.vul_scan_summary.stats || {},
     } : undefined,
     weak_scan_summary: mapToTaskRecordWeakScanSummary(dto, result),
+    secprobe_summary: mapToTaskRecordSecprobeSummary(dto, result),
     vulnerabilities: (dto.vulnerabilities || []).map(mapToTaskRecordVulnerabilityVM),
+    secprobe_findings: (dto.secprobe_findings || []).map(mapToTaskSecprobeFindingVM),
   }
 }
 
@@ -607,6 +674,61 @@ function mapToTaskRecordWeakScanSummary(dto: any, result: Record<string, any>): 
   }
 }
 
+function mapToTaskRecordSecprobeSummary(dto: any, result: Record<string, any>): TaskRecordSecprobeSummaryVM | undefined {
+  const summary = dto.secprobe_summary || result || {}
+  const taskType = dto.task_type || dto.taskType || ''
+  const stage = dto.stage || ''
+  const routeCode = dto.route_code || ''
+  const engine = summary.engine || ''
+  const isSecprobe = taskType === 'secprobe' || stage === 'secprobe' || routeCode === 'secprobe.host' || engine === 'gomap-secprobe'
+  if (!isSecprobe) {
+    return undefined
+  }
+  return {
+    engine: summary.engine || 'gomap-secprobe',
+    target_host: summary.target_host || summary.target || dto.target_key || '',
+    resolved_ip: summary.resolved_ip || '',
+    source_asset_kind: summary.source_asset_kind || '',
+    source_asset_key: summary.source_asset_key || '',
+    service_count: Number(summary.service_count ?? 0),
+    attempted_count: Number(summary.attempted_count ?? 0),
+    matched_count: Number(summary.matched_count ?? 0),
+    failed_count: Number(summary.failed_count ?? 0),
+    partial_result: Boolean(summary.partial_result),
+    error: summary.error || '',
+    stats: summary.stats || {},
+  }
+}
+
+function mapToTaskSecprobeFindingVM(item: any): TaskSecprobeFindingVM {
+  return {
+    id: item.id || '',
+    task_unit_id: item.task_unit_id || '',
+    task_id: item.task_id || '',
+    task_name: item.task_name || '',
+    asset_pool_id: item.asset_pool_id || '',
+    asset_pool_name: item.asset_pool_name || '',
+    finding_key: item.finding_key || '',
+    target_host: item.target_host || '',
+    resolved_ip: item.resolved_ip || '',
+    source_asset_kind: item.source_asset_kind || '',
+    source_asset_key: item.source_asset_key || '',
+    port: item.port ?? 0,
+    service: item.service || '',
+    probe_kind: item.probe_kind || '',
+    finding_type: item.finding_type || '',
+    success: Boolean(item.success),
+    username: item.username || '',
+    password: item.password || '',
+    evidence: item.evidence || '',
+    error: item.error || '',
+    enrichment: item.enrichment || {},
+    raw: item.raw || {},
+    matched_at: item.matched_at || '',
+    updated_at: item.updated_at || '',
+  }
+}
+
 export interface TaskStatusInfo {
   label: string
   color: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
@@ -673,12 +795,14 @@ export function getBlockedReasonLabel(reason: string): string {
 export function getAttackRouteLabel(route: string): string {
   if (route === 'vuln_scan.nuclei' || route === 'vuln_scan' || route === 'vul_scan.site') return '漏洞扫描'
   if (route === 'weak_scan.site' || route === 'weak_scan') return '弱点扫描'
+  if (route === 'secprobe.host' || route === 'secprobe') return '弱口令探测'
   return route || ''
 }
 
 export function getTemplateCodeLabel(code: string): string {
   if (code === 'vuln_scan') return '漏洞扫描'
   if (code === 'weak_scan' || code === 'site_weak_scan') return '弱点扫描'
+  if (code === 'secprobe') return '弱口令探测'
   return code || '-'
 }
 
@@ -938,6 +1062,34 @@ export function useTaskWeakScanFindings(
           raw: item.raw || {},
           updated_at: item.updated_at || '',
         })),
+      }
+    },
+    enabled: Boolean(id && enabled),
+    refetchInterval: enabled ? 5000 : false,
+  })
+}
+
+export function useTaskSecprobeFindings(
+  id?: string,
+  params?: {
+    page?: number
+    page_size?: number
+    unit_id?: string
+    target?: string
+    service?: string
+    probe_kind?: string
+    success?: boolean
+    keyword?: string
+  },
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ['tasks', id, 'secprobe-findings', params],
+    queryFn: async () => {
+      const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>(`/tasks/${id}/secprobe-findings`, { params })
+      return {
+        ...res.data,
+        data: (res.data.data || []).map(mapToTaskSecprobeFindingVM),
       }
     },
     enabled: Boolean(id && enabled),

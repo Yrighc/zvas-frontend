@@ -30,7 +30,8 @@ type RecordTabKey =
   | "port_scan"
   | "http_probe"
   | "vuln_scan"
-  | "weak_scan";
+  | "weak_scan"
+  | "secprobe";
 
 const RECORD_TABS: Array<{
   key: RecordTabKey;
@@ -49,6 +50,11 @@ const RECORD_TABS: Array<{
       key: "weak_scan",
       label: "弱点扫描",
       description: "查看弱点扫描结果与来源任务信息",
+    },
+    {
+      key: "secprobe",
+      label: "弱口令探测",
+      description: "查看 host + service 弱口令探测状态与结果摘要",
     },
   ];
 
@@ -94,6 +100,19 @@ function getCompactVulScanSummary(item: TaskRecordVM) {
 }
 
 function getCompactWeakScanSummary(item: TaskRecordVM) {
+  if (isInProgressStatus(item.status)) {
+    return getInProgressSummary(item.status);
+  }
+  const summary = (item.result_summary || "").trim();
+  if (!summary) {
+    if (item.status === "failed") return "执行失败";
+    if (item.status === "succeeded") return "已完成";
+    return "-";
+  }
+  return summary;
+}
+
+function getCompactSecprobeSummary(item: TaskRecordVM) {
   if (isInProgressStatus(item.status)) {
     return getInProgressSummary(item.status);
   }
@@ -455,6 +474,18 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                 <TableColumn width={220}>扫描结果</TableColumn>
                 <TableColumn width={96}>详情</TableColumn>
               </>
+            ) : recordTab === "secprobe" ? (
+              <>
+                <TableColumn width={220}>目标主机</TableColumn>
+                <TableColumn width={100}>状态</TableColumn>
+                <TableColumn width={160}>执行节点</TableColumn>
+                <TableColumn width={90}>尝试次数</TableColumn>
+                <TableColumn width={160}>开始时间</TableColumn>
+                <TableColumn width={160}>结束时间</TableColumn>
+                <TableColumn width={100}>耗时</TableColumn>
+                <TableColumn width={220}>探测结果</TableColumn>
+                <TableColumn width={96}>详情</TableColumn>
+              </>
             ) : (
               <>
                 <TableColumn width={130}>阶段</TableColumn>
@@ -603,6 +634,40 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                     <TableCell>
                       <span className="block truncate w-full text-[12px] text-white">
                         {getCompactWeakScanSummary(item)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        className="min-w-0 rounded-xl bg-white/5 text-apple-blue-light hover:bg-white/10 font-bold"
+                        onPress={() => setSelectedRecord(item)}
+                        startContent={<EyeIcon className="w-4 h-4" />}
+                      >
+                        详情
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+
+              if (recordTab === "secprobe") {
+                return (
+                  <TableRow key={item.unit_id}>
+                    <TableCell>
+                      <span className="font-mono text-[12px] break-all text-apple-blue-light">
+                        {item.target_key}
+                      </span>
+                    </TableCell>
+                    <TableCell>{renderStatus(item)}</TableCell>
+                    <TableCell>{item.worker_id || "-"}</TableCell>
+                    <TableCell>{item.attempt}</TableCell>
+                    <TableCell>{formatDateTime(item.started_at)}</TableCell>
+                    <TableCell>{formatDateTime(item.finished_at)}</TableCell>
+                    <TableCell>{formatDuration(item.duration_ms)}</TableCell>
+                    <TableCell>
+                      <span className="block truncate w-full text-[12px] text-white">
+                        {getCompactSecprobeSummary(item)}
                       </span>
                     </TableCell>
                     <TableCell>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { httpClient } from '@/api/client'
-import type { PaginationMeta, FindingSummaryView, AssetPoolWeakScanFindingVM } from './asset'
+import type { PaginationMeta, FindingSummaryView, AssetPoolSecprobeFindingVM, AssetPoolWeakScanFindingVM } from './asset'
 
 export interface EvidenceView {
   id: string
@@ -135,6 +135,57 @@ export function useWeakScanFindings(params: {
         })),
       }
     }
+  })
+}
+
+export function useSecprobeFindings(params: {
+  page?: number
+  page_size?: number
+  asset_pool_id?: string
+  task_id?: string
+  task_name?: string
+  target?: string
+  service?: string
+  probe_kind?: string
+  success?: boolean
+  keyword?: string
+  sort?: string
+  order?: string
+}) {
+  return useQuery({
+    queryKey: ['findings', 'secprobe', params],
+    queryFn: async () => {
+      const res = await httpClient.get<{ data: Record<string, unknown>[]; pagination?: PaginationMeta }>('/findings/secprobe', { params })
+      return {
+        ...res.data,
+        data: (res.data.data || []).map((item): AssetPoolSecprobeFindingVM => ({
+          id: String(item.id || ''),
+          task_unit_id: String(item.task_unit_id || ''),
+          task_id: String(item.task_id || ''),
+          task_name: String(item.task_name || ''),
+          asset_pool_id: String(item.asset_pool_id || ''),
+          asset_pool_name: String(item.asset_pool_name || ''),
+          finding_key: String(item.finding_key || ''),
+          target_host: String(item.target_host || ''),
+          resolved_ip: String(item.resolved_ip || ''),
+          source_asset_kind: String(item.source_asset_kind || ''),
+          source_asset_key: String(item.source_asset_key || ''),
+          port: Number(item.port || 0),
+          service: String(item.service || ''),
+          probe_kind: String(item.probe_kind || ''),
+          finding_type: String(item.finding_type || ''),
+          success: Boolean(item.success),
+          username: String(item.username || ''),
+          password: String(item.password || ''),
+          evidence: String(item.evidence || ''),
+          error: String(item.error || ''),
+          enrichment: item.enrichment && typeof item.enrichment === 'object' && !Array.isArray(item.enrichment) ? (item.enrichment as Record<string, unknown>) : {},
+          raw: item.raw && typeof item.raw === 'object' && !Array.isArray(item.raw) ? (item.raw as Record<string, unknown>) : {},
+          matched_at: String(item.matched_at || ''),
+          updated_at: String(item.updated_at || ''),
+        })),
+      }
+    },
   })
 }
 

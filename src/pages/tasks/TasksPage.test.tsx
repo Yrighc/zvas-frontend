@@ -181,6 +181,62 @@ describe('TasksPage', () => {
     expect(screen.queryByRole('button', { name: '监控' })).not.toBeInTheDocument()
   })
 
+  it('prefers the secprobe tab when the task is a secprobe task', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(useTasks).mockReturnValue({
+      data: {
+        data: [
+          {
+            id: 'task-secprobe-1',
+            name: '弱口令任务',
+            template_code: 'secprobe',
+            template_name: '弱口令扫描',
+            asset_pool_id: 'pool-1',
+            asset_pool_name: '测试资产池',
+            target_set_id: 'ts-1',
+            status: 'running',
+            desired_state: 'running',
+            stage_plan: ['secprobe'],
+            route_plan: ['secprobe.host'],
+            route_progress: [],
+            group_progress: [],
+            active_route_code: '',
+            active_group: '',
+            blocked_reason: '',
+            active_attack_route: '',
+            created_by: 'user-admin',
+            created_at: '2026-04-20T10:00:00Z',
+            updated_at: '2026-04-20T10:01:00Z',
+            started_at: '2026-04-20T10:00:30Z',
+            finished_at: '',
+            stage_overrides: {},
+          },
+        ],
+        pagination: {
+          page: 1,
+          page_size: 20,
+          total: 1,
+        },
+      },
+      isPending: false,
+      refetch: refetchMock,
+    } as unknown as ReturnType<typeof useTasks>)
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
+
+    const row = screen.getByText('弱口令任务').closest('tr')
+    expect(row).not.toBeNull()
+
+    await user.click(row!)
+
+    expect(navigateMock).toHaveBeenCalledWith('/tasks/task-secprobe-1?tab=secprobe')
+  })
+
   it('opens delete confirmation without navigating away when delete is clicked', async () => {
     const user = userEvent.setup()
 

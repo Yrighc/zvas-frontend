@@ -550,6 +550,70 @@ function renderWeakScan(detail: TaskRecordDetailVM) {
   )
 }
 
+function renderSecprobe(detail: TaskRecordDetailVM) {
+  if (!detail.secprobe_summary) return null
+
+  const summary = detail.secprobe_summary
+  const inProgress = isInProgressStatus(detail.status)
+
+  return (
+    <section className="space-y-4">
+      <div className="space-y-1">
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.24em] text-apple-text-tertiary">弱口令探测执行摘要</h3>
+        <p className="text-xs text-apple-text-tertiary">这里展示 secprobe 单元的 host、service 统计和命中结果。完整列表可前往“弱口令结果”页查看。</p>
+      </div>
+      <div className="space-y-4 rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <DetailPair label="目标主机" value={<TruncatedText value={firstNonEmptyText(summary.target_host, detail.target_key)} limit={48} mono />} />
+          <DetailPair label="解析 IP" value={summary.resolved_ip || '-'} />
+          <DetailPair label="执行状态" value={getExecutionStatusLabel(detail.status)} />
+          <DetailPair label="执行节点" value={detail.worker_id || '-'} />
+          <DetailPair label="尝试次数" value={detail.attempt} />
+          <DetailPair label="开始时间" value={formatDateTime(detail.started_at)} />
+          <DetailPair label="结束时间" value={formatDateTime(detail.finished_at)} />
+          <DetailPair label="耗时" value={detail.duration_ms > 0 ? `${(detail.duration_ms / 1000).toFixed(1)} s` : '-'} />
+          <DetailPair label="服务数量" value={summary.service_count} />
+          <DetailPair label="尝试次数" value={summary.attempted_count} />
+          <DetailPair label="命中数量" value={summary.matched_count} />
+          <DetailPair label="失败数量" value={summary.failed_count} />
+          <DetailPair label="来源资产" value={firstNonEmptyText(summary.source_asset_kind, summary.source_asset_key, '-')} />
+          <DetailPair label="探测引擎" value={summary.engine || '-'} />
+          <DetailPair label="部分结果" value={summary.partial_result ? '是' : '否'} />
+          <DetailPair label="执行错误" value={summary.error || '-'} />
+        </div>
+        {summary.stats && Object.keys(summary.stats).length > 0 && (
+          <MessageBlock title="统计详情" content={JSON.stringify(summary.stats, null, 2)} copyable collapsible />
+        )}
+        {detail.secprobe_findings.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.24em] text-apple-text-tertiary">命中明细</h3>
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+              {detail.secprobe_findings.map((finding) => (
+                <div key={finding.id} className="rounded-[22px] border border-white/8 bg-black/20 p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-white">{firstNonEmptyText(finding.service?.toUpperCase(), 'SECPROBE')} / {finding.port || '-'}</div>
+                    <Chip size="sm" variant="flat" color={finding.success ? 'danger' : 'default'} classNames={{ base: finding.success ? 'bg-apple-red/15 text-apple-red-light border border-apple-red/20' : 'border border-white/8 bg-white/[0.04] text-apple-text-secondary' }}>
+                      {finding.success ? '命中' : '未命中'}
+                    </Chip>
+                  </div>
+                  <div className="text-[12px] text-apple-text-secondary font-mono">{firstNonEmptyText(finding.target_host, finding.resolved_ip, '-')}</div>
+                  <div className="text-[12px] text-white">账号：{firstNonEmptyText(finding.username, '-')} / 密码：{firstNonEmptyText(finding.password, '-')}</div>
+                  <div className="text-[12px] text-apple-text-secondary">证据：{firstNonEmptyText(finding.evidence, finding.error, '-')}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {inProgress && (
+          <div className="rounded-[20px] border border-apple-blue/20 bg-apple-blue/5 p-4 text-sm text-apple-blue-light">
+            当前弱口令探测仍在执行中，命中统计将在结果收口后更新。
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function renderFallbackSummary(detail: TaskRecordDetailVM) {
   const summary = detail.result_summary?.trim()
   if (!summary) {
@@ -603,7 +667,8 @@ export function TaskRecordDetailDrawer({ taskId, record, isOpen, onClose }: Prop
   const hasHTTPDetail = Boolean(detail?.http_result)
   const hasVulDetail = Boolean(detail?.vul_scan_summary || detail?.vulnerabilities.length)
   const hasWeakDetail = Boolean(detail?.weak_scan_summary)
-  const hasStructuredResult = hasPortDetail || hasHTTPDetail || hasVulDetail || hasWeakDetail
+  const hasSecprobeDetail = Boolean(detail?.secprobe_summary || detail?.secprobe_findings.length)
+  const hasStructuredResult = hasPortDetail || hasHTTPDetail || hasVulDetail || hasWeakDetail || hasSecprobeDetail
 
   return (
     <Drawer
@@ -642,12 +707,14 @@ export function TaskRecordDetailDrawer({ taskId, record, isOpen, onClose }: Prop
             {detail && (
               <>
                 {renderPortResults(sortedPortResults, portSort, setPortSort)}
-                {hasPortDetail && (hasHTTPDetail || hasVulDetail || hasWeakDetail) && <Divider className="bg-white/6" />}
+                {hasPortDetail && (hasHTTPDetail || hasVulDetail || hasWeakDetail || hasSecprobeDetail) && <Divider className="bg-white/6" />}
                 {renderHTTPResult(detail)}
-                {hasHTTPDetail && (hasVulDetail || hasWeakDetail) && <Divider className="bg-white/6" />}
+                {hasHTTPDetail && (hasVulDetail || hasWeakDetail || hasSecprobeDetail) && <Divider className="bg-white/6" />}
                 {renderVulScan(detail)}
-                {hasVulDetail && hasWeakDetail && <Divider className="bg-white/6" />}
+                {hasVulDetail && (hasWeakDetail || hasSecprobeDetail) && <Divider className="bg-white/6" />}
                 {renderWeakScan(detail)}
+                {hasWeakDetail && hasSecprobeDetail && <Divider className="bg-white/6" />}
+                {renderSecprobe(detail)}
                 {!hasStructuredResult && renderFallbackSummary(detail)}
               </>
             )}

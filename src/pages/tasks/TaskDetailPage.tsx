@@ -18,18 +18,21 @@ import { TaskRecordsTab } from '@/components/tasks/TaskRecordsTab'
 import { TaskFindingsTab } from '@/components/tasks/TaskFindingsTab'
 import { TaskReportsTab } from '@/components/tasks/TaskReportsTab'
 import { TaskWeakScanResultsTab } from '@/components/tasks/TaskWeakScanResultsTab'
+import { TaskSecprobeResultsTab } from '@/components/tasks/TaskSecprobeResultsTab'
 import { PauseIcon, PlayIcon as PlayIconSolid, StopIcon } from '@heroicons/react/24/solid'
 import { useUrlTabState } from '@/hooks/useUrlTabState'
 import { useAuthStore } from '@/store/auth'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
-const TASK_DETAIL_TABS = ['overview', 'assets', 'records', 'progress', 'findings', 'weak_scan', 'reports'] as const
+const TASK_DETAIL_TABS = ['overview', 'assets', 'records', 'progress', 'findings', 'weak_scan', 'secprobe', 'reports'] as const
 type TaskDetailTabKey = (typeof TASK_DETAIL_TABS)[number]
 
 const VULN_SCAN_PLANS = new Set(['vuln_scan', 'vul_scan', 'vul_scan.site', 'vuln_scan.nuclei'])
 const WEAK_SCAN_PLANS = new Set(['weak_scan', 'weak_scan.site'])
+const SECPROBE_PLANS = new Set(['secprobe', 'secprobe.host'])
 const VULN_SCAN_TEMPLATES = new Set(['site_vuln_scan', 'vuln_scan'])
 const WEAK_SCAN_TEMPLATES = new Set(['site_weak_scan', 'weak_scan'])
+const SECPROBE_TEMPLATES = new Set(['secprobe'])
 
 function hasPlan(task: TaskDetailVM | undefined, plans: Set<string>, templates: Set<string>) {
   if (!task) return false
@@ -56,6 +59,13 @@ export function TaskDetailPage() {
     sort: 'updated_at',
     order: 'desc',
   })
+  const secprobeRecordQuery = useTaskRecords(id, {
+    page: 1,
+    page_size: 1,
+    stage: 'secprobe',
+    sort: 'updated_at',
+    order: 'desc',
+  })
   const runTask = useRunTask()
   const pauseTask = usePauseTask()
   const resumeTask = useResumeTask()
@@ -74,13 +84,18 @@ export function TaskDetailPage() {
     const hasRuntimeRecords = Boolean((weakScanRecordQuery.data?.pagination?.total || 0) > 0 || (weakScanRecordQuery.data?.data || []).length > 0)
     return hasPlan(task, WEAK_SCAN_PLANS, WEAK_SCAN_TEMPLATES) || hasRuntimeRecords
   }, [task, weakScanRecordQuery.data])
+  const showSecprobeTab = useMemo(() => {
+    const hasRuntimeRecords = Boolean((secprobeRecordQuery.data?.pagination?.total || 0) > 0 || (secprobeRecordQuery.data?.data || []).length > 0)
+    return hasPlan(task, SECPROBE_PLANS, SECPROBE_TEMPLATES) || hasRuntimeRecords
+  }, [secprobeRecordQuery.data, task])
   const visibleTabs = useMemo<TaskDetailTabKey[]>(() => {
     const tabs: TaskDetailTabKey[] = ['overview', 'assets', 'records', 'progress']
     if (showFindingsTab) tabs.push('findings')
     if (showWeakScanTab) tabs.push('weak_scan')
+    if (showSecprobeTab) tabs.push('secprobe')
     if (canReadReports) tabs.push('reports')
     return tabs
-  }, [canReadReports, showFindingsTab, showWeakScanTab])
+  }, [canReadReports, showFindingsTab, showSecprobeTab, showWeakScanTab])
   const selectedTab: TaskDetailTabKey = visibleTabs.includes(activeTab) ? activeTab : 'overview'
 
   useEffect(() => {
@@ -188,6 +203,7 @@ export function TaskDetailPage() {
           <Tab key="progress" title="执行进度" />
           {showFindingsTab && <Tab key="findings" title="漏洞结果" />}
           {showWeakScanTab && <Tab key="weak_scan" title="弱点扫描结果" />}
+          {showSecprobeTab && <Tab key="secprobe" title="弱口令结果" />}
           {canReadReports && <Tab key="reports" title="报告" />}
         </Tabs>
       </div>
@@ -199,6 +215,7 @@ export function TaskDetailPage() {
         {selectedTab === 'progress' && <TaskProgressTab progress={progress} />}
         {selectedTab === 'findings' && <TaskFindingsTab taskId={task.id} />}
         {selectedTab === 'weak_scan' && <TaskWeakScanResultsTab taskId={task.id} />}
+        {selectedTab === 'secprobe' && <TaskSecprobeResultsTab taskId={task.id} />}
         {selectedTab === 'reports' && canReadReports && <TaskReportsTab taskId={task.id} />}
       </div>
     </div>

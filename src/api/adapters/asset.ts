@@ -288,6 +288,33 @@ export interface AssetPoolWeakScanFindingVM {
   updated_at: string
 }
 
+export interface AssetPoolSecprobeFindingVM {
+  id: string
+  task_unit_id: string
+  task_id: string
+  task_name: string
+  asset_pool_id: string
+  asset_pool_name: string
+  finding_key: string
+  target_host: string
+  resolved_ip: string
+  source_asset_kind: string
+  source_asset_key: string
+  port: number
+  service: string
+  probe_kind: string
+  finding_type: string
+  success: boolean
+  username: string
+  password: string
+  evidence: string
+  error: string
+  enrichment: Record<string, any>
+  raw: Record<string, any>
+  matched_at?: string
+  updated_at: string
+}
+
 function mapToTaskSummaryView(dto: any): TaskSummaryView {
   return {
     id: dto.id || '',
@@ -450,6 +477,59 @@ export function useAssetPoolWeakScanFindings(
           classification: item.classification || {},
           evidence: item.evidence || {},
           raw: item.raw || {},
+          updated_at: item.updated_at || '',
+        })),
+      }
+    },
+    enabled: Boolean(id),
+  })
+}
+
+export function useAssetPoolSecprobeFindings(
+  id?: string,
+  params?: {
+    page?: number
+    page_size?: number
+    target?: string
+    keyword?: string
+    task_id?: string
+    service?: string
+    probe_kind?: string
+    success?: boolean
+    sort?: string
+    order?: string
+  },
+) {
+  return useQuery({
+    queryKey: ['asset-pools', id, 'secprobe-findings', params],
+    queryFn: async () => {
+      const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>(`/asset-pools/${id}/secprobe-findings`, { params })
+      return {
+        ...res.data,
+        data: (res.data.data || []).map((item: any): AssetPoolSecprobeFindingVM => ({
+          id: item.id || '',
+          task_unit_id: item.task_unit_id || '',
+          task_id: item.task_id || '',
+          task_name: item.task_name || '',
+          asset_pool_id: item.asset_pool_id || '',
+          asset_pool_name: item.asset_pool_name || '',
+          finding_key: item.finding_key || '',
+          target_host: item.target_host || '',
+          resolved_ip: item.resolved_ip || '',
+          source_asset_kind: item.source_asset_kind || '',
+          source_asset_key: item.source_asset_key || '',
+          port: item.port ?? 0,
+          service: item.service || '',
+          probe_kind: item.probe_kind || '',
+          finding_type: item.finding_type || '',
+          success: Boolean(item.success),
+          username: item.username || '',
+          password: item.password || '',
+          evidence: item.evidence || '',
+          error: item.error || '',
+          enrichment: item.enrichment || {},
+          raw: item.raw || {},
+          matched_at: item.matched_at || '',
           updated_at: item.updated_at || '',
         })),
       }

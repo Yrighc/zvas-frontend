@@ -21,6 +21,7 @@ import { AssetPoolSiteTab } from '@/components/assets/AssetPoolSiteTab'
 import { AssetPoolTasksTab } from '@/components/assets/AssetPoolTasksTab'
 import { AssetPoolFindingsTab } from '@/components/assets/AssetPoolFindingsTab'
 import { AssetPoolWeakScanFindingsTab } from '@/components/assets/AssetPoolWeakScanFindingsTab'
+import { AssetPoolSecprobeFindingsTab } from '@/components/assets/AssetPoolSecprobeFindingsTab'
 import { AssetPoolReportsTab } from '@/components/assets/AssetPoolReportsTab'
 import { CreateTaskFromPoolModal } from '@/components/assets/CreateTaskFromPoolModal'
 import { ManualInputModal } from '@/components/assets/ManualInputModal'
@@ -31,7 +32,7 @@ import { useUrlTabState } from '@/hooks/useUrlTabState'
 import { useAuthStore } from '@/store/auth'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
-const ASSET_POOL_DETAIL_TABS = ['overview', 'inputs', 'ip', 'domain', 'site', 'tasks', 'findings', 'weak_scan', 'reports'] as const
+const ASSET_POOL_DETAIL_TABS = ['overview', 'inputs', 'ip', 'domain', 'site', 'tasks', 'findings', 'weak_scan', 'secprobe', 'reports'] as const
 
 export function AssetPoolDetailPage() {
   const { id } = useParams()
@@ -55,7 +56,7 @@ export function AssetPoolDetailPage() {
   const canReadReports = hasPermission(currentUser?.permissions, PERMISSIONS.reportRead)
   const visibleTabs = useMemo(() => {
     return ASSET_POOL_DETAIL_TABS.filter((tab) => {
-      if ((tab === 'findings' || tab === 'weak_scan') && !canReadFindings) {
+      if ((tab === 'findings' || tab === 'weak_scan' || tab === 'secprobe') && !canReadFindings) {
         return false
       }
       if (tab === 'reports' && !canReadReports) {
@@ -203,6 +204,7 @@ export function AssetPoolDetailPage() {
           <Tab key="tasks" title="任务执行" />
           {canReadFindings && <Tab key="findings" title="漏洞结果" />}
           {canReadFindings && <Tab key="weak_scan" title="弱点扫描结果" />}
+          {canReadFindings && <Tab key="secprobe" title="弱口令结果" />}
           {canReadReports && <Tab key="reports" title="分析报告" />}
         </Tabs>
       </div>
@@ -219,6 +221,7 @@ export function AssetPoolDetailPage() {
 
           {activeTab === 'findings' && canReadFindings && <AssetPoolFindingsTab poolId={id!} />}
           {activeTab === 'weak_scan' && canReadFindings && <AssetPoolWeakScanFindingsTab poolId={id!} />}
+          {activeTab === 'secprobe' && canReadFindings && <AssetPoolSecprobeFindingsTab poolId={id!} />}
           {activeTab === 'reports' && canReadReports && <AssetPoolReportsTab poolId={id!} />}
         </div>
       </div>

@@ -17,7 +17,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MagnifyingGlassIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline'
 
-import { useTasks, usePauseTask, useResumeTask, useStopTask, useDeleteTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, isTerminalTaskStatus, getTemplateCodeLabel, taskHasWeakScanPlan } from '@/api/adapters/task'
+import { useTasks, usePauseTask, useResumeTask, useStopTask, useDeleteTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, isTerminalTaskStatus, getTemplateCodeLabel, getTaskPreferredDetailPath } from '@/api/adapters/task'
 import { useAssetPools } from '@/api/adapters/asset'
 import { useTaskRoutes, getRouteActiveLabel, mapStageLabels } from '@/api/adapters/route'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
@@ -66,11 +66,6 @@ export function TasksPage() {
   const items = tasksQuery.data?.data || []
   const total = tasksQuery.data?.pagination?.total || 0
   const totalPages = Math.ceil(total / pageSize)
-
-  function buildTaskDetailPath(taskID: string, hasWeakScan: boolean) {
-    if (!hasWeakScan) return `/tasks/${taskID}`
-    return `/tasks/${taskID}?tab=weak_scan`
-  }
 
   return (
     <div className="flex flex-col gap-6 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20 p-4">
@@ -173,7 +168,7 @@ export function TasksPage() {
                 <TableRow
                   key={rowKey}
                   className="cursor-pointer hover:bg-white/[0.03]"
-                  onClick={() => navigate(buildTaskDetailPath(rowKey, taskHasWeakScanPlan(task)))}
+                  onClick={() => navigate(getTaskPreferredDetailPath(task))}
                 >
                   <TableCell>
                     <span className="text-sm font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis block tracking-tight">{task.name || 'Untitled Task'}</span>
