@@ -64,7 +64,8 @@ const MENU_CONFIG: MainMenu[] = [
      children: [
        { key: 'findings-list', path: '/findings', label: '漏洞结果', kicker: 'THREAT INTELLIGENCE', permission: PERMISSIONS.findingRead },
        { key: 'findings-weak-scan', path: '/findings/weak-scan', label: '弱点扫描结果', kicker: 'WEAK SCAN', permission: PERMISSIONS.findingRead },
-       { key: 'findings-secprobe', path: '/findings/secprobe', label: '弱口令结果', kicker: 'SECPROBE', permission: PERMISSIONS.findingRead }
+       { key: 'findings-secprobe', path: '/findings/secprobe', label: '弱口令结果', kicker: 'SECPROBE', permission: PERMISSIONS.findingRead },
+       { key: 'findings-fingerprints', path: '/findings/fingerprints', label: '指纹管理', kicker: 'FINGERPRINTS', permission: PERMISSIONS.settingsManage }
      ]
   },
   {

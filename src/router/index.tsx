@@ -34,6 +34,7 @@ const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage').then(m 
 const FindingsPage = lazy(() => import('@/pages/findings/FindingsPage').then(m => ({ default: m.FindingsPage })))
 const WeakScanFindingsPage = lazy(() => import('@/pages/findings/WeakScanFindingsPage').then(m => ({ default: m.WeakScanFindingsPage })))
 const SecprobeFindingsPage = lazy(() => import('@/pages/findings/SecprobeFindingsPage').then(m => ({ default: m.SecprobeFindingsPage })))
+const FingerprintRulesPage = lazy(() => import('@/pages/findings/FingerprintRulesPage').then(m => ({ default: m.FingerprintRulesPage })))
 
 /**
  * 局部骨架屏占位
@@ -257,6 +258,16 @@ export const router = createBrowserRouter(
                   <SecprobeFindingsPage />
                 </Suspense>,
                 [PERMISSIONS.findingRead],
+              ),
+            },
+            {
+              path: 'findings/fingerprints',
+              handle: { requiredPermissions: [PERMISSIONS.settingsManage] },
+              element: renderProtectedPage(
+                <Suspense fallback={renderPageLoader()}>
+                  <FingerprintRulesPage />
+                </Suspense>,
+                [PERMISSIONS.settingsManage],
               ),
             },
           ],
