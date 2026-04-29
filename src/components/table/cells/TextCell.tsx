@@ -27,6 +27,7 @@ export function TextCell({
   const display = truncateText(text, limit);
   const body = (
     <span
+      title={text}
       className={`block truncate whitespace-nowrap text-[12px] ${mono ? "font-mono" : ""} ${className || "text-white"}`.trim()}
     >
       {display}

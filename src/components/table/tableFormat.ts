@@ -1,5 +1,9 @@
 const TABLE_COUNT_FORMATTER = new Intl.NumberFormat("en-US");
 
+function padDateTimePart(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
 export function truncateText(value: string, limit: number): string {
   const text = value.trim();
   if (!text) return "-";
@@ -12,7 +16,12 @@ export function formatTableDateTime(value?: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return date.toLocaleString("zh-CN", { hour12: false });
+  return [
+    date.getUTCFullYear(),
+    padDateTimePart(date.getUTCMonth() + 1),
+    padDateTimePart(date.getUTCDate()),
+  ].join("-")
+    + ` ${padDateTimePart(date.getUTCHours())}:${padDateTimePart(date.getUTCMinutes())}:${padDateTimePart(date.getUTCSeconds())}`;
 }
 
 export function formatTableCount(value?: number | null): string {
