@@ -49,6 +49,15 @@ function firstNonEmptyText(...values: unknown[]): string {
   return "";
 }
 
+function formatDateTime(value?: string): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("zh-CN", {
+    hour12: false,
+  });
+}
+
 type ProbePayload = Record<string, unknown>;
 
 function extractProbePayload(item: PoolAssetVM): ProbePayload {
@@ -86,6 +95,12 @@ function truncateText(value: string, limit = 32) {
   const text = value.trim();
   if (!text) return "-";
   return text.length > limit ? `${text.slice(0, limit)}...` : text;
+}
+
+function fingerprintSummary(fingerprints: string[], limit = 2) {
+  if (fingerprints.length === 0) return "";
+  if (fingerprints.length <= limit) return fingerprints.join(", ");
+  return `${fingerprints.slice(0, limit).join(", ")} +${fingerprints.length - limit}`;
 }
 
 function InlineTextCell({
@@ -429,7 +444,7 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
           <Input
             isClearable
             value={keyword}
-            placeholder="搜索 URL、标题或备案信息..."
+            placeholder="搜索 URL、标题或指纹..."
             onValueChange={(v) => {
               setKeyword(v);
               setPage(1);
@@ -462,18 +477,17 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
           layout="fixed"
           classNames={{
             ...APPLE_TABLE_CLASSES,
-            base: "min-w-[1280px] p-4",
+            base: "min-w-[1240px] p-4",
             tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
           }}
         >
           <TableHeader>
-            <TableColumn width={320}>站点实体 / URL</TableColumn>
-            <TableColumn width={140}>存活状态</TableColumn>
-            <TableColumn width={240}>页面标题</TableColumn>
-            <TableColumn width={110}>状态码</TableColumn>
-            <TableColumn width={220}>ICP 备案</TableColumn>
-            <TableColumn width={110}>置信度</TableColumn>
-            <TableColumn width={150}>来源标识</TableColumn>
+            <TableColumn width={360}>URL</TableColumn>
+            <TableColumn width={140}>状态</TableColumn>
+            <TableColumn width={120}>状态码</TableColumn>
+            <TableColumn width={240}>Title</TableColumn>
+            <TableColumn width={220}>指纹</TableColumn>
+            <TableColumn width={180}>发现时间</TableColumn>
             <TableColumn width={120}>详情</TableColumn>
           </TableHeader>
           <TableBody
@@ -505,24 +519,21 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
                     <StatusBadge item={it} />
                   </TableCell>
                   <TableCell>
-                    <InlineTextCell value={detail.title} limit={34} />
-                  </TableCell>
-                  <TableCell>
                     <StatusCodeBadge code={detail.statusCode} />
                   </TableCell>
                   <TableCell>
-                    <InlineTextCell value={detail.icp} limit={30} />
-                  </TableCell>
-                  <TableCell>
-                    <span className="rounded-full border border-apple-green/20 bg-apple-green/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-apple-green-light">
-                      {it.confidence_level}
-                    </span>
+                    <InlineTextCell value={detail.title} limit={34} />
                   </TableCell>
                   <TableCell>
                     <InlineTextCell
-                      value={sourceLabel(it.source_summary)}
-                      limit={18}
+                      value={fingerprintSummary(detail.fingerprints)}
+                      limit={26}
                     />
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-mono text-[12px] text-apple-text-secondary">
+                      {formatDateTime(it.created_at)}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <Button

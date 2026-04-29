@@ -83,4 +83,16 @@ describe("AssetPoolSiteTab", () => {
     expect(within(section as HTMLElement).getByText("nginx")).toBeInTheDocument();
     expect(within(section as HTMLElement).getByText("jenkins")).toBeInTheDocument();
   });
+
+  it("renders the updated site list columns", async () => {
+    renderTab();
+
+    expect(await screen.findByRole("columnheader", { name: "URL" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "状态" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "状态码" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Title" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "指纹" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "发现时间" })).toBeInTheDocument();
+    expect(screen.getByText("nginx, jenkins")).toBeInTheDocument();
+  });
 });
