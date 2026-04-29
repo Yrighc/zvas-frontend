@@ -58,6 +58,11 @@ function extractProbePayload(item: PoolAssetVM): ProbePayload {
 function extractProbeDetail(item: PoolAssetVM) {
   const payload = extractProbePayload(item);
   const summary = parseHttpProbeSummary(payload);
+  const fingerprints = Array.isArray(item.detail?.fingerprints)
+    ? item.detail.fingerprints
+        .map((value) => (typeof value === "string" ? value.trim() : String(value).trim()))
+        .filter(Boolean)
+    : [];
   return {
     summary,
     requestMessage: firstNonEmptyText(payload["request_message"]),
@@ -73,6 +78,7 @@ function extractProbeDetail(item: PoolAssetVM) {
     faviconHash: summary?.favicon_hash || "",
     probeStatus: summary?.probe_status || "",
     probeError: summary?.probe_error || "",
+    fingerprints,
   };
 }
 
@@ -300,6 +306,28 @@ function SiteDetailDrawer({
                           : detail.probeError || "-"
                       }
                     />
+                  </section>
+
+                  <section className="space-y-3">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.24em] text-apple-text-tertiary">
+                      命中指纹
+                    </h3>
+                    {detail.fingerprints.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {detail.fingerprints.map((fingerprint) => (
+                          <span
+                            key={fingerprint}
+                            className="rounded-full border border-apple-blue/20 bg-apple-blue/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-apple-blue-light"
+                          >
+                            {fingerprint}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-white/6 bg-white/[0.03] p-4 text-sm text-apple-text-tertiary">
+                        当前站点资产尚未记录命中指纹。
+                      </div>
+                    )}
                   </section>
 
                   {joinTags(item?.system_facets || [], item?.custom_tags || [])
