@@ -526,7 +526,7 @@ export function FingerprintRulesPage() {
                 label="规则内容"
                 value={draft.rule_content}
                 onValueChange={(value) => setDraft((current) => ({ ...current, rule_content: value }))}
-                placeholder={`例如:\nheader=\"Server: nginx\" || body=\"/jenkins/login\"`}
+                placeholder={`例如:\nheader="Server: nginx" || body="/jenkins/login"`}
                 minRows={12}
                 classNames={{
                   inputWrapper: 'rounded-2xl border border-white/10 bg-white/5 font-mono text-sm',
