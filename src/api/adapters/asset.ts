@@ -109,6 +109,58 @@ export interface PoolAssetVM {
   updated_at: string
 }
 
+export interface PoolAssetPortDetailVM {
+  port: string
+  protocol: string
+  service: string
+  banner: string
+  cert_subject: string
+  dns_names: string
+  status: string
+}
+
+function normalizeDetailText(value: unknown) {
+  if (Array.isArray(value)) {
+    const text = value
+      .map((item) => normalizeDetailText(item))
+      .filter(Boolean)
+      .join(', ')
+    return text || '-'
+  }
+  if (value === null || value === undefined) return '-'
+  const text = String(value).trim()
+  return text || '-'
+}
+
+export function getPoolAssetPortDetails(detail: Record<string, any> | null | undefined): PoolAssetPortDetailVM[] {
+  const payload = detail || {}
+  if (Array.isArray(payload.ports) && payload.ports.length > 0) {
+    return payload.ports.map((row: Record<string, unknown>) => ({
+      port: normalizeDetailText(row.port),
+      protocol: normalizeDetailText(row.protocol),
+      service: normalizeDetailText(row.service),
+      banner: normalizeDetailText(row.banner),
+      cert_subject: normalizeDetailText(row.cert_subject),
+      dns_names: normalizeDetailText(row.dns_names),
+      status: normalizeDetailText(row.status),
+    }))
+  }
+
+  if (!Array.isArray(payload.open_ports) || payload.open_ports.length === 0) {
+    return []
+  }
+
+  return payload.open_ports.map((port: string | number, index: number) => ({
+    port: normalizeDetailText(port),
+    protocol: '-',
+    service: normalizeDetailText(Array.isArray(payload.services) ? payload.services[index] : '-'),
+    banner: '-',
+    cert_subject: '-',
+    dns_names: '-',
+    status: '-',
+  }))
+}
+
 export interface CreateAssetPoolPayload {
   name: string
   description?: string
