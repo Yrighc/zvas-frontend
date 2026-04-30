@@ -10,7 +10,6 @@ import { FindingsPage } from "@/pages/findings/FindingsPage";
 
 const navigateMock = vi.fn();
 const LONG_FINDING_ID = "finding-abcdefghijklmnopqrstuvwxyz-1234567890";
-const TRUNCATED_FINDING_ID = "finding-abcdefghijklmnopqrstuvwx...";
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
@@ -96,14 +95,7 @@ describe("FindingsPage", () => {
     expect(
       within(findingRow as HTMLTableRowElement).getByText("跨资产池漏洞命中摘要标题"),
     ).toBeInTheDocument();
-    expect(
-      within(findingRow as HTMLTableRowElement).getByTitle(
-        LONG_FINDING_ID,
-      ),
-    ).toHaveClass("truncate", "whitespace-nowrap");
-    expect(
-      within(findingRow as HTMLTableRowElement).getByText(TRUNCATED_FINDING_ID),
-    ).toHaveClass("truncate", "whitespace-nowrap");
+    expect(within(findingRow as HTMLTableRowElement).queryByText(LONG_FINDING_ID)).not.toBeInTheDocument();
     expect(screen.getByText("poc-template-1")).toHaveClass("truncate", "whitespace-nowrap");
   });
 

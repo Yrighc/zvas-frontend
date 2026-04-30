@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Chip, Pagination, Skeleton } from '@heroui/react'
+import { Button, Chip, Pagination, Skeleton, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@heroui/react'
 import {
   RocketLaunchIcon,
   BoltIcon,
@@ -14,14 +14,30 @@ import { useAssetPoolTasks } from '@/api/adapters/asset'
 import { usePauseTask, useResumeTask, useStopTask, useDeleteTask, getTaskStatusInfo, getActiveGroupLabel, getBlockedReasonLabel, getTemplateCodeLabel, isTerminalTaskStatus, getTaskPreferredDetailPath } from '@/api/adapters/task'
 import { useTaskRoutes, mapStageLabels, getRouteActiveLabel } from '@/api/adapters/route'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { TableFrame } from '@/components/table/TableFrame'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
+import { TABLE_CLASS_NAMES } from '@/components/table/tableClassNames'
 import { useAuthStore } from '@/store/auth'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
-function formatTime(value?: string): string {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+function buildTaskRouteSummary(
+  activeRouteLabel: string,
+  activeGroup: string,
+  blockedReason: string,
+  planLabels: string[],
+) {
+  if (blockedReason) {
+    return `${blockedReason}${activeRouteLabel ? ` · ${activeRouteLabel}` : ''}`
+  }
+  if (activeRouteLabel && activeGroup) {
+    return `${activeRouteLabel} · ${activeGroup}`
+  }
+  if (activeRouteLabel) {
+    return activeRouteLabel
+  }
+  return planLabels.length > 0 ? planLabels.join(' • ') : '—'
 }
 
 export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
@@ -93,107 +109,106 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
         </div>
       </div>
 
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
-        <div className="min-w-[1000px]">
-          <div className="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1.2fr_130px] gap-4 px-6 h-14 items-center text-[10px] font-black tracking-[0.2em] uppercase text-apple-text-tertiary border-b border-white/5">
-            <span>任务标识</span>
-            <span>挂载模板序列</span>
-            <span>流状态</span>
-            <span>执行阶段进度</span>
-            <span>时效</span>
-            <span className="text-right">管控</span>
-          </div>
+      <TableFrame className="custom-scrollbar scrollbar-hide md:scrollbar-default">
+        <Table
+          removeWrapper
+          aria-label="Asset pool tasks table"
+          layout="fixed"
+          classNames={{
+            ...TABLE_CLASS_NAMES,
+            base: 'min-w-[1100px] p-4',
+            tr: `${TABLE_CLASS_NAMES.tr} cursor-default`,
+          }}
+        >
+          <TableHeader>
+            <TableColumn width={240}>任务标识</TableColumn>
+            <TableColumn width={220}>挂载模板序列</TableColumn>
+            <TableColumn width={140}>流状态</TableColumn>
+            <TableColumn width={240}>执行阶段进度</TableColumn>
+            <TableColumn width={180}>时效</TableColumn>
+            <TableColumn width={180} align="end">管控</TableColumn>
+          </TableHeader>
+          <TableBody
+            isLoading={isLoading}
+            loadingContent={<Skeleton className="h-40 w-full rounded-[24px] bg-white/5" />}
+            emptyContent={
+              isError ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-20">
+                  <p className="text-[13px] font-bold uppercase tracking-widest text-apple-red-light">ERR_FETCH_TASKS</p>
+                  <p className="text-[11px] text-apple-text-tertiary">调度网关读取失败，请检查网络或重试。</p>
+                  <Button size="sm" variant="flat" onPress={() => refetch()} className="mt-2 bg-white/5 font-bold">RELOAD</Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+                  <RocketLaunchIcon className="h-12 w-12 text-apple-blue-light opacity-30 drop-shadow-[0_0_12px_rgba(0,113,227,0.5)]" />
+                  <p className="text-[13px] font-black uppercase tracking-[0.1em] text-white">NULL_TARGETED_TASKS</p>
+                  <p className="max-w-sm text-[12px] font-medium text-apple-text-tertiary">当前资产池未关联任何存量扫描或探测任务，立刻创建以启动防护检查。</p>
+                  <Button color="primary" variant="flat" isDisabled={!canCreateTask} onPress={() => setCreateVisible(true)} className="mt-2 rounded-xl font-black">
+                    INITIATE TASK
+                  </Button>
+                </div>
+              )
+            }
+          >
+            {items.map((item) => {
+              const statusInfo = getTaskStatusInfo(item.status, item.desired_state)
+              const isTerminal = isTerminalTaskStatus(item.status)
+              const activeRouteLabel = item.active_route_code ? getRouteActiveLabel(routes, item.active_route_code) : ''
+              const planLabels = mapStageLabels(routes, item.route_plan.length > 0 ? item.route_plan : item.stage_plan)
+              const routeSummary = buildTaskRouteSummary(
+                activeRouteLabel,
+                item.active_group ? getActiveGroupLabel(item.active_group) : '',
+                !isTerminal && item.blocked_reason ? getBlockedReasonLabel(item.blocked_reason) : '',
+                planLabels,
+              )
 
-          {isLoading && (
-            <div className="p-4">
-               <Skeleton className="h-40 w-full rounded-[24px] bg-white/5" />
-            </div>
-          )}
-
-          {!isLoading && isError && (
-            <div className="flex flex-col items-center justify-center gap-3 py-20">
-              <p className="text-[13px] font-bold text-apple-red-light tracking-widest uppercase">ERR_FETCH_TASKS</p>
-              <p className="text-[11px] text-apple-text-tertiary">调度网关读取失败，请检查网络或重试。</p>
-              <Button size="sm" variant="flat" onPress={() => refetch()} className="mt-2 bg-white/5 font-bold">RELOAD</Button>
-            </div>
-          )}
-
-          {!isLoading && !isError && items.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-              <RocketLaunchIcon className="w-12 h-12 text-apple-blue-light opacity-30 drop-shadow-[0_0_12px_rgba(0,113,227,0.5)]" />
-              <p className="text-[13px] font-black tracking-[0.1em] text-white uppercase">NULL_TARGETED_TASKS</p>
-              <p className="text-[12px] text-apple-text-tertiary max-w-sm font-medium">当前资产池未关联任何存量扫描或探测任务，立刻创建以启动防护检查。</p>
-              <Button color="primary" variant="flat" isDisabled={!canCreateTask} onPress={() => setCreateVisible(true)} className="mt-2 font-black rounded-xl">
-                INITIATE TASK
-              </Button>
-            </div>
-          )}
-
-          {!isLoading && !isError && items.length > 0 && (
-            <div className="flex flex-col">
-              {items.map((item) => {
-                const statusInfo = getTaskStatusInfo(item.status, item.desired_state)
-                const isTerminal = isTerminalTaskStatus(item.status)
-                const activeRouteLabel = item.active_route_code ? getRouteActiveLabel(routes, item.active_route_code) : ''
-                const planLabels = mapStageLabels(routes, item.route_plan.length > 0 ? item.route_plan : item.stage_plan)
-
-                return (
-                  <div
-                    key={item.id}
-                    className="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1.2fr_130px] gap-4 px-6 py-5 items-center border-b border-white/5 hover:bg-white/[0.03] transition-colors leading-tight"
-                  >
-                    <div className="flex flex-col gap-1 overflow-hidden font-medium">
-                      <span className="font-bold text-[14px] text-white truncate tracking-tight">{item.name || '未命名任务'}</span>
-                    </div>
-                    <div className="flex flex-col gap-1 overflow-hidden font-medium">
-                      <span className="text-[13px] font-bold text-white truncate">{item.template_name || getTemplateCodeLabel(item.template_code)}</span>
-                      <span className="text-[11px] font-mono text-apple-text-secondary truncate">TPL_{getTemplateCodeLabel(item.template_code)}</span>
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <Chip size="sm" variant="flat" color={statusInfo.color} classNames={{ base: 'border-0 font-black tracking-[0.1em] uppercase px-1.5 py-0.5 rounded-md' }}>
-                        {statusInfo.label}
-                      </Chip>
-                      {!isTerminal && activeRouteLabel && (
-                        <span className="text-[9px] text-apple-blue-light font-bold pl-0.5">{activeRouteLabel}</span>
-                      )}
-                      {!isTerminal && item.active_group && (
-                        <span className="text-[9px] text-apple-text-tertiary font-bold pl-0.5">{getActiveGroupLabel(item.active_group)}</span>
-                      )}
-                      {!isTerminal && item.blocked_reason && (
-                        <span className="text-[9px] text-apple-amber font-bold pl-0.5">{getBlockedReasonLabel(item.blocked_reason)}</span>
-                      )}
-                    </div>
-                    <div className="text-[11px] font-bold tracking-widest text-apple-text-secondary uppercase truncate" title={planLabels.join(' • ')}>
-                      {planLabels.length > 0 ? planLabels.join(' • ') : '—'}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-semibold text-apple-text-secondary font-mono tracking-tighter uppercase">{formatTime(item.updated_at).split(' ')[0]}</span>
-                      <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60">{formatTime(item.updated_at).split(' ')[1]}</span>
-                    </div>
-                    <div className="flex items-center justify-end gap-1.5">
-                       <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
-                          {statusInfo.canPause && (
-                            <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(item.id)}>
-                              <PauseIcon className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {statusInfo.canResume && (
-                            <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-green hover:bg-apple-green/20" onPress={() => resumeTask.mutate(item.id)}>
-                              <PlayIcon className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {statusInfo.canStop && (
-                            <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20" onPress={() => stopTask.mutate(item.id)}>
-                              <StopIcon className="w-4 h-4" />
-                            </Button>
-                          )}
-                       </div>
-
+              return (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    <TextCell value={item.name || '未命名任务'} limit={28} className="text-white" />
+                  </TableCell>
+                  <TableCell>
+                    <TextCell
+                      value={item.template_name || getTemplateCodeLabel(item.template_code)}
+                      limit={28}
+                      className="text-white"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip size="sm" variant="flat" color={statusInfo.color} classNames={{ base: 'border-0 font-black tracking-[0.1em] uppercase px-1.5 py-0.5 rounded-md' }}>
+                      {statusInfo.label}
+                    </Chip>
+                  </TableCell>
+                  <TableCell>
+                    <TextCell value={routeSummary} limit={38} className="text-apple-text-secondary" />
+                  </TableCell>
+                  <TableCell>
+                    <TimeCell value={item.updated_at} />
+                  </TableCell>
+                  <TableCell>
+                    <ActionCell>
+                      <div className="mr-1 flex items-center gap-1 rounded-lg bg-white/5 p-0.5">
+                        {statusInfo.canPause && (
+                          <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(item.id)}>
+                            <PauseIcon className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {statusInfo.canResume && (
+                          <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-green hover:bg-apple-green/20" onPress={() => resumeTask.mutate(item.id)}>
+                            <PlayIcon className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {statusInfo.canStop && (
+                          <Button isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-red hover:bg-apple-red/20" onPress={() => stopTask.mutate(item.id)}>
+                            <StopIcon className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                       <Button
                         size="sm"
                         variant="bordered"
                         onPress={() => navigate(getTaskPreferredDetailPath(item))}
-                        className="border-white/10 text-white font-bold rounded-lg h-7 min-w-0 px-2.5 text-[11px]"
+                        className="h-7 min-w-0 rounded-lg border-white/10 px-2.5 text-[11px] font-bold text-white"
                       >
                         详情
                       </Button>
@@ -210,35 +225,35 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
                       >
                         <TrashIcon className="w-4 h-4" />
                       </Button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                    </ActionCell>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
 
-          {!isLoading && !isError && items.length > 0 && (
-            <div className="flex justify-between items-center px-6 py-5 bg-white/[0.01]">
-              <span className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-text-tertiary">合计任务流 <span className="text-white mx-1">{pagination?.total ?? items.length}</span> 项</span>
-              {totalPages > 1 && (
-                <Pagination
-                  size="sm"
-                  page={page}
-                  total={totalPages}
-                  onChange={setPage}
-                  classNames={{
-                    wrapper: 'gap-2',
-                    item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]',
-                    cursor: 'bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white',
-                    prev: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                    next: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                  }}
-                />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+        {!isLoading && !isError && items.length > 0 && (
+          <div className="flex items-center justify-between bg-white/[0.01] px-6 py-5">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">合计任务流 <span className="mx-1 text-white">{pagination?.total ?? items.length}</span> 项</span>
+            {totalPages > 1 && (
+              <Pagination
+                size="sm"
+                page={page}
+                total={totalPages}
+                onChange={setPage}
+                classNames={{
+                  wrapper: 'gap-2',
+                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]',
+                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white',
+                  prev: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
+                  next: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
+                }}
+              />
+            )}
+          </div>
+        )}
+      </TableFrame>
 
       <CreateTaskFromPoolModal isOpen={createVisible} onClose={() => setCreateVisible(false)} poolId={poolId} />
       <ConfirmModal

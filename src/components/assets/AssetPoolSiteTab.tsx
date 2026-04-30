@@ -29,6 +29,7 @@ import {
 } from "@/api/adapters/asset";
 import type { PoolAssetVM } from "@/api/adapters/asset";
 import { TableFrame } from "@/components/table/TableFrame";
+import { MonoCell } from "@/components/table/cells/MonoCell";
 import { StatusBadgeCell } from "@/components/table/cells/StatusBadgeCell";
 import { TextCell } from "@/components/table/cells/TextCell";
 import { TimeCell } from "@/components/table/cells/TimeCell";
@@ -467,14 +468,11 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
               return (
                 <TableRow key={it.id}>
                   <TableCell>
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <span className="break-all font-mono text-[14px] font-black tracking-tight text-apple-blue-light drop-shadow-[0_0_8px_rgba(0,113,227,0.3)]">
-                        {it.display_name}
-                      </span>
-                      <span className="break-all font-mono text-[11px] text-white/55">
-                        {it.normalized_key}
-                      </span>
-                    </div>
+                    <MonoCell
+                      value={detail.siteURL || it.display_name}
+                      limit={44}
+                      className="text-apple-blue-light"
+                    />
                   </TableCell>
                   <TableCell>
                     <StatusBadge item={it} />

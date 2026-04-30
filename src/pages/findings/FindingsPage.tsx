@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAssetPools } from '@/api/adapters/asset'
 import { useFindings } from '@/api/adapters/finding'
 import { TableFrame } from '@/components/table/TableFrame'
+import { ActionCell } from '@/components/table/cells/ActionCell'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
@@ -155,10 +156,7 @@ export function FindingsPage() {
               return (
                 <TableRow key={item.finding_id}>
                   <TableCell>
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <TextCell value={item.title || '-'} limit={48} className="font-semibold text-white" />
-                      <MonoCell value={item.finding_id || '-'} limit={32} className="text-apple-text-tertiary" />
-                    </div>
+                    <TextCell value={item.title || item.finding_id || '-'} limit={48} className="font-semibold text-white" />
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.18em] uppercase border ${severityClass(item.severity)}`}>
@@ -182,7 +180,7 @@ export function FindingsPage() {
                     <TimeCell value={item.updated_at || item.created_at} />
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end">
+                    <ActionCell>
                       <Button
                         size="sm"
                         variant="bordered"
@@ -191,7 +189,7 @@ export function FindingsPage() {
                       >
                         查看任务
                       </Button>
-                    </div>
+                    </ActionCell>
                   </TableCell>
                 </TableRow>
               )

@@ -45,7 +45,7 @@ describe("AssetPoolSiteTab", () => {
             id: "site-1",
             asset_kind: "site",
             display_name: "https://example.com",
-            normalized_key: "https://example.com",
+            normalized_key: "https://example.com:443",
             status: "active",
             confidence_level: "high",
             system_facets: ["kind:site"],
@@ -93,6 +93,9 @@ describe("AssetPoolSiteTab", () => {
     expect(screen.getByRole("columnheader", { name: "Title" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "指纹" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "发现时间" })).toBeInTheDocument();
+    const urlCell = screen.getByText("https://example.com").closest("td");
+    expect(urlCell).not.toBeNull();
+    expect(within(urlCell as HTMLElement).queryByText("https://example.com:443")).not.toBeInTheDocument();
     expect(screen.getByText("nginx, jenkins")).toHaveClass("truncate", "whitespace-nowrap");
   });
 });
