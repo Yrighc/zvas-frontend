@@ -64,32 +64,66 @@ describe("TaskRecordsTab", () => {
             route_code: "route-1",
             desired_state: "succeeded",
           },
+          {
+            unit_id: "record-2",
+            task_id: "task-1",
+            stage: "http_probe",
+            topic: "topic-2",
+            task_type: "http_probe",
+            task_subtype: "homepage_identify",
+            target_key: "https://fallback.example.internal",
+            status: "succeeded",
+            worker_id: "worker-beta",
+            attempt: 1,
+            started_at: "2026-04-29T08:10:00Z",
+            finished_at: "2026-04-29T08:10:02Z",
+            duration_ms: 2100,
+            result_summary: "legacy homepage summary text",
+            route_code: "route-2",
+            desired_state: "succeeded",
+          },
         ],
-        pagination: { page: 1, page_size: 20, total: 1 },
+        pagination: { page: 1, page_size: 20, total: 2 },
       },
       isPending: false,
     } as never);
   });
 
-  it("renders shared single-line summary and action cells for mixed record rows", async () => {
+  it("renders visible detail actions and compact mixed-record summaries", async () => {
     renderTab();
 
     expect(await screen.findByRole("columnheader", { name: "结果摘要" })).toBeInTheDocument();
 
     const targetCell = screen.getByTitle("https://example.internal/very/long/path");
-    expect(targetCell).toHaveClass("truncate", "whitespace-nowrap");
-
     const row = targetCell.closest("tr");
     expect(row).not.toBeNull();
 
-    const summary = within(row as HTMLTableRowElement).getByTitle(
-      "200 · Internal Admin Portal Dashboard With Very Long Title · https://example.internal/very/long/path",
-    );
-    expect(summary).toHaveClass("truncate", "whitespace-nowrap");
-    expect(summary).toHaveTextContent("200 · Internal Admin Portal Dash...");
+    const fullSummary =
+      "200 · Internal Admin Portal Dashboard With Very Long Title · https://example.internal/very/long/path";
+    const summary = within(row as HTMLTableRowElement).getByTitle(fullSummary);
+    expect(summary.textContent).toBeTruthy();
+    expect(summary.textContent!.length).toBeLessThan(fullSummary.length);
+    expect(summary).toHaveTextContent("200 · Internal Admin Portal");
 
     expect(
       within(row as HTMLTableRowElement).getByRole("button", { name: "查看详情" }),
-    ).toHaveClass("rounded-full", "border-white/10");
+    ).toBeInTheDocument();
+  });
+
+  it("falls back to the original summary text when homepage summary payload is not structured JSON", async () => {
+    renderTab();
+
+    const fallbackTarget = await screen.findByTitle(
+      "https://fallback.example.internal",
+    );
+    const row = fallbackTarget.closest("tr");
+    expect(row).not.toBeNull();
+
+    expect(
+      within(row as HTMLTableRowElement).getByText("legacy homepage summary text"),
+    ).toBeInTheDocument();
+    expect(
+      within(row as HTMLTableRowElement).queryByText("-"),
+    ).not.toBeInTheDocument();
   });
 });

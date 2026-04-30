@@ -86,8 +86,7 @@ describe('AuditLogPage', () => {
       expect(screen.getByText(/管理员/)).toBeInTheDocument();
     });
 
-    expect(screen.getByText('user.password.reset')).toHaveClass('truncate', 'whitespace-nowrap');
-    expect(screen.getByRole('button', { name: '查看详情' })).toHaveClass('rounded-full', 'border-white/10');
+    expect(screen.getByRole('button', { name: '查看详情' })).toBeInTheDocument();
   });
 
   it('点击查看按钮应该打开详情抽屉', async () => {

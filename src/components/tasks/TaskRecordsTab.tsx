@@ -85,43 +85,21 @@ function getInProgressSummary(status: string) {
   }
 }
 
-function getCompactVulScanSummary(item: TaskRecordVM) {
-  if (isInProgressStatus(item.status)) {
-    return getInProgressSummary(item.status);
-  }
+function getCompletedSummary(item: TaskRecordVM) {
   const summary = (item.result_summary || "").trim();
-  if (!summary) {
-    if (item.status === "failed") return "执行失败";
-    if (item.status === "succeeded") return "已完成";
-    return "-";
+  if (summary) {
+    return summary;
   }
-  return summary;
+  if (item.status === "failed") return "执行失败";
+  if (item.status === "succeeded") return "已完成";
+  return "-";
 }
 
-function getCompactWeakScanSummary(item: TaskRecordVM) {
+function getCompactSummary(item: TaskRecordVM) {
   if (isInProgressStatus(item.status)) {
     return getInProgressSummary(item.status);
   }
-  const summary = (item.result_summary || "").trim();
-  if (!summary) {
-    if (item.status === "failed") return "执行失败";
-    if (item.status === "succeeded") return "已完成";
-    return "-";
-  }
-  return summary;
-}
-
-function getCompactSecprobeSummary(item: TaskRecordVM) {
-  if (isInProgressStatus(item.status)) {
-    return getInProgressSummary(item.status);
-  }
-  const summary = (item.result_summary || "").trim();
-  if (!summary) {
-    if (item.status === "failed") return "执行失败";
-    if (item.status === "succeeded") return "已完成";
-    return "-";
-  }
-  return summary;
+  return getCompletedSummary(item);
 }
 
 function parseTaskRecordSummary(
@@ -161,7 +139,7 @@ function getHTTPProbeTableData(item: TaskRecordVM) {
 function getHomepageIdentifySummary(item: TaskRecordVM) {
   const summaryPayload = parseTaskRecordSummary(item);
   const summary = parseHttpProbeSummary(summaryPayload);
-  if (!summary) return "";
+  if (!summary) return getCompactSummary(item);
 
   const parts = [
     typeof summary.status_code === "number" && summary.status_code > 0
@@ -171,6 +149,10 @@ function getHomepageIdentifySummary(item: TaskRecordVM) {
     (summary.site_url || item.target_key || "").trim(),
   ].filter(Boolean);
 
+  if (parts.length === 0) {
+    return getCompactSummary(item);
+  }
+
   return parts.join(" · ");
 }
 
@@ -178,15 +160,7 @@ function getMixedRecordSummary(item: TaskRecordVM) {
   if (item.task_type === "http_probe" && item.task_subtype === "homepage_identify") {
     return getHomepageIdentifySummary(item);
   }
-
-  const summary = (item.result_summary || "").trim();
-  if (!summary) {
-    if (item.status === "failed") return "执行失败";
-    if (item.status === "succeeded") return "已完成";
-    return "-";
-  }
-
-  return summary;
+  return getCompactSummary(item);
 }
 
 function renderResultSummary(item: TaskRecordVM) {
@@ -327,6 +301,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Input
+          aria-label="搜索扫描记录"
           isClearable
           value={keyword}
           placeholder={
@@ -347,6 +322,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
           }
         />
         <Select
+          aria-label="筛选扫描记录状态"
           selectedKeys={status ? [status] : []}
           placeholder="状态"
           onSelectionChange={(keys) => {
@@ -533,7 +509,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                     </TableCell>
                     <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                     <TableCell>
-                      <TextCell value={getCompactVulScanSummary(item)} limit={30} />
+                      <TextCell value={getCompactSummary(item)} limit={30} />
                     </TableCell>
                     <TableCell>{renderDetailAction(item)}</TableCell>
                   </TableRow>
@@ -559,7 +535,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                     </TableCell>
                     <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                     <TableCell>
-                      <TextCell value={getCompactWeakScanSummary(item)} limit={30} />
+                      <TextCell value={getCompactSummary(item)} limit={30} />
                     </TableCell>
                     <TableCell>{renderDetailAction(item)}</TableCell>
                   </TableRow>
@@ -585,7 +561,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                     </TableCell>
                     <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                     <TableCell>
-                      <TextCell value={getCompactSecprobeSummary(item)} limit={30} />
+                      <TextCell value={getCompactSummary(item)} limit={30} />
                     </TableCell>
                     <TableCell>{renderDetailAction(item)}</TableCell>
                   </TableRow>
