@@ -174,6 +174,58 @@ export interface TaskSnapshotAssetVM {
   updated_at: string
 }
 
+export interface TaskSnapshotAssetPortDetailVM {
+  port: string
+  protocol: string
+  service: string
+  banner: string
+  cert_subject: string
+  dns_names: string
+  status: string
+}
+
+function normalizeTaskAssetDetailText(value: unknown): string {
+  if (Array.isArray(value)) {
+    const text = value
+      .map((item) => normalizeTaskAssetDetailText(item))
+      .filter(Boolean)
+      .join(', ')
+    return text || '-'
+  }
+  if (value === null || value === undefined) return '-'
+  const text = String(value).trim()
+  return text || '-'
+}
+
+export function getTaskSnapshotAssetPortDetails(extraPayload: Record<string, any> | null | undefined): TaskSnapshotAssetPortDetailVM[] {
+  const payload = extraPayload || {}
+  if (Array.isArray(payload.ports) && payload.ports.length > 0) {
+    return payload.ports.map((row: Record<string, unknown>) => ({
+      port: normalizeTaskAssetDetailText(row.port),
+      protocol: normalizeTaskAssetDetailText(row.protocol),
+      service: normalizeTaskAssetDetailText(row.service),
+      banner: normalizeTaskAssetDetailText(row.banner),
+      cert_subject: normalizeTaskAssetDetailText(row.cert_subject),
+      dns_names: normalizeTaskAssetDetailText(row.dns_names),
+      status: normalizeTaskAssetDetailText(row.status),
+    }))
+  }
+
+  if (!Array.isArray(payload.open_ports) || payload.open_ports.length === 0) {
+    return []
+  }
+
+  return payload.open_ports.map((port: string | number, index: number) => ({
+    port: normalizeTaskAssetDetailText(port),
+    protocol: '-',
+    service: normalizeTaskAssetDetailText(Array.isArray(payload.services) ? payload.services[index] : '-'),
+    banner: '-',
+    cert_subject: '-',
+    dns_names: '-',
+    status: '-',
+  }))
+}
+
 export interface TaskRecordVM {
   unit_id: string
   task_id: string

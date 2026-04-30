@@ -1,381 +1,432 @@
-import { useMemo, useState } from 'react'
-import { Tabs, Tab, Skeleton, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagination, Button, ButtonGroup, Tooltip } from '@heroui/react'
-import { ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useMemo, useState } from "react";
+import {
+  Button,
+  ButtonGroup,
+  Pagination,
+  Skeleton,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+  Tabs,
+} from "@heroui/react";
 
-import { useTaskSnapshotAssets, useTaskSnapshotAssetDetail, type TaskSnapshotAssetVM } from '@/api/adapters/task'
-import { parseHttpProbeSummary } from '@/api/adapters/asset'
-import { useUrlTabState } from '@/hooks/useUrlTabState'
-import { APPLE_TABLE_CLASSES } from '@/utils/theme'
+import { parseHttpProbeSummary } from "@/api/adapters/asset";
+import {
+  getTaskSnapshotAssetPortDetails,
+  type TaskSnapshotAssetVM,
+  useTaskSnapshotAssetDetail,
+  useTaskSnapshotAssets,
+} from "@/api/adapters/task";
+import { useUrlTabState } from "@/hooks/useUrlTabState";
+import { TableFrame } from "@/components/table/TableFrame";
+import { ActionCell } from "@/components/table/cells/ActionCell";
+import { CountCell } from "@/components/table/cells/CountCell";
+import { MonoCell } from "@/components/table/cells/MonoCell";
+import { StatusBadgeCell } from "@/components/table/cells/StatusBadgeCell";
+import { TextCell } from "@/components/table/cells/TextCell";
+import { DetailSidePanel } from "@/components/table/detail/DetailSidePanel";
+import { EvidenceBlock } from "@/components/table/detail/EvidenceBlock";
+import { KeyValueGrid } from "@/components/table/detail/KeyValueGrid";
+import { TABLE_CLASS_NAMES } from "@/components/table/tableClassNames";
 
-const TASK_ASSET_KIND_TABS = ['ip', 'domain', 'site'] as const
+const TASK_ASSET_KIND_TABS = ["ip", "domain", "site"] as const;
 
 const ASSET_KIND_LABEL: Record<string, string> = {
-  ip: 'IP',
-  domain: '域名',
-  site: '站点',
-}
+  ip: "IP",
+  domain: "域名",
+  site: "站点",
+};
 
 function formatPorts(value: unknown) {
-  if (!Array.isArray(value) || value.length === 0) return '-'
-  return (value as (string | number)[]).slice(0, 5).join(', ') + (value.length > 5 ? ` …+${value.length - 5}` : '')
+  if (!Array.isArray(value) || value.length === 0) return "-";
+  return `${(value as Array<string | number>).slice(0, 5).join(", ")}${value.length > 5 ? ` …+${value.length - 5}` : ""}`;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// 展开行详情组件：展开时按需加载 detail 接口，支持 IP 端口子表 / 域名关联列表
-// ──────────────────────────────────────────────────────────────────────────────
-function ExpandedRow({ taskId, item, assetKind }: { taskId?: string; item: TaskSnapshotAssetVM; assetKind: string }) {
-  const detailQuery = useTaskSnapshotAssetDetail(taskId, item.id)
+function joinTags(item: TaskSnapshotAssetVM) {
+  return [
+    item.extra_payload?.expanded_from_cidr ? "CIDR展开" : "",
+    ...(item.system_facets || []),
+  ].filter(Boolean);
+}
+
+function formatDetailList(value: unknown, emptyLabel: string) {
+  if (!Array.isArray(value) || value.length === 0) return emptyLabel;
+  return value
+    .map((item) => String(item).trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
+function formatPortDetails(item: TaskSnapshotAssetVM) {
+  const ports = getTaskSnapshotAssetPortDetails(item.extra_payload);
+  if (ports.length === 0) return "暂无端口明细记录";
+
+  return ports
+    .map((port) =>
+      [
+        `${port.port}/${port.protocol}`,
+        port.service !== "-" ? `service=${port.service}` : "",
+        port.status !== "-" ? `status=${port.status}` : "",
+        port.banner !== "-" ? `banner=${port.banner}` : "",
+        port.cert_subject !== "-" ? `cert=${port.cert_subject}` : "",
+        port.dns_names !== "-" ? `dns=${port.dns_names}` : "",
+      ]
+        .filter(Boolean)
+        .join(" | "),
+    )
+    .join("\n");
+}
+
+function getProbeStatusLabel(status: string | undefined) {
+  if (status === "alive") return "站点存活";
+  if (status === "unreachable") return "站点不存活";
+  return status?.trim() || "-";
+}
+
+function getConfidenceTone(confidence: string) {
+  switch (confidence) {
+    case "high":
+      return "success" as const;
+    case "medium":
+      return "warning" as const;
+    case "low":
+      return "neutral" as const;
+    default:
+      return "info" as const;
+  }
+}
+
+function TaskAssetDetailBody({
+  taskId,
+  item,
+}: {
+  taskId?: string;
+  item: TaskSnapshotAssetVM | null;
+}) {
+  const detailQuery = useTaskSnapshotAssetDetail(taskId, item?.id);
+
+  if (!item) return null;
 
   if (detailQuery.isPending) {
-    return (
-      <div className="px-6 py-5 bg-white/[0.01] border-l-2 border-l-apple-blue animate-in fade-in duration-200">
-        <Skeleton className="h-20 w-full rounded-2xl bg-white/5" />
-      </div>
-    )
+    return <Skeleton className="h-48 w-full rounded-[24px] bg-white/5" />;
   }
 
   if (detailQuery.isError) {
     return (
-      <div className="px-6 py-4 bg-white/[0.01] border-l-2 border-l-apple-red text-apple-red-light text-[13px] font-bold animate-in fade-in duration-200">
-        详情加载失败，请收起后重试。
+      <div className="rounded-2xl border border-apple-red/20 bg-apple-red/10 px-4 py-5 text-sm font-bold text-apple-red-light">
+        详情加载失败，请关闭侧栏后重试。
       </div>
-    )
+    );
   }
 
-  // detail 成功后才能读取数据，优先读 detail 接口字段，降级到列表字段
-  const detail = detailQuery.data ?? item
-  const payload = detail.extra_payload
+  const detail = detailQuery.data ?? item;
+  const tags = joinTags(detail);
 
-  if (assetKind === 'ip') {
-    // 优先读结构化 ports[]，降级读 open_ports / services 数组
-    const ports = Array.isArray(payload?.ports) && payload.ports.length > 0
-      ? (payload.ports as Record<string, string>[])
-      : (Array.isArray(payload?.open_ports) ? (payload.open_ports as (string | number)[]).map((p, idx) => ({
-        port: String(p),
-        protocol: '-',
-        service: (Array.isArray(payload?.services) ? payload.services[idx] : '-') ?? '-',
-        banner: '-',
-        cert_subject: '-',
-        dns_names: '-',
-        status: '-',
-      })) : [])
-
+  if (detail.asset_kind === "ip") {
+    const portDetails = getTaskSnapshotAssetPortDetails(detail.extra_payload);
     return (
-      <div className="px-6 py-4 bg-white/[0.01] border-l-2 border-l-apple-blue animate-in fade-in slide-in-from-top-2 duration-200">
-        <div className="flex flex-wrap items-center gap-6 mb-5">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">端口明细</span>
-          </div>
-
-          {payload?.expanded_from_cidr && payload?.source_cidr && (
-            <div className="flex flex-col gap-1.5 bg-apple-blue/5 border border-apple-blue/10 px-4 py-2 rounded-xl">
-              <span className="text-[9px] uppercase font-black tracking-widest text-apple-blue-light opacity-80">来源网段</span>
-              <span className="text-[12px] font-mono font-bold text-apple-blue-light">{payload.source_cidr}</span>
-            </div>
-          )}
-        </div>
-        {ports.length === 0 ? (
-          <div className="py-6 text-center text-[12px] text-apple-text-tertiary italic">暂无端口明细记录</div>
-        ) : (
-          <div className="overflow-x-auto rounded-[16px] border border-white/5">
-            <table className="w-full min-w-[860px] text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/5">
-                  {['端口', '协议', '服务', 'Banner', '证书 Subject', 'DNS 名称', '状态'].map((h) => (
-                    <th key={h} className="text-[9px] uppercase tracking-[0.2em] font-black text-apple-text-tertiary px-4 py-3 bg-white/[0.02] whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {ports.map((row, idx) => (
-                  <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-3"><span className="font-mono text-[13px] text-apple-blue-light font-black">{row.port ?? '-'}</span></td>
-                    <td className="px-4 py-3"><span className="text-[11px] text-apple-text-secondary font-mono">{row.protocol ?? '-'}</span></td>
-                    <td className="px-4 py-3"><span className="text-[11px] text-white font-bold">{row.service ?? '-'}</span></td>
-                    <td className="px-4 py-3"><span className="text-[11px] text-apple-text-tertiary italic">{row.banner ?? '-'}</span></td>
-                    <td className="px-4 py-3"><span className="text-[11px] text-apple-text-tertiary italic">{row.cert_subject ?? '-'}</span></td>
-                    <td className="px-4 py-3"><span className="text-[11px] text-apple-text-tertiary italic">{row.dns_names ?? '-'}</span></td>
-                    <td className="px-4 py-3"><span className="text-[11px] text-apple-text-tertiary">{row.status ?? '-'}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <div className="mt-4 grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-[9px] uppercase font-black tracking-widest text-apple-text-tertiary">关联域名数</span>
-            <span className="text-[12px] text-apple-text-secondary italic">{payload?.domain_count ?? '-'}</span>
-          </div>
-          <div className="flex flex-col gap-1 col-span-2">
-            <span className="text-[9px] uppercase font-black tracking-widest text-apple-text-tertiary">关联域名</span>
-            {Array.isArray(payload?.related_domains) && payload.related_domains.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {(payload.related_domains as string[]).map((d: string) => (
-                  <span key={d} className="font-mono text-[11px] bg-white/5 border border-white/10 text-apple-text-secondary px-2 py-0.5 rounded-lg">{d}</span>
-                ))}
-              </div>
-            ) : (
-              <span className="text-[12px] text-apple-text-secondary italic">暂无数据</span>
-            )}
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[9px] uppercase font-black tracking-widest text-apple-text-tertiary">证书主体数</span>
-            <span className="text-[12px] text-apple-text-secondary italic">{payload?.cert_count ?? '-'}</span>
-          </div>
-        </div>
-      </div>
-    )
+      <>
+        <KeyValueGrid
+          items={[
+            {
+              key: "display-name",
+              label: "IP / 网段",
+              value: detail.display_name || "-",
+              mono: true,
+            },
+            {
+              key: "normalized-key",
+              label: "标准键",
+              value: detail.normalized_key || "-",
+              mono: true,
+            },
+            {
+              key: "origin-type",
+              label: "来源类型",
+              value: detail.origin_type || "-",
+            },
+            {
+              key: "source-type",
+              label: "来源",
+              value: detail.source_type || "-",
+            },
+            {
+              key: "open-port-count",
+              label: "开放端口数",
+              value: String(detail.extra_payload?.open_port_count ?? portDetails.length),
+            },
+            {
+              key: "domain-count",
+              label: "关联域名数",
+              value: String(detail.extra_payload?.domain_count ?? "-"),
+            },
+            {
+              key: "cert-count",
+              label: "证书主体数",
+              value: String(detail.extra_payload?.cert_count ?? "-"),
+            },
+            {
+              key: "source-cidr",
+              label: "来源网段",
+              value: String(detail.extra_payload?.source_cidr || "-"),
+              mono: true,
+            },
+            {
+              key: "tags",
+              label: "标签摘要",
+              value: tags.length > 0 ? tags.join(", ") : "-",
+            },
+          ]}
+        />
+        <EvidenceBlock
+          title="端口明细"
+          hint={`当前记录共 ${portDetails.length} 个开放端口，主表仅保留摘要。`}
+          content={formatPortDetails(detail)}
+        />
+        <EvidenceBlock
+          title="关联域名"
+          content={formatDetailList(detail.extra_payload?.related_domains, "暂无关联域名")}
+        />
+      </>
+    );
   }
 
-  if (assetKind === 'domain') {
-    const relatedIps: string[] = Array.isArray(payload?.related_ips) ? payload.related_ips : []
-    const relatedSites: string[] = Array.isArray(payload?.related_sites) ? payload.related_sites : []
+  if (detail.asset_kind === "domain") {
     return (
-      <div className="px-6 py-5 bg-white/[0.01] border-l-2 border-l-apple-blue flex flex-col gap-6 animate-in fade-in slide-in-from-top-2 duration-200">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-3">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">关联解析 IP</span>
-            {relatedIps.length === 0 ? (
-              <span className="text-[12px] text-apple-text-secondary italic">暂无关联 IP</span>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {relatedIps.map((ip) => (
-                  <span key={ip} className="font-mono text-[12px] text-apple-blue-light bg-apple-blue/10 border border-apple-blue/20 px-2.5 py-1 rounded-lg font-bold">{ip}</span>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col gap-3">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">关联站点</span>
-            {relatedSites.length === 0 ? (
-              <span className="text-[12px] text-apple-text-secondary italic">暂无关联站点</span>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {relatedSites.map((site) => (
-                  <span key={site} className="text-[12px] text-white font-mono break-all">{site}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-[9px] uppercase font-black tracking-widest text-apple-text-tertiary">DNS 记录</span>
-            <span className="text-[12px] text-apple-text-secondary italic">待结果补齐</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[9px] uppercase font-black tracking-widest text-apple-text-tertiary">证书发现</span>
-            <span className="text-[12px] text-apple-text-secondary italic">待结果补齐</span>
-          </div>
-        </div>
-      </div>
-    )
+      <>
+        <KeyValueGrid
+          items={[
+            {
+              key: "display-name",
+              label: "域名",
+              value: detail.display_name || "-",
+              mono: true,
+            },
+            {
+              key: "normalized-key",
+              label: "标准键",
+              value: detail.normalized_key || "-",
+              mono: true,
+            },
+            {
+              key: "root-domain",
+              label: "根域",
+              value:
+                String(
+                  detail.extra_payload?.root_domain ||
+                    detail.display_name.split(".").slice(-2).join(".") ||
+                    "-",
+                ),
+            },
+            {
+              key: "origin-type",
+              label: "来源类型",
+              value: detail.origin_type || "-",
+            },
+            {
+              key: "ip-count",
+              label: "关联 IP 数",
+              value: String(detail.extra_payload?.ip_count ?? "-"),
+            },
+            {
+              key: "site-count",
+              label: "关联站点数",
+              value: String(detail.extra_payload?.site_count ?? "-"),
+            },
+            {
+              key: "source-type",
+              label: "来源",
+              value: detail.source_type || "-",
+            },
+            {
+              key: "tags",
+              label: "标签摘要",
+              value: tags.length > 0 ? tags.join(", ") : "-",
+            },
+          ]}
+        />
+        <EvidenceBlock
+          title="关联解析 IP"
+          content={formatDetailList(detail.extra_payload?.related_ips, "暂无关联 IP")}
+        />
+        <EvidenceBlock
+          title="关联站点"
+          content={formatDetailList(detail.extra_payload?.related_sites, "暂无关联站点")}
+        />
+      </>
+    );
   }
 
-  if (assetKind === 'site') {
-    const sum = parseHttpProbeSummary(item.extra_payload)
-    return (
-      <div className="px-10 py-5 bg-white/[0.01] border-l-2 border-l-apple-blue flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">存活状态</span>
-            <div className="flex items-center gap-2">
-              {sum?.probe_status === 'alive' ? <span className="text-[10px] font-bold tracking-widest bg-apple-green/10 text-apple-green-light border border-apple-green/30 px-2 py-0.5 rounded uppercase">站点存活</span> :
-                sum?.probe_status === 'unreachable' ? <Tooltip content={sum?.probe_error || '无法确认细节'}><span className="text-[10px] font-bold tracking-widest bg-white/5 text-apple-text-secondary border border-white/20 px-2 py-0.5 rounded uppercase cursor-help">站点不存活</span></Tooltip> :
-                  <span className="text-[10px] font-bold tracking-widest bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded uppercase">-</span>}
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">标题 (Title)</span>
-            <span className="text-[12px] text-white font-medium break-all">{sum?.title || '-'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">状态码</span>
-            <span className="text-[12px] text-apple-text-secondary">
-              {sum?.status_code ? (
-                <span className={`px-2 py-0.5 rounded-md font-bold ${sum.status_code >= 200 && sum.status_code < 400 ? 'bg-apple-green/20 text-apple-green-light' : 'bg-white/10 text-white'}`}>
-                  {sum.status_code}
-                </span>
-              ) : '-'}
-            </span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">内容长度</span>
-            <span className="text-[12px] text-apple-text-secondary italic font-mono">{sum?.content_length ?? '-'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">Server 响应头</span>
-            <span className="text-[12px] text-apple-text-secondary italic font-mono">{sum?.server || '-'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">Favicon Hash</span>
-            <span className="text-[12px] text-apple-text-secondary italic font-mono">{sum?.favicon_hash || '-'}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">ICP 备案信息</span>
-            <span className="text-[12px] text-apple-text-secondary italic">{sum?.icp || '-'}</span>
-          </div>
-          <div className="flex flex-col gap-1 col-span-2">
-            <span className="text-[10px] uppercase font-black tracking-widest text-apple-text-tertiary">页面根 URL</span>
-            <span className="text-[12px] text-apple-blue-light font-mono break-all">{sum?.site_url || item.display_name}</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return null
+  const summary = parseHttpProbeSummary(detail.extra_payload);
+  return (
+    <>
+      <KeyValueGrid
+        items={[
+          {
+            key: "display-name",
+            label: "站点标识",
+            value: detail.display_name || "-",
+            mono: true,
+          },
+          {
+            key: "page-root-url",
+            label: "页面根 URL",
+            value: summary?.site_url || detail.display_name || "-",
+            mono: true,
+          },
+          {
+            key: "probe-status",
+            label: "探测状态",
+            value: getProbeStatusLabel(summary?.probe_status),
+          },
+          {
+            key: "status-code",
+            label: "状态码",
+            value: String(summary?.status_code ?? "-"),
+          },
+          {
+            key: "title",
+            label: "页面标题",
+            value: summary?.title || "-",
+          },
+          {
+            key: "server",
+            label: "Server",
+            value: summary?.server || "-",
+          },
+          {
+            key: "favicon-hash",
+            label: "Favicon Hash",
+            value: summary?.favicon_hash || "-",
+          },
+          {
+            key: "content-length",
+            label: "内容长度",
+            value: String(summary?.content_length ?? "-"),
+          },
+          {
+            key: "icp",
+            label: "ICP 备案",
+            value: summary?.icp || "-",
+          },
+        ]}
+      />
+      {summary?.probe_error ? (
+        <EvidenceBlock title="探测错误" content={summary.probe_error} />
+      ) : null}
+    </>
+  );
 }
 
 export function TaskAssetViewTab({ taskId }: { taskId?: string }) {
-  const [assetKind, setAssetKind] = useUrlTabState({ param: 'asset_tab', defaultValue: 'ip', values: TASK_ASSET_KIND_TABS })
-  const [originFilter, setOriginFilter] = useState<'all' | 'input' | 'expanded'>('all')
-  const [page, setPage] = useState(1)
-  const pageSize = 20
+  const [assetKind, setAssetKind] = useUrlTabState({
+    param: "asset_tab",
+    defaultValue: "ip",
+    values: TASK_ASSET_KIND_TABS,
+  });
+  const [originFilter, setOriginFilter] = useState<"all" | "input" | "expanded">("all");
+  const [page, setPage] = useState(1);
+  const [selectedAsset, setSelectedAsset] = useState<TaskSnapshotAssetVM | null>(
+    null,
+  );
+  const pageSize = 20;
 
-  const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
-
-  const queryParams = {
+  const query = useTaskSnapshotAssets(taskId, {
     page,
     page_size: pageSize,
     asset_kind: assetKind,
-    sort: 'created_at',
-    order: 'desc',
-    ...(originFilter !== 'all' ? { origin_type: originFilter } : {}),
-  }
+    sort: "created_at",
+    order: "desc",
+    ...(originFilter !== "all" ? { origin_type: originFilter } : {}),
+  });
 
-  const query = useTaskSnapshotAssets(taskId, queryParams)
-
-  const items = query.data?.data || []
-  const total = query.data?.pagination?.total || 0
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-
-  const handleToggleExpand = (id: string) => {
-    setExpandedRowId((prev) => (prev === id ? null : id))
-  }
-
-  const renderRowCells = (item: TaskSnapshotAssetVM) => {
-    const isExpanded = expandedRowId === item.id
-    const toggleIcon = isExpanded ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />
-
-    const cells = [
-      <TableCell key="display_name">
-        <div className="flex items-center gap-2">
-          <Button isIconOnly size="sm" variant="light" className="text-apple-text-tertiary w-6 h-6 min-w-6" onPress={() => handleToggleExpand(item.id)}>
-            {toggleIcon}
-          </Button>
-          <span className="font-mono text-[13px] text-white font-bold break-all cursor-pointer" onClick={() => handleToggleExpand(item.id)}>{item.display_name}</span>
-        </div>
-      </TableCell>
-    ]
-
-    if (assetKind === 'ip') {
-      cells.push(
-        <TableCell key="open_port_count">{item.extra_payload?.open_port_count ?? 0}</TableCell>,
-        <TableCell key="open_ports"><span className="truncate block max-w-[180px] text-apple-text-secondary">{formatPorts(item.extra_payload?.open_ports)}</span></TableCell>,
-        <TableCell key="domain_count"><span className="text-[12px] text-white font-bold">{item.extra_payload?.domain_count ?? '-'}</span></TableCell>,
-      )
-    } else if (assetKind === 'domain') {
-      const rootDomain = item.extra_payload?.root_domain || item.display_name.split('.').slice(-2).join('.')
-      const ipCount = item.extra_payload?.ip_count ?? '-'
-      const siteCount = item.extra_payload?.site_count ?? '-'
-      cells.push(
-        <TableCell key="root_domain"><span className="text-apple-text-secondary font-mono text-[12px]">{rootDomain}</span></TableCell>,
-        <TableCell key="ip_count"><span className="text-[12px] text-white font-bold">{ipCount}</span></TableCell>,
-        <TableCell key="site_count"><span className="text-[12px] text-white font-bold">{siteCount}</span></TableCell>,
-      )
-    } else if (assetKind === 'site') {
-      const sum = parseHttpProbeSummary(item.extra_payload)
-      cells.push(
-        <TableCell key="title">
-          <div className="flex items-center gap-2">
-            {sum?.probe_status === 'alive' ? <span className="w-2 h-2 rounded-full bg-apple-green shrink-0" title="站点存活"></span> :
-              sum?.probe_status === 'unreachable' ? <span className="w-2 h-2 rounded-full bg-apple-text-secondary shrink-0" title={`站点不存活: ${sum?.probe_error || '未知'}`}></span> : null}
-            <span className="text-apple-text-secondary truncate block max-w-[180px]">{sum?.title || '-'}</span>
-          </div>
-        </TableCell>,
-        <TableCell key="status_code"><span className="text-apple-text-secondary">{sum?.status_code || '-'}</span></TableCell>,
-        <TableCell key="cert"><span className="text-apple-text-secondary">-</span></TableCell>,
-      )
-    }
-
-    cells.push(
-      <TableCell key="source_type"><span className="text-[10px] bg-white/5 border border-white/10 text-apple-text-secondary px-2 py-0.5 rounded uppercase font-bold">{item.source_type || '-'}</span></TableCell>,
-      <TableCell key="confidence_level"><span className="text-[10px] text-apple-green-light font-bold uppercase">{item.confidence_level || '-'}</span></TableCell>,
-      <TableCell key="labels">
-        <div className="flex gap-1.5 flex-wrap">
-          {item.extra_payload?.expanded_from_cidr && (
-            <span className="text-[9px] bg-apple-blue/10 border border-apple-blue/20 text-apple-blue-light px-1.5 py-0.5 rounded-full font-black uppercase tracking-widest">CIDR展开</span>
-          )}
-          {(item.system_facets || []).slice(0, 3).map((tag: string) => (
-            <span key={tag} className="text-[9px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{tag}</span>
-          ))}
-        </div>
-      </TableCell>,
-    )
-
-    return cells
-  }
-
-
-
+  const items = query.data?.data || [];
+  const total = query.data?.pagination?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const columns = useMemo(() => {
     const base = [
-      <TableColumn key="display_name" width={260}>显示值</TableColumn>,
-    ]
-    if (assetKind === 'ip') {
+      <TableColumn key="display_name" width={280}>
+        显示值
+      </TableColumn>,
+    ];
+
+    if (assetKind === "ip") {
       base.push(
-        <TableColumn key="open_port_count" width={100}>开放端口数</TableColumn>,
-        <TableColumn key="open_ports" width={200}>端口摘要</TableColumn>,
-        <TableColumn key="domain_count" width={110}>关联域名数</TableColumn>,
-      )
-    } else if (assetKind === 'domain') {
+        <TableColumn key="open_port_count" width={120}>
+          开放端口数
+        </TableColumn>,
+        <TableColumn key="open_ports" width={220}>
+          端口摘要
+        </TableColumn>,
+        <TableColumn key="domain_count" width={120}>
+          关联域名数
+        </TableColumn>,
+      );
+    } else if (assetKind === "domain") {
       base.push(
-        <TableColumn key="root_domain" width={200}>根域</TableColumn>,
-        <TableColumn key="ip_count" width={100}>关联 IP 数</TableColumn>,
-        <TableColumn key="site_count" width={110}>关联站点数</TableColumn>,
-      )
-    } else if (assetKind === 'site') {
+        <TableColumn key="root_domain" width={220}>
+          根域
+        </TableColumn>,
+        <TableColumn key="ip_count" width={120}>
+          关联 IP 数
+        </TableColumn>,
+        <TableColumn key="site_count" width={120}>
+          关联站点数
+        </TableColumn>,
+      );
+    } else {
       base.push(
-        <TableColumn key="title" width={200}>Title</TableColumn>,
-        <TableColumn key="status_code" width={100}>状态码</TableColumn>,
-        <TableColumn key="cert" width={140}>证书</TableColumn>
-      )
+        <TableColumn key="title" width={240}>
+          Title
+        </TableColumn>,
+        <TableColumn key="status_code" width={120}>
+          状态码
+        </TableColumn>,
+        <TableColumn key="cert" width={160}>
+          证书
+        </TableColumn>,
+      );
     }
 
     base.push(
-      <TableColumn key="source_type" width={140}>来源</TableColumn>,
-      <TableColumn key="confidence_level" width={100}>可信度</TableColumn>,
-      <TableColumn key="labels" width={160}>标签</TableColumn>,
-    )
-    return base
-  }, [assetKind])
+      <TableColumn key="source_type" width={140}>
+        来源
+      </TableColumn>,
+      <TableColumn key="confidence_level" width={120}>
+        可信度
+      </TableColumn>,
+      <TableColumn key="labels" width={220}>
+        标签
+      </TableColumn>,
+      <TableColumn key="actions" width={120}>
+        详情
+      </TableColumn>,
+    );
+
+    return base;
+  }, [assetKind]);
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500 w-full mb-8">
-      {/* <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex items-center justify-between backdrop-blur-3xl">
-        <div>
-          <h3 className="text-xl font-black text-white tracking-tight mb-1">资产视图</h3>
-          <p className="text-[13px] text-apple-text-tertiary font-medium">展示本次任务涉及的输入资产以及扫描阶段新发现的衍生资产。</p>
-        </div>
-      </div> */}
-
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-2">
+    <div className="mb-8 flex w-full animate-in fade-in duration-500 flex-col gap-6">
+      <div className="flex flex-col justify-between gap-4 border-b border-white/5 pb-2 md:flex-row md:items-center">
         <Tabs
           aria-label="Asset Type"
           selectedKey={assetKind}
           onSelectionChange={(key) => {
-            setAssetKind(key as 'ip' | 'domain' | 'site')
-            setExpandedRowId(null)
-            setPage(1)
+            setAssetKind(key as "ip" | "domain" | "site");
+            setSelectedAsset(null);
+            setPage(1);
           }}
           variant="underlined"
           classNames={{
-            tabList: 'gap-6 p-0',
-            cursor: 'bg-apple-blue h-[2px] w-full',
-            tab: 'h-12 px-2 text-apple-text-secondary data-[selected=true]:text-white data-[selected=true]:font-black text-[12px] uppercase tracking-widest transition-colors',
+            tabList: "gap-6 p-0",
+            cursor: "h-[2px] w-full bg-apple-blue",
+            tab: "h-12 px-2 text-[12px] uppercase tracking-widest text-apple-text-secondary transition-colors data-[selected=true]:font-black data-[selected=true]:text-white",
           }}
         >
           <Tab key="ip" title="IP" />
@@ -383,90 +434,236 @@ export function TaskAssetViewTab({ taskId }: { taskId?: string }) {
           <Tab key="site" title="站点" />
         </Tabs>
 
-        <ButtonGroup size="sm" variant="flat" className="bg-apple-tertiary-bg/20 backdrop-blur-xl border border-white/10 rounded-xl p-1 h-10">
+        <ButtonGroup
+          size="sm"
+          variant="flat"
+          className="h-10 rounded-xl border border-white/10 bg-apple-tertiary-bg/20 p-1 backdrop-blur-xl"
+        >
           <Button
-            className={`font-black tracking-widest text-[11px] rounded-lg px-4 transition-all ${originFilter === 'all' ? 'bg-white/10 text-white shadow-md' : 'bg-transparent text-apple-text-tertiary hover:text-white'}`}
-            onPress={() => { setOriginFilter('all'); setExpandedRowId(null); setPage(1) }}
+            className={`rounded-lg px-4 text-[11px] font-black tracking-widest transition-all ${originFilter === "all" ? "bg-white/10 text-white shadow-md" : "bg-transparent text-apple-text-tertiary hover:text-white"}`}
+            onPress={() => {
+              setOriginFilter("all");
+              setSelectedAsset(null);
+              setPage(1);
+            }}
           >
             全部
           </Button>
           <Button
-            className={`font-black tracking-widest text-[11px] rounded-lg px-4 transition-all ${originFilter === 'input' ? 'bg-white/10 text-white shadow-md' : 'bg-transparent text-apple-text-tertiary hover:text-white'}`}
-            onPress={() => { setOriginFilter('input'); setExpandedRowId(null); setPage(1) }}
+            className={`rounded-lg px-4 text-[11px] font-black tracking-widest transition-all ${originFilter === "input" ? "bg-white/10 text-white shadow-md" : "bg-transparent text-apple-text-tertiary hover:text-white"}`}
+            onPress={() => {
+              setOriginFilter("input");
+              setSelectedAsset(null);
+              setPage(1);
+            }}
           >
             输入资产
           </Button>
           <Button
-            className={`font-black tracking-widest text-[11px] rounded-lg px-4 transition-all ${originFilter === 'expanded' ? 'bg-white/10 text-white shadow-md' : 'bg-transparent text-apple-text-tertiary hover:text-white'}`}
-            onPress={() => { setOriginFilter('expanded'); setExpandedRowId(null); setPage(1) }}
+            className={`rounded-lg px-4 text-[11px] font-black tracking-widest transition-all ${originFilter === "expanded" ? "bg-white/10 text-white shadow-md" : "bg-transparent text-apple-text-tertiary hover:text-white"}`}
+            onPress={() => {
+              setOriginFilter("expanded");
+              setSelectedAsset(null);
+              setPage(1);
+            }}
           >
             本次发现
           </Button>
         </ButtonGroup>
       </div>
 
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto">
+      <TableFrame className="custom-scrollbar scrollbar-hide md:scrollbar-default">
         <Table
           removeWrapper
           aria-label={`Task Asset ${ASSET_KIND_LABEL[assetKind]} Table`}
           layout="fixed"
           classNames={{
-            ...APPLE_TABLE_CLASSES,
-            base: 'p-4 min-w-[980px]',
-            td: `${APPLE_TABLE_CLASSES.td} relative`,
+            ...TABLE_CLASS_NAMES,
+            base: "min-w-[1180px] p-4",
+            tr: `${TABLE_CLASS_NAMES.tr} cursor-default`,
           }}
         >
           <TableHeader>{columns}</TableHeader>
           <TableBody
-            emptyContent={<div className="py-20 text-apple-text-tertiary text-[13px] font-bold tracking-widest uppercase flex flex-col items-center gap-2">当前筛选条件下暂无资产记录。</div>}
+            emptyContent={
+              <div className="flex flex-col items-center gap-2 py-20 text-[13px] font-bold uppercase tracking-widest text-apple-text-tertiary">
+                当前筛选条件下暂无资产记录。
+              </div>
+            }
             isLoading={query.isPending}
-            loadingContent={<Skeleton className="h-40 w-full rounded-[24px] bg-white/5" />}
+            loadingContent={
+              <Skeleton className="h-40 w-full rounded-[24px] bg-white/5" />
+            }
           >
-            {items.flatMap((item) => {
-              const rowId = item.id
-              const isExpanded = expandedRowId === rowId
-              const rowCells = renderRowCells(item)
+            {items.map((item) => {
+              const tags = joinTags(item).join(", ");
+              const siteSummary = assetKind === "site"
+                ? parseHttpProbeSummary(item.extra_payload)
+                : null;
+              const rowCells = [
+                <TableCell key="display_name">
+                  <MonoCell value={item.display_name} limit={36} className="font-bold text-white" />
+                </TableCell>,
+              ];
 
-              const mainRow = (
-                <TableRow key={rowId} className={`cursor-pointer ${isExpanded ? 'bg-white/[0.03]' : ''}`} onClick={() => handleToggleExpand(item.id)}>
-                  {rowCells}
-                </TableRow>
-              )
-
-              if (isExpanded) {
-                const expandedBg = (
-                  <TableRow key={`${rowId}-expanded`} className="bg-white/[0.01]">
-                    <TableCell colSpan={columns.length} className="p-0 border-b border-white/5">
-                      <ExpandedRow taskId={taskId} item={item} assetKind={assetKind} />
-                    </TableCell>
-                  </TableRow>
-                )
-                return [mainRow, expandedBg]
+              if (assetKind === "ip") {
+                rowCells.push(
+                  <TableCell key="open_port_count">
+                    <CountCell value={Number(item.extra_payload?.open_port_count ?? 0)} />
+                  </TableCell>,
+                  <TableCell key="open_ports">
+                    <TextCell
+                      value={formatPorts(item.extra_payload?.open_ports)}
+                      limit={30}
+                      className="text-apple-text-secondary"
+                    />
+                  </TableCell>,
+                  <TableCell key="domain_count">
+                    <CountCell
+                      value={
+                        typeof item.extra_payload?.domain_count === "number"
+                          ? item.extra_payload.domain_count
+                          : null
+                      }
+                    />
+                  </TableCell>,
+                );
+              } else if (assetKind === "domain") {
+                rowCells.push(
+                  <TableCell key="root_domain">
+                    <TextCell
+                      value={
+                        item.extra_payload?.root_domain ||
+                        item.display_name.split(".").slice(-2).join(".")
+                      }
+                      limit={28}
+                      className="text-apple-text-secondary"
+                    />
+                  </TableCell>,
+                  <TableCell key="ip_count">
+                    <CountCell
+                      value={
+                        typeof item.extra_payload?.ip_count === "number"
+                          ? item.extra_payload.ip_count
+                          : null
+                      }
+                    />
+                  </TableCell>,
+                  <TableCell key="site_count">
+                    <CountCell
+                      value={
+                        typeof item.extra_payload?.site_count === "number"
+                          ? item.extra_payload.site_count
+                          : null
+                      }
+                    />
+                  </TableCell>,
+                );
+              } else {
+                rowCells.push(
+                  <TableCell key="title">
+                    <TextCell
+                      value={siteSummary?.title || "-"}
+                      limit={30}
+                      className="text-apple-text-secondary"
+                    />
+                  </TableCell>,
+                  <TableCell key="status_code">
+                    <TextCell
+                      value={
+                        siteSummary?.status_code
+                          ? String(siteSummary.status_code)
+                          : "-"
+                      }
+                      limit={10}
+                      className="text-apple-text-secondary"
+                    />
+                  </TableCell>,
+                  <TableCell key="cert">
+                    <TextCell value="-" limit={10} className="text-apple-text-secondary" />
+                  </TableCell>,
+                );
               }
 
-              return [mainRow]
+              rowCells.push(
+                <TableCell key="source_type">
+                  <TextCell
+                    value={item.source_type || "-"}
+                    limit={18}
+                    className="text-apple-text-secondary"
+                  />
+                </TableCell>,
+                <TableCell key="confidence_level">
+                  <StatusBadgeCell
+                    label={item.confidence_level || "-"}
+                    tone={getConfidenceTone(item.confidence_level)}
+                  />
+                </TableCell>,
+                <TableCell key="labels">
+                  <TextCell
+                    value={tags}
+                    limit={28}
+                    className="text-apple-text-secondary"
+                  />
+                </TableCell>,
+                <TableCell key="actions">
+                  <ActionCell
+                    label="查看详情"
+                    onPress={() => setSelectedAsset(item)}
+                  />
+                </TableCell>,
+              );
+
+              return (
+                <TableRow key={item.id}>
+                  {rowCells}
+                </TableRow>
+              );
             })}
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="flex justify-between items-center px-6 py-5 border-t border-white/5 bg-white/[0.01]">
-            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-text-tertiary">合计本次视图资产 <span className="text-white mx-1">{total}</span> 项</span>
+          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-6 py-5">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+              合计本次视图资产 <span className="mx-1 text-white">{total}</span> 项
+            </span>
             {totalPages > 1 && (
               <Pagination
                 size="sm"
                 page={page}
                 total={totalPages}
-                onChange={(p) => { setPage(p); setExpandedRowId(null) }}
+                onChange={(nextPage) => {
+                  setPage(nextPage);
+                  setSelectedAsset(null);
+                }}
                 classNames={{
-                  wrapper: 'gap-2',
-                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]',
-                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white',
+                  wrapper: "gap-2",
+                  item: "h-8 min-w-[32px] rounded-xl border border-white/5 bg-white/5 text-[12px] font-bold text-apple-text-secondary transition-all hover:bg-white/10",
+                  cursor:
+                    "rounded-xl bg-apple-blue font-black text-white shadow-lg shadow-apple-blue/30",
                 }}
               />
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
+
+      <DetailSidePanel
+        isOpen={Boolean(selectedAsset)}
+        onClose={() => setSelectedAsset(null)}
+        title={selectedAsset?.display_name || "-"}
+        description="任务资产详情统一在侧边面板承载，主表只保留检索与对比所需摘要字段。"
+        size="5xl"
+        drawerClassNames={{
+          base: "z-[140] !w-screen sm:!w-[min(84vw,900px)] xl:!w-[min(78vw,980px)] max-w-none h-dvh max-h-dvh border-l border-white/10 bg-[#09111d]/96 text-white backdrop-blur-3xl",
+          header: "bg-[#0b1220] px-5 pb-5 pt-6 sm:px-7 sm:pb-6 sm:pt-7",
+          body: "bg-[#09111d] px-5 py-5 sm:px-7 sm:py-6",
+          footer: "bg-[#0b1220] px-5 py-4 sm:px-7 sm:py-5",
+        }}
+        headerClassName="border-b border-white/8"
+      >
+        <TaskAssetDetailBody taskId={taskId} item={selectedAsset} />
+      </DetailSidePanel>
     </div>
-  )
+  );
 }
