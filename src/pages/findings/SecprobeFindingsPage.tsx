@@ -18,21 +18,42 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAssetPools } from '@/api/adapters/asset'
 import { useSecprobeFindings } from '@/api/adapters/finding'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const PAGE_SIZE = 20
 
-function formatDateTime(value?: string) {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+function firstNonEmptyText(...values: unknown[]): string {
+  for (const value of values) {
+    if (value === null || value === undefined) continue
+    const text = typeof value === 'string' ? value.trim() : String(value).trim()
+    if (text) return text
+  }
+  return ''
 }
 
-function truncateText(value: string, limit = 54) {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
+function buildTargetSummary(targetHost?: string, resolvedIP?: string): string {
+  const primary = firstNonEmptyText(targetHost, resolvedIP, '-')
+  if (resolvedIP && resolvedIP !== targetHost) {
+    return `${primary} · ${resolvedIP}`
+  }
+  return primary
+}
+
+function buildServiceSummary(service?: string, port?: number): string {
+  const label = service || '-'
+  return port && port > 0 ? `${label} · :${port}` : label
+}
+
+function buildTaskSummary(taskName?: string, taskID?: string): string {
+  const label = firstNonEmptyText(taskName, taskID, '-')
+  if (taskID && taskName && taskID !== taskName) {
+    return `${label} · ${taskID}`
+  }
+  return label
 }
 
 export function SecprobeFindingsPage() {
@@ -161,30 +182,15 @@ export function SecprobeFindingsPage() {
           >
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-mono text-[12px] text-apple-blue-light">{item.target_host || item.resolved_ip || '-'}</span>
-                    <span className="text-[11px] text-apple-text-tertiary">{item.resolved_ip || '-'}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-white">{item.service || '-'}</span>
-                    <span className="text-[11px] text-apple-text-tertiary">{item.port > 0 ? `:${item.port}` : '-'}</span>
-                  </div>
-                </TableCell>
-                <TableCell><span className="font-mono text-[12px] text-white">{item.username || '-'}</span></TableCell>
+                <TableCell><MonoCell value={buildTargetSummary(item.target_host, item.resolved_ip)} limit={32} className="text-apple-blue-light" /></TableCell>
+                <TableCell><TextCell value={buildServiceSummary(item.service, item.port)} limit={20} className="text-white" /></TableCell>
+                <TableCell><MonoCell value={item.username || '-'} limit={18} className="text-white" /></TableCell>
                 <TableCell><span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.18em] uppercase border ${item.success ? 'border-apple-red/40 text-apple-red-light bg-apple-red/10' : 'border-white/15 text-apple-text-secondary bg-white/5'}`}>{item.success ? '命中' : '未命中'}</span></TableCell>
+                <TableCell><TextCell value={buildTaskSummary(item.task_name, item.task_id)} limit={28} className="text-white" /></TableCell>
+                <TableCell><TextCell value={item.asset_pool_name || '-'} limit={24} className="text-white" /></TableCell>
+                <TableCell><TimeCell value={item.matched_at || item.updated_at} /></TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="block truncate text-[12px] font-semibold text-white">{item.task_name || item.task_id || '-'}</span>
-                    <span className="block truncate text-[11px] text-apple-text-tertiary">{truncateText(item.task_id || '-', 24)}</span>
-                  </div>
-                </TableCell>
-                <TableCell><span className="block truncate text-[12px] text-white">{item.asset_pool_name || '-'}</span></TableCell>
-                <TableCell><span className="text-[12px] font-mono text-apple-text-secondary">{formatDateTime(item.matched_at || item.updated_at)}</span></TableCell>
-                <TableCell>
-                  <div className="flex justify-end">
+                  <ActionCell>
                     <Button
                       size="sm"
                       variant="bordered"
@@ -193,7 +199,7 @@ export function SecprobeFindingsPage() {
                     >
                       查看任务
                     </Button>
-                  </div>
+                  </ActionCell>
                 </TableCell>
               </TableRow>
             ))}

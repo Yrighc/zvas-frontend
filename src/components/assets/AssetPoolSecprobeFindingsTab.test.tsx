@@ -52,11 +52,11 @@ describe('AssetPoolSecprobeFindingsTab', () => {
           id: 'spf-asset-1',
           task_unit_id: 'unit-asset-1',
           task_id: 'task-secprobe-1',
-          task_name: '边界主机弱口令',
+          task_name: 'RDP 命中',
           asset_pool_id: 'pool-1',
           asset_pool_name: '核心资产池',
           finding_key: '198.51.100.8:3389:rdp:administrator',
-          target_host: '198.51.100.8',
+          target_host: 'rdp-1',
           resolved_ip: '198.51.100.8',
           source_asset_kind: 'host',
           source_asset_key: 'host-rdp-1',
@@ -85,10 +85,10 @@ describe('AssetPoolSecprobeFindingsTab', () => {
   it('renders asset pool secprobe rows with source task and evidence', async () => {
     renderTab()
 
-    expect((await screen.findAllByText('198.51.100.8')).length).toBeGreaterThan(0)
-    expect(screen.getByText('rdp')).toBeInTheDocument()
+    expect(await screen.findByText('rdp-1 · 198.51.100.8')).toBeInTheDocument()
+    expect(screen.getByText('rdp · :3389')).toBeInTheDocument()
     expect(screen.getByText('administrator')).toBeInTheDocument()
-    expect(screen.getByText('边界主机弱口令')).toBeInTheDocument()
+    expect(screen.getByText('RDP 命中 · task-secprobe-1')).toBeInTheDocument()
     expect(screen.getByText('RDP credential accepted')).toBeInTheDocument()
   })
 

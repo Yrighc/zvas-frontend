@@ -18,7 +18,6 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  Tooltip,
 } from '@heroui/react'
 import {
   ArrowPathIcon,
@@ -27,6 +26,10 @@ import {
 } from '@heroicons/react/24/outline'
 
 import { type TaskWeakScanFindingVM, useTaskWeakScanFindings } from '@/api/adapters/task'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const PAGE_SIZE = 20
@@ -75,27 +78,6 @@ function firstNonEmptyText(...values: unknown[]): string {
     if (text) return text
   }
   return ''
-}
-
-function truncateText(value: string, limit = 56): string {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
-}
-
-function RenderTextCell({ value, limit = 56, mono = false }: { value: string; limit?: number; mono?: boolean }) {
-  const text = value.trim()
-  if (!text) return <span className="text-apple-text-tertiary">-</span>
-  const display = truncateText(text, limit)
-  const className = mono ? 'font-mono text-[12px] text-white' : 'text-[13px] text-white'
-  if (display === text) {
-    return <span className={className}>{display}</span>
-  }
-  return (
-    <Tooltip content={<div className="max-w-[420px] break-all text-xs">{text}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
-      <span className={className}>{display}</span>
-    </Tooltip>
-  )
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
@@ -461,9 +443,9 @@ export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
           >
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell><RenderTextCell value={item.affects_url || item.target_url || '-'} limit={44} mono /></TableCell>
-                <TableCell><RenderTextCell value={item.rule_id || item.finding_key || '-'} limit={24} mono /></TableCell>
-                <TableCell><RenderTextCell value={item.rule_name || item.rule_id || '-'} limit={34} /></TableCell>
+                <TableCell><MonoCell value={item.affects_url || item.target_url || '-'} limit={44} className="text-white" /></TableCell>
+                <TableCell><MonoCell value={item.rule_id || item.finding_key || '-'} limit={24} className="text-white" /></TableCell>
+                <TableCell><TextCell value={item.rule_name || item.rule_id || '-'} limit={34} className="text-white" /></TableCell>
                 <TableCell>
                   <Chip size="sm" variant="flat" color={severityColor(item.severity)} classNames={{ base: 'border-0 px-1 font-black uppercase tracking-[0.12em]' }}>
                     {item.severity || '-'}
@@ -475,12 +457,10 @@ export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
                   </Chip>
                 </TableCell>
                 <TableCell>
-                  <Button size="sm" variant="flat" className="rounded-xl bg-white/6 font-bold text-white hover:bg-white/10" onPress={() => setSelectedItem(item)}>
-                    查看详情
-                  </Button>
+                  <ActionCell label="查看详情" onPress={() => setSelectedItem(item)} />
                 </TableCell>
                 <TableCell>
-                  <span className="font-mono text-[12px] text-apple-text-secondary">{formatDateTime(item.matched_at || item.updated_at)}</span>
+                  <TimeCell value={item.matched_at || item.updated_at} />
                 </TableCell>
               </TableRow>
             ))}

@@ -29,6 +29,11 @@ import {
   useTaskFindings,
 } from '@/api/adapters/task'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
+import { truncateText as truncateTableText } from '@/components/table/tableFormat'
 import { FindingReportEditModal } from '@/components/tasks/FindingReportEditModal'
 import { ManualTaskFindingModal } from '@/components/tasks/ManualTaskFindingModal'
 import {
@@ -54,13 +59,6 @@ const EMPTY_FILTERS: FindingFilterState = {
   url: '',
   pocID: '',
   severity: 'all',
-}
-
-function formatDateTime(value?: string): string {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
 }
 
 function firstNonEmptyText(...values: unknown[]): string {
@@ -161,33 +159,6 @@ function getRemediation(item: TaskRecordVulnerabilityVM): string {
     item.classification?.solution,
     info.remediation,
     Array.isArray(reference) ? reference.filter(Boolean).join('\n') : reference,
-  )
-}
-
-function truncateText(value: string, limit = 64): string {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
-}
-
-function RenderTextCell({ value, limit = 64, mono = false }: { value: string; limit?: number; mono?: boolean }) {
-  const text = value.trim()
-  if (!text) return <span className="text-apple-text-tertiary">-</span>
-  const display = truncateText(text, limit)
-  const className = mono ? 'block max-w-full truncate font-mono text-[12px] text-white' : 'block max-w-full truncate text-[13px] text-white'
-  if (display === text) {
-    return (
-      <div className="min-w-0 max-w-full">
-        <span className={className}>{display}</span>
-      </div>
-    )
-  }
-  return (
-    <div className="min-w-0 max-w-full">
-      <Tooltip content={<div className="max-w-[420px] break-all text-xs">{text}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
-        <span className={className}>{display}</span>
-      </Tooltip>
-    </div>
   )
 }
 
@@ -398,43 +369,34 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
               const remediation = getRemediation(item)
               return (
                 <TableRow key={item.id || item.vulnerability_key}>
-                  <TableCell><RenderTextCell value={getBaseURL(item) || '-'} limit={40} mono /></TableCell>
+                  <TableCell><MonoCell value={getBaseURL(item) || '-'} limit={40} className="text-white" /></TableCell>
                   <TableCell>
                     {matchedLink && matchedLink !== '-' ? (
                       <Tooltip content={<div className="max-w-[420px] break-all text-xs">{matchedLink}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
                         <a href={matchedLink} target="_blank" rel="noreferrer" className="flex min-w-0 max-w-full items-center gap-2 text-[12px] font-semibold text-apple-blue-light hover:text-white">
                           <LinkIcon className="h-4 w-4 flex-none" />
-                          <span className="min-w-0 flex-1 truncate">{truncateText(matchedLink, 34)}</span>
+                          <span className="min-w-0 flex-1 truncate">{truncateTableText(matchedLink, 34)}</span>
                         </a>
                       </Tooltip>
                     ) : (
                       <span className="text-apple-text-tertiary">-</span>
                     )}
                   </TableCell>
-                  <TableCell><RenderTextCell value={item.template_id || '-'} limit={26} mono /></TableCell>
-                  <TableCell><RenderTextCell value={item.rule_name || '-'} limit={28} /></TableCell>
+                  <TableCell><MonoCell value={item.template_id || '-'} limit={26} className="text-white" /></TableCell>
+                  <TableCell><TextCell value={item.rule_name || '-'} limit={28} className="text-white" /></TableCell>
                   <TableCell>
                     <Chip size="sm" variant="flat" color={getSeverityColor(item.severity)} classNames={{ base: 'border-0 px-1 font-black uppercase tracking-[0.12em]' }}>
                       {normalizeSeverityDisplay(item.severity) || '-'}
                     </Chip>
                   </TableCell>
-                  <TableCell><RenderTextCell value={description || '-'} limit={72} /></TableCell>
-                  <TableCell><RenderTextCell value={remediation || '-'} limit={72} /></TableCell>
+                  <TableCell><TextCell value={description || '-'} limit={72} className="text-white" /></TableCell>
+                  <TableCell><TextCell value={remediation || '-'} limit={72} className="text-white" /></TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      className="min-w-[72px] rounded-xl bg-white/6 font-bold text-white hover:bg-white/10"
-                      onPress={() => handleOpenPayloadViewer(item)}
-                    >
-                      查看
-                    </Button>
+                    <ActionCell label="查看" onPress={() => handleOpenPayloadViewer(item)} />
                   </TableCell>
+                  <TableCell><TimeCell value={item.matched_at} /></TableCell>
                   <TableCell>
-                    <span className="font-mono text-[12px] text-apple-text-secondary">{formatDateTime(item.matched_at)}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <ActionCell className="flex-wrap">
                       <Button
                         size="sm"
                         color="primary"
@@ -455,7 +417,7 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
                       >
                         删除
                       </Button>
-                    </div>
+                    </ActionCell>
                   </TableCell>
                 </TableRow>
               )

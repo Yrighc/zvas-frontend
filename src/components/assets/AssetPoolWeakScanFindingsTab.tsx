@@ -19,7 +19,6 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  Tooltip,
 } from '@heroui/react'
 import {
   ArrowPathIcon,
@@ -29,6 +28,10 @@ import {
 import { type SetURLSearchParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { type AssetPoolWeakScanFindingVM, useAssetPoolWeakScanFindings } from '@/api/adapters/asset'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const PAGE_SIZE = 20
@@ -176,25 +179,12 @@ function formatWeakScanSourceLabel(source?: string): string {
   return (source || '').trim() ? '弱点扫描' : '-'
 }
 
-function truncateText(value: string, limit = 56): string {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
-}
-
-function RenderTextCell({ value, limit = 56, mono = false }: { value: string; limit?: number; mono?: boolean }) {
-  const text = value.trim()
-  if (!text) return <span className="text-apple-text-tertiary">-</span>
-  const display = truncateText(text, limit)
-  const className = mono ? 'font-mono text-[12px] text-white' : 'text-[13px] text-white'
-  if (display === text) {
-    return <span className={className}>{display}</span>
+function buildTaskSummary(item: AssetPoolWeakScanFindingVM): string {
+  const label = firstNonEmptyText(item.task_name, item.task_id, '-')
+  if (item.task_id && item.task_name && item.task_id !== item.task_name) {
+    return `${label} · ${item.task_id}`
   }
-  return (
-    <Tooltip content={<div className="max-w-[420px] break-all text-xs">{text}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
-      <span className={className}>{display}</span>
-    </Tooltip>
-  )
+  return label
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
@@ -623,9 +613,9 @@ function AssetPoolWeakScanFindingsTabContent({ poolId, searchParams, setSearchPa
           >
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell><RenderTextCell value={item.affects_url || item.target_url || '-'} limit={44} mono /></TableCell>
-                <TableCell><RenderTextCell value={item.rule_id || item.finding_key || '-'} limit={24} mono /></TableCell>
-                <TableCell><RenderTextCell value={item.rule_name || item.rule_id || '-'} limit={34} /></TableCell>
+                <TableCell><MonoCell value={item.affects_url || item.target_url || '-'} limit={44} className="text-white" /></TableCell>
+                <TableCell><MonoCell value={item.rule_id || item.finding_key || '-'} limit={24} className="text-white" /></TableCell>
+                <TableCell><TextCell value={item.rule_name || item.rule_id || '-'} limit={34} className="text-white" /></TableCell>
                 <TableCell>
                   <Chip size="sm" variant="flat" color={severityColor(item.severity)} classNames={{ base: 'border-0 px-1 font-black uppercase tracking-[0.12em]' }}>
                     {item.severity || '-'}
@@ -638,25 +628,22 @@ function AssetPoolWeakScanFindingsTabContent({ poolId, searchParams, setSearchPa
                 </TableCell>
                 <TableCell>
                   {item.task_id ? (
-                    <Button
-                      size="sm"
-                      variant="light"
-                      className="h-8 min-w-0 rounded-lg px-3 text-[12px] font-bold text-apple-blue-light hover:bg-apple-blue/10 hover:text-white"
-                      onPress={() => navigate(`/tasks/${item.task_id}`)}
+                    <button
+                      type="button"
+                      className="block w-full text-left transition-colors hover:text-white"
+                      onClick={() => navigate(`/tasks/${item.task_id}`)}
                     >
-                      查看任务
-                    </Button>
+                      <TextCell value={buildTaskSummary(item)} limit={30} className="text-apple-blue-light" />
+                    </button>
                   ) : (
                     <span className="text-apple-text-tertiary">-</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Button size="sm" variant="flat" className="rounded-xl bg-white/6 font-bold text-white hover:bg-white/10" onPress={() => setSelectedItem(item)}>
-                    查看详情
-                  </Button>
+                  <ActionCell label="查看详情" onPress={() => setSelectedItem(item)} />
                 </TableCell>
                 <TableCell>
-                  <span className="font-mono text-[12px] text-apple-text-secondary">{formatDateTime(item.matched_at || item.updated_at)}</span>
+                  <TimeCell value={item.matched_at || item.updated_at} />
                 </TableCell>
               </TableRow>
             ))}

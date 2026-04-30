@@ -11,7 +11,6 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  Tooltip,
 } from '@heroui/react'
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState } from 'react'
@@ -19,15 +18,38 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAssetPools } from '@/api/adapters/asset'
 import { useWeakScanFindings } from '@/api/adapters/finding'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const PAGE_SIZE = 20
 
-function formatDateTime(value?: string) {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+function firstNonEmptyText(...values: unknown[]): string {
+  for (const value of values) {
+    if (value === null || value === undefined) continue
+    const text = typeof value === 'string' ? value.trim() : String(value).trim()
+    if (text) return text
+  }
+  return ''
+}
+
+function buildRuleSummary(ruleName?: string, ruleID?: string, fallbackID?: string): string {
+  const label = firstNonEmptyText(ruleName, ruleID, fallbackID, '-')
+  const secondary = firstNonEmptyText(ruleID, fallbackID)
+  if (secondary && secondary !== label) {
+    return `${label} · ${secondary}`
+  }
+  return label
+}
+
+function buildTaskSummary(taskName?: string, taskID?: string, assetPoolName?: string): string {
+  const label = firstNonEmptyText(taskName, taskID, '-')
+  if (assetPoolName && assetPoolName !== label) {
+    return `${label} · ${assetPoolName}`
+  }
+  return label
 }
 
 function severityClass(severity: string) {
@@ -44,12 +66,6 @@ function severityClass(severity: string) {
     default:
       return 'border-white/15 text-apple-text-secondary bg-white/5'
   }
-}
-
-function truncateText(value: string, limit = 54) {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
 }
 
 export function WeakScanFindingsPage() {
@@ -166,10 +182,7 @@ export function WeakScanFindingsPage() {
             {items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-white">{item.rule_name || item.rule_id || '-'}</span>
-                    <span className="text-[11px] font-mono text-apple-text-tertiary">{truncateText(item.rule_id || item.remote_vulnerability_id || item.finding_key, 32)}</span>
-                  </div>
+                  <TextCell value={buildRuleSummary(item.rule_name, item.rule_id, item.remote_vulnerability_id || item.finding_key)} limit={34} className="text-white" />
                 </TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.18em] uppercase border ${severityClass(item.severity)}`}>
@@ -180,26 +193,19 @@ export function WeakScanFindingsPage() {
                   <span className="text-[12px] font-mono text-apple-text-secondary">{item.status || '-'}</span>
                 </TableCell>
                 <TableCell>
-                  <Tooltip content={<div className="max-w-[420px] break-all text-xs">{item.target_url || '-'}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
-                    <span className="block truncate font-mono text-[12px] text-white">{item.target_url || '-'}</span>
-                  </Tooltip>
+                  <MonoCell value={item.target_url || '-'} limit={36} className="text-white" />
                 </TableCell>
                 <TableCell>
-                  <Tooltip content={<div className="max-w-[420px] break-all text-xs">{item.affects_url || '-'}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
-                    <span className="block truncate font-mono text-[12px] text-apple-text-secondary">{item.affects_url || '-'}</span>
-                  </Tooltip>
+                  <MonoCell value={item.affects_url || '-'} limit={34} />
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="block truncate text-[12px] font-semibold text-white">{item.task_name || item.task_id || '-'}</span>
-                    <span className="block truncate text-[11px] text-apple-text-tertiary">{item.asset_pool_name || '-'}</span>
-                  </div>
+                  <TextCell value={buildTaskSummary(item.task_name, item.task_id, item.asset_pool_name)} limit={32} className="text-white" />
                 </TableCell>
                 <TableCell>
-                  <span className="text-[12px] font-mono text-apple-text-secondary">{formatDateTime(item.matched_at || item.updated_at)}</span>
+                  <TimeCell value={item.matched_at || item.updated_at} />
                 </TableCell>
                 <TableCell>
-                  <div className="flex justify-end">
+                  <ActionCell>
                     <Button
                       size="sm"
                       variant="bordered"
@@ -208,7 +214,7 @@ export function WeakScanFindingsPage() {
                     >
                       查看任务
                     </Button>
-                  </div>
+                  </ActionCell>
                 </TableCell>
               </TableRow>
             ))}

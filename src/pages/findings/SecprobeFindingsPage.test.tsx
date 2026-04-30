@@ -68,11 +68,11 @@ describe('SecprobeFindingsPage', () => {
           id: 'spf-global-1',
           task_unit_id: 'unit-global-1',
           task_id: 'task-global-1',
-          task_name: '全网 SSH 弱口令',
+          task_name: 'SSH 巡检',
           asset_pool_id: 'pool-1',
           asset_pool_name: '生产资产池',
           finding_key: '203.0.113.5:22:ssh:root',
-          target_host: '203.0.113.5',
+          target_host: 'gw-1',
           resolved_ip: '203.0.113.5',
           source_asset_kind: 'host',
           source_asset_key: 'host-global-1',
@@ -101,9 +101,9 @@ describe('SecprobeFindingsPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: '全局弱口令结果' })).toBeInTheDocument()
-    expect(screen.getAllByText('203.0.113.5').length).toBeGreaterThan(0)
-    expect(screen.getByText('ssh')).toBeInTheDocument()
-    expect(screen.getByText('全网 SSH 弱口令')).toBeInTheDocument()
+    expect(screen.getByText('gw-1 · 203.0.113.5')).toBeInTheDocument()
+    expect(screen.getByText('ssh · :22')).toBeInTheDocument()
+    expect(screen.getByText('SSH 巡检 · task-global-1')).toBeInTheDocument()
     expect(screen.getAllByText('生产资产池').length).toBeGreaterThan(0)
   })
 

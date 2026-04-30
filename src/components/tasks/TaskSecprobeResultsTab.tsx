@@ -26,6 +26,10 @@ import {
 } from '@heroicons/react/24/outline'
 
 import { type TaskSecprobeFindingVM, useTaskSecprobeFindings } from '@/api/adapters/task'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const PAGE_SIZE = 20
@@ -62,10 +66,17 @@ function firstNonEmptyText(...values: unknown[]): string {
   return ''
 }
 
-function truncateText(value: string, limit = 56): string {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
+function buildTargetSummary(item: TaskSecprobeFindingVM): string {
+  const primary = firstNonEmptyText(item.target_host, item.resolved_ip, '-')
+  if (item.resolved_ip && item.resolved_ip !== item.target_host) {
+    return `${primary} · ${item.resolved_ip}`
+  }
+  return primary
+}
+
+function buildServiceSummary(item: TaskSecprobeFindingVM): string {
+  const service = item.service || '-'
+  return item.port > 0 ? `${service} · :${item.port}` : service
 }
 
 function renderSuccessChip(success: boolean) {
@@ -333,26 +344,18 @@ export function TaskSecprobeResultsTab({ taskId }: { taskId: string }) {
             {items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-mono text-[12px] text-apple-blue-light">{firstNonEmptyText(item.target_host, item.resolved_ip, '-')}</span>
-                    <span className="text-[11px] text-apple-text-tertiary">{item.resolved_ip || '-'}</span>
-                  </div>
+                  <MonoCell value={buildTargetSummary(item)} limit={32} className="text-apple-blue-light" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-white">{item.service || '-'}</span>
-                    <span className="text-[11px] text-apple-text-tertiary">{item.port > 0 ? `:${item.port}` : '-'}</span>
-                  </div>
+                  <TextCell value={buildServiceSummary(item)} limit={20} className="text-white" />
                 </TableCell>
-                <TableCell><span className="font-mono text-[12px] text-white">{item.username || '-'}</span></TableCell>
-                <TableCell><span className="font-mono text-[12px] text-white">{item.password || '-'}</span></TableCell>
+                <TableCell><MonoCell value={item.username || '-'} limit={18} className="text-white" /></TableCell>
+                <TableCell><MonoCell value={item.password || '-'} limit={18} className="text-white" /></TableCell>
                 <TableCell>{renderSuccessChip(item.success)}</TableCell>
-                <TableCell><span className="text-[12px] font-mono text-apple-text-secondary">{formatDateTime(item.matched_at || item.updated_at)}</span></TableCell>
-                <TableCell><span className="block truncate text-[12px] text-white">{truncateText(item.evidence || item.error || '-', 42)}</span></TableCell>
+                <TableCell><TimeCell value={item.matched_at || item.updated_at} /></TableCell>
+                <TableCell><TextCell value={item.evidence || item.error || '-'} limit={42} className="text-white" /></TableCell>
                 <TableCell>
-                  <Button size="sm" variant="flat" className="min-w-0 rounded-xl bg-white/5 text-apple-blue-light hover:bg-white/10 font-bold" onPress={() => setSelectedItem(item)}>
-                    详情
-                  </Button>
+                  <ActionCell label="详情" onPress={() => setSelectedItem(item)} />
                 </TableCell>
               </TableRow>
             ))}

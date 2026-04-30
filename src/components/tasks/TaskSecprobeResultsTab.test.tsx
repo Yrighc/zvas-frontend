@@ -41,11 +41,11 @@ describe('TaskSecprobeResultsTab', () => {
           id: 'spf-1',
           task_unit_id: 'unit-1',
           task_id: 'task-secprobe-1',
-          task_name: 'Secprobe 任务',
+          task_name: 'SSH 登录',
           asset_pool_id: 'pool-1',
           asset_pool_name: '默认资产池',
           finding_key: '192.0.2.10:22:ssh:root',
-          target_host: '192.0.2.10',
+          target_host: 'gw-1',
           resolved_ip: '192.0.2.10',
           source_asset_kind: 'host',
           source_asset_key: 'host-1',
@@ -74,8 +74,8 @@ describe('TaskSecprobeResultsTab', () => {
   it('renders secprobe rows with host service and credential fields', async () => {
     renderTab()
 
-    expect((await screen.findAllByText('192.0.2.10')).length).toBeGreaterThan(0)
-    expect(screen.getByText('ssh')).toBeInTheDocument()
+    expect(await screen.findByText('gw-1 · 192.0.2.10')).toBeInTheDocument()
+    expect(screen.getByText('ssh · :22')).toBeInTheDocument()
     expect(screen.getAllByText('root')).toHaveLength(2)
     expect(screen.getByText('命中')).toBeInTheDocument()
   })

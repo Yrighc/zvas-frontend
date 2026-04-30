@@ -14,12 +14,10 @@ import { useState } from 'react'
 import { MagnifyingGlassIcon, ArrowPathIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'
 
 import { useEvidences } from '@/api/adapters/finding'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
-
-function formatDateTime(isoStr?: string) {
-  if (!isoStr) return '-'
-  return new Date(isoStr).toLocaleString()
-}
 
 export function EvidencesPage() {
   const [page, setPage] = useState(1)
@@ -98,19 +96,15 @@ export function EvidencesPage() {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-bold text-apple-text-secondary tracking-tight leading-loose text-balance truncate max-w-[200px]">{evi.finding_title}</span>
-                  </div>
+                  <TextCell value={evi.finding_title} limit={32} className="text-apple-text-secondary" />
                 </TableCell>
                 <TableCell>
-                   <span className="text-xs text-apple-text-tertiary font-mono italic max-w-full inline-block truncate">{evi.summary}</span>
+                  <TextCell value={evi.summary} limit={42} className="text-apple-text-tertiary italic" />
                 </TableCell>
+                <TableCell><TimeCell value={evi.created_at} /></TableCell>
                 <TableCell>
-                  <span className="text-xs text-apple-text-secondary font-mono">{formatDateTime(evi.created_at)}</span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end pr-2 gap-2">
-                     <Button
+                  <ActionCell>
+                    <Button
                       size="sm"
                       variant="bordered"
                       color="primary"
@@ -118,7 +112,7 @@ export function EvidencesPage() {
                     >
                       <CloudArrowDownIcon className="w-4 h-4"/>
                     </Button>
-                  </div>
+                  </ActionCell>
                 </TableCell>
               </TableRow>
             ))}

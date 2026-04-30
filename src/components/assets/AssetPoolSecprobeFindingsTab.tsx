@@ -18,6 +18,10 @@ import {
 import { ArrowPathIcon, KeyIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 import { type AssetPoolSecprobeFindingVM, useAssetPoolSecprobeFindings } from '@/api/adapters/asset'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 const PAGE_SIZE = 20
@@ -40,17 +44,34 @@ const EMPTY_FILTERS: SecprobeFilterState = {
   keyword: '',
 }
 
-function formatDateTime(value?: string): string {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+function firstNonEmptyText(...values: unknown[]): string {
+  for (const value of values) {
+    if (value === null || value === undefined) continue
+    const text = typeof value === 'string' ? value.trim() : String(value).trim()
+    if (text) return text
+  }
+  return ''
 }
 
-function truncateText(value: string, limit = 48): string {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
+function buildTargetSummary(item: AssetPoolSecprobeFindingVM): string {
+  const primary = firstNonEmptyText(item.target_host, item.resolved_ip, '-')
+  if (item.resolved_ip && item.resolved_ip !== item.target_host) {
+    return `${primary} · ${item.resolved_ip}`
+  }
+  return primary
+}
+
+function buildServiceSummary(item: AssetPoolSecprobeFindingVM): string {
+  const service = item.service || '-'
+  return item.port > 0 ? `${service} · :${item.port}` : service
+}
+
+function buildTaskSummary(item: AssetPoolSecprobeFindingVM): string {
+  const taskLabel = firstNonEmptyText(item.task_name, item.task_id, '-')
+  if (item.task_id && item.task_name && item.task_id !== item.task_name) {
+    return `${taskLabel} · ${item.task_id}`
+  }
+  return taskLabel
 }
 
 function renderSuccessChip(success: boolean) {
@@ -222,33 +243,24 @@ export function AssetPoolSecprobeFindingsTab({ poolId }: { poolId: string }) {
             {items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-mono text-[12px] text-apple-blue-light">{item.target_host || item.resolved_ip || '-'}</span>
-                    <span className="text-[11px] text-apple-text-tertiary">{item.resolved_ip || '-'}</span>
-                  </div>
+                  <MonoCell value={buildTargetSummary(item)} limit={32} className="text-apple-blue-light" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-white">{item.service || '-'}</span>
-                    <span className="text-[11px] text-apple-text-tertiary">{item.port > 0 ? `:${item.port}` : '-'}</span>
-                  </div>
+                  <TextCell value={buildServiceSummary(item)} limit={20} className="text-white" />
                 </TableCell>
-                <TableCell><span className="font-mono text-[12px] text-white">{item.username || '-'}</span></TableCell>
+                <TableCell><MonoCell value={item.username || '-'} limit={18} className="text-white" /></TableCell>
                 <TableCell>{renderSuccessChip(item.success)}</TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[12px] font-semibold text-white">{truncateText(item.task_name || item.task_id || '-', 24)}</span>
-                    <span className="text-[11px] text-apple-text-tertiary">{truncateText(item.task_id || '-', 24)}</span>
-                  </div>
+                  <TextCell value={buildTaskSummary(item)} limit={28} className="text-white" />
                 </TableCell>
-                <TableCell><span className="text-[12px] font-mono text-apple-text-secondary">{formatDateTime(item.matched_at || item.updated_at)}</span></TableCell>
-                <TableCell><span className="block truncate text-[12px] text-white">{truncateText(item.evidence || item.error || '-', 40)}</span></TableCell>
+                <TableCell><TimeCell value={item.matched_at || item.updated_at} /></TableCell>
+                <TableCell><TextCell value={item.evidence || item.error || '-'} limit={40} className="text-white" /></TableCell>
                 <TableCell>
-                  <div className="flex justify-end">
+                  <ActionCell>
                     <Button size="sm" variant="bordered" className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold" onPress={() => navigate(buildTaskPath(item))}>
                       查看任务
                     </Button>
-                  </div>
+                  </ActionCell>
                 </TableCell>
               </TableRow>
             ))}

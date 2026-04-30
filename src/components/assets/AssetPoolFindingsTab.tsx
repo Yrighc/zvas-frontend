@@ -30,6 +30,11 @@ import {
 import { type SetURLSearchParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { deleteAssetPoolFinding, type FindingSummaryView, useAssetPoolFindings } from '@/api/adapters/asset'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
+import { truncateText as truncateTableText } from '@/components/table/tableFormat'
 import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
@@ -150,6 +155,14 @@ function getMatchedLink(item: FindingSummaryView): string {
   return firstNonEmptyText(item.link, item.raw?.['matched-at'], item.target_url, item.asset_ref, item.host)
 }
 
+function getTaskSummary(item: FindingSummaryView): string {
+  const label = firstNonEmptyText(item.task_name, item.task_id, '-')
+  if (item.task_id && item.task_name && item.task_id !== item.task_name) {
+    return `${label} · ${item.task_id}`
+  }
+  return label
+}
+
 function getDescription(item: FindingSummaryView): string {
   const info = getRawInfoMap(item)
   return firstNonEmptyText(
@@ -173,12 +186,6 @@ function getRemediation(item: FindingSummaryView): string {
 
 function getEvidenceText(item: FindingSummaryView, key: 'request' | 'response' | 'curl_command'): string {
   return formatPlainValue(item.evidence?.[key])
-}
-
-function truncateText(value: string, limit = 56): string {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
@@ -226,21 +233,6 @@ function MessageBlock({ title, content }: { title: string; content: string }) {
         {text}
       </pre>
     </section>
-  )
-}
-
-function RenderTextCell({ value, limit = 56, mono = false }: { value: string; limit?: number; mono?: boolean }) {
-  const text = value.trim()
-  if (!text) return <span className="text-apple-text-tertiary">-</span>
-  const display = truncateText(text, limit)
-  const className = mono ? 'font-mono text-[12px] text-white' : 'text-[13px] text-white'
-  if (display === text) {
-    return <span className={className}>{display}</span>
-  }
-  return (
-    <Tooltip content={<div className="max-w-[420px] break-all text-xs">{text}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
-      <span className={className}>{display}</span>
-    </Tooltip>
   )
 }
 
@@ -519,10 +511,20 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
           >
             {items.map((item) => (
               <TableRow key={item.finding_id}>
-                <TableCell><RenderTextCell value={getBaseURL(item) || item.asset_ref || '-'} limit={40} mono /></TableCell>
-                <TableCell><RenderTextCell value={getMatchedLink(item) || '-'} limit={44} mono /></TableCell>
-                <TableCell><RenderTextCell value={item.rule_id || '-'} limit={24} mono /></TableCell>
-                <TableCell><RenderTextCell value={item.title || '-'} limit={34} /></TableCell>
+                <TableCell><MonoCell value={getBaseURL(item) || item.asset_ref || '-'} limit={40} className="text-white" /></TableCell>
+                <TableCell>
+                  {getMatchedLink(item) ? (
+                    <Tooltip content={<div className="max-w-[420px] break-all text-xs">{getMatchedLink(item)}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
+                      <a href={getMatchedLink(item)} target="_blank" rel="noreferrer" className="block truncate font-mono text-[12px] text-white hover:text-apple-blue-light" title={getMatchedLink(item)}>
+                        {truncateTableText(getMatchedLink(item), 44)}
+                      </a>
+                    </Tooltip>
+                  ) : (
+                    <span className="text-apple-text-tertiary">-</span>
+                  )}
+                </TableCell>
+                <TableCell><MonoCell value={item.rule_id || '-'} limit={24} className="text-white" /></TableCell>
+                <TableCell><TextCell value={item.title || '-'} limit={34} className="text-white" /></TableCell>
                 <TableCell>
                   <Chip size="sm" variant="flat" color={severityColor(item.severity)} classNames={{ base: 'border-0 px-1 font-black uppercase tracking-[0.12em]' }}>
                     {item.severity || '-'}
@@ -530,31 +532,28 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
                 </TableCell>
                 <TableCell>
                   {item.task_id ? (
-                    <Button
-                      size="sm"
-                      variant="light"
-                      className="h-8 min-w-0 rounded-lg px-3 text-[12px] font-bold text-apple-blue-light hover:bg-apple-blue/10 hover:text-white"
-                      onPress={() => navigate(`/tasks/${item.task_id}`)}
+                    <button
+                      type="button"
+                      className="block w-full text-left transition-colors hover:text-white"
+                      onClick={() => navigate(`/tasks/${item.task_id}`)}
                     >
-                      查看任务
-                    </Button>
+                      <TextCell value={getTaskSummary(item)} limit={30} className="text-apple-blue-light" />
+                    </button>
                   ) : (
                     <span className="text-apple-text-tertiary">-</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <ActionCell className="flex-wrap">
                     <Button size="sm" variant="flat" className="rounded-xl bg-white/6 font-bold text-white hover:bg-white/10" onPress={() => setSelectedItem(item)}>
                       查看详情
                     </Button>
                     <Button size="sm" color="danger" variant="flat" isDisabled={!canDeleteFinding} className="rounded-xl font-bold" onPress={() => setPendingDeleteItem(item)}>
                       删除
                     </Button>
-                  </div>
+                  </ActionCell>
                 </TableCell>
-                <TableCell>
-                  <span className="font-mono text-[12px] text-apple-text-secondary">{formatDateTime(item.created_at)}</span>
-                </TableCell>
+                <TableCell><TimeCell value={item.created_at} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
