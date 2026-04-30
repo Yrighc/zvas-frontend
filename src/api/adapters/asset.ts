@@ -119,7 +119,7 @@ export interface PoolAssetPortDetailVM {
   status: string
 }
 
-function normalizeDetailText(value: unknown) {
+function normalizeDetailText(value: unknown): string {
   if (Array.isArray(value)) {
     const text = value
       .map((item) => normalizeDetailText(item))
