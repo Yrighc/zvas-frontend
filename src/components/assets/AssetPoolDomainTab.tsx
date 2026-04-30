@@ -3,6 +3,11 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagina
 import { MagnifyingGlassIcon, ArrowPathIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import { useAssetPoolAssets, useAssetPoolAssetDetail, type PoolAssetVM } from '@/api/adapters/asset'
+import { TableFrame } from '@/components/table/TableFrame'
+import { CountCell } from '@/components/table/cells/CountCell'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { StatusBadgeCell } from '@/components/table/cells/StatusBadgeCell'
+import { TextCell } from '@/components/table/cells/TextCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
 function sourceLabel(sourceSummary: Record<string, unknown>) {
@@ -12,6 +17,11 @@ function sourceLabel(sourceSummary: Record<string, unknown>) {
 
 function joinTags(systemFacets: string[], customTags: string[]) {
   return [...systemFacets, ...customTags].slice(0, 3)
+}
+
+function joinTagsSummary(systemFacets: string[], customTags: string[]) {
+  const values = joinTags(systemFacets, customTags)
+  return values.length ? values.join(', ') : '-'
 }
 
 function getRootDomain(item: PoolAssetVM) {
@@ -130,7 +140,7 @@ export function AssetPoolDomainTab({ poolId }: { poolId: string }) {
         </div>
       </div>
 
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto">
+      <TableFrame>
         <Table
           removeWrapper
           aria-label="Domain Assets Table"
@@ -168,20 +178,16 @@ export function AssetPoolDomainTab({ poolId }: { poolId: string }) {
                       <span className="text-apple-text-tertiary flex-shrink-0">
                         {isExpanded ? <ChevronDownIcon className="w-4 h-4" /> : <ChevronRightIcon className="w-4 h-4" />}
                       </span>
-                      <span className="font-mono text-[13px] text-apple-blue-light font-black break-all">{it.display_name}</span>
+                      <MonoCell value={it.display_name} limit={32} className="text-apple-blue-light" />
                     </div>
                   </TableCell>
-                  <TableCell><span className="text-[12px] font-mono text-apple-text-secondary">{getRootDomain(it)}</span></TableCell>
-                  <TableCell><span className="text-[12px] text-white font-bold">{it.detail?.ip_count ?? '-'}</span></TableCell>
-                  <TableCell><span className="text-[12px] text-white font-bold">{it.detail?.site_count ?? '-'}</span></TableCell>
-                  <TableCell><span className="text-[11px] font-bold text-apple-text-secondary uppercase tracking-wider">{sourceLabel(it.source_summary)}</span></TableCell>
-                  <TableCell><span className="text-[9px] bg-apple-green/10 border border-apple-green/20 text-apple-green-light px-2.5 py-1 rounded-full tracking-[0.2em] font-black uppercase">{it.confidence_level}</span></TableCell>
+                  <TableCell><MonoCell value={getRootDomain(it)} limit={20} /></TableCell>
+                  <TableCell><CountCell value={it.detail?.ip_count} className="text-white" /></TableCell>
+                  <TableCell><CountCell value={it.detail?.site_count} className="text-white" /></TableCell>
+                  <TableCell><TextCell value={sourceLabel(it.source_summary)} limit={16} className="text-apple-text-secondary" /></TableCell>
+                  <TableCell><StatusBadgeCell label={it.confidence_level || '-'} tone="success" /></TableCell>
                   <TableCell>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {joinTags(it.system_facets, it.custom_tags).map((tag) => (
-                        <span key={tag} className="text-[9px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{tag}</span>
-                      ))}
-                    </div>
+                    <TextCell value={joinTagsSummary(it.system_facets, it.custom_tags)} limit={22} className="text-apple-text-secondary" />
                   </TableCell>
                 </TableRow>
               )
@@ -220,7 +226,7 @@ export function AssetPoolDomainTab({ poolId }: { poolId: string }) {
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
     </div>
   )
 }

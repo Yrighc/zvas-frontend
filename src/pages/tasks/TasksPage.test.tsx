@@ -163,6 +163,7 @@ describe('TasksPage', () => {
       </MemoryRouter>,
     )
 
+    expect(screen.getByText('弱扫任务')).toBeInTheDocument()
     const row = screen.getByText('弱扫任务').closest('tr')
     expect(row).not.toBeNull()
 

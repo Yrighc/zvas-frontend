@@ -3,6 +3,10 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagina
 import { ArrowDownTrayIcon, ArrowPathIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline'
 
 import { downloadAssetPoolVulnerabilityReport, useAssetPoolReports } from '@/api/adapters/asset'
+import { TableFrame } from '@/components/table/TableFrame'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
@@ -21,13 +25,6 @@ function statusColor(status: string): 'default' | 'primary' | 'success' | 'warni
     default:
       return 'default'
   }
-}
-
-function formatTime(value?: string): string {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
 function scopeLabel(scopeType: string, scopeID: string): string {
@@ -131,7 +128,7 @@ export function AssetPoolReportsTab({ poolId }: { poolId: string }) {
         </div>
       </div>
 
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
+      <TableFrame className="scrollbar-hide custom-scrollbar md:scrollbar-default">
         <Table 
           removeWrapper 
           aria-label="Reports Table" 
@@ -162,13 +159,13 @@ export function AssetPoolReportsTab({ poolId }: { poolId: string }) {
             {items.map((it) => (
               <TableRow key={it.id}>
                 <TableCell>
-                  <span className="font-bold text-[14px] text-white tracking-tight leading-tight block truncate">{reportNameLabel(it.name, it.scope_type)}</span>
+                  <TextCell value={reportNameLabel(it.name, it.scope_type)} limit={38} className="text-white" />
                 </TableCell>
                 <TableCell>
-                  <span className="text-[10px] font-black tracking-widest text-apple-text-secondary uppercase bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{scopeLabel(it.scope_type, it.scope_id)}</span>
+                  <TextCell value={scopeLabel(it.scope_type, it.scope_id)} limit={20} className="text-apple-text-secondary" />
                 </TableCell>
                 <TableCell>
-                  <span className="font-mono text-[13px] text-white font-bold tracking-tight truncate block">{it.scope_name || it.scope_id}</span>
+                  <MonoCell value={it.scope_name || it.scope_id} limit={28} className="text-white" />
                 </TableCell>
                 <TableCell>
                   <Chip size="sm" variant="flat" color={statusColor(it.status)} classNames={{ base: 'border-0 font-black tracking-[0.1em] uppercase px-1' }}>
@@ -176,9 +173,8 @@ export function AssetPoolReportsTab({ poolId }: { poolId: string }) {
                   </Chip>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[11px] font-semibold text-apple-text-secondary font-mono tracking-tighter uppercase">{formatTime(it.created_at).split(' ')[0]}</span>
-                    <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60">{formatTime(it.created_at).split(' ')[1]}</span>
+                  <div className="flex justify-end">
+                    <TimeCell value={it.created_at} />
                   </div>
                 </TableCell>
               </TableRow>
@@ -205,7 +201,7 @@ export function AssetPoolReportsTab({ poolId }: { poolId: string }) {
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
     </div>
   )
 }

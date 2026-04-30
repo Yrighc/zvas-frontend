@@ -33,14 +33,18 @@ import { CreateAssetPoolModal } from '@/components/assets/CreateAssetPoolModal'
 import { ManualInputModal } from '@/components/assets/ManualInputModal'
 import { FileImportModal } from '@/components/assets/FileImportModal'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { TableFrame } from '@/components/table/TableFrame'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { CountCell } from '@/components/table/cells/CountCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
-function formatDateTime(isoStr?: string) {
-  if (!isoStr) return '-'
-  const d = new Date(isoStr)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+function summarizeTags(tags?: string[]) {
+  if (!tags || tags.length === 0) return '-'
+  return tags.join(', ')
 }
 
 export function AssetPoolsPage() {
@@ -235,7 +239,7 @@ export function AssetPoolsPage() {
           <p className="font-bold">库表游标已探底 (NULL_PAYLOAD)</p>
         </div>
       ) : (
-        <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto">
+        <TableFrame>
           <Table
             aria-label="Asset pools advanced table"
             layout="fixed"
@@ -266,67 +270,56 @@ export function AssetPoolsPage() {
                 return (
                   <TableRow key={pool.id} className="cursor-pointer" onClick={() => navigate(`/assets/${pool.id}`)}>
                     <TableCell>
-                      <div className="flex items-center gap-2 max-w-[200px]">
-                        <span className="text-base font-bold text-white tracking-tight leading-tight truncate">{pool.name}</span>
+                      <TextCell value={pool.name || '-'} limit={24} className="text-white" />
+                    </TableCell>
+                    <TableCell>
+                      <TextCell value={pool.description || '-'} limit={30} className="text-apple-text-secondary" />
+                    </TableCell>
+                    <TableCell>
+                      <TextCell value={summarizeTags(pool.tags)} limit={26} className="text-apple-text-secondary" />
+                    </TableCell>
+                    <TableCell>
+                      <CountCell value={pool.asset_count} className="text-apple-blue-light" />
+                    </TableCell>
+                    <TableCell>
+                      <TextCell value="—" className="text-apple-blue-light/50" />
+                    </TableCell>
+                    <TableCell>
+                      <TextCell value="—" className="text-apple-blue-light/50" />
+                    </TableCell>
+                    <TableCell>
+                      <CountCell value={pool.task_count ?? 0} />
+                    </TableCell>
+                    <TableCell>
+                      <CountCell value={pool.finding_count ?? 0} className={pool.finding_count && pool.finding_count > 0 ? 'text-apple-red-light' : 'text-apple-text-tertiary opacity-40'} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
+                        <TimeCell value={pool.updated_at || pool.created_at} />
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs text-apple-text-secondary whitespace-normal overflow-hidden line-clamp-2 max-w-[140px] font-medium leading-relaxed">
-                        {pool.description || '-'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1.5">
-                        {(!pool.tags || pool.tags.length === 0) ? <span className="text-[10px] text-apple-text-tertiary italic">-</span> : pool.tags.map((t: string) => (
-                          <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-apple-text-secondary text-[10px] font-black uppercase tracking-wider">
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-apple-blue-light text-[14px] font-black drop-shadow-[0_0_8px_rgba(0,113,227,0.3)]">{pool.asset_count ?? '-'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-apple-blue-light/50 text-[14px] font-bold">—</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-apple-blue-light/50 text-[14px] font-bold">—</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-apple-text-secondary text-[14px] font-black">{pool.task_count ?? 0}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`font-mono text-[14px] font-black ${pool.finding_count && pool.finding_count > 0 ? 'text-apple-red-light drop-shadow-[0_0_8px_rgba(255,59,48,0.5)]' : 'text-apple-text-tertiary opacity-40'}`}>
-                        {pool.finding_count ?? 0}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col items-end">
-                        <span className="text-[11px] font-semibold text-apple-text-secondary font-mono tracking-tighter uppercase">{formatDateTime(pool.updated_at || pool.created_at).split(' ')[0]}</span>
-                        <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60">{formatDateTime(pool.updated_at || pool.created_at).split(' ')[1]}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end pr-2 gap-2" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          size="sm"
-                          variant="bordered"
-                          className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
-                          onPress={() => navigate(`/assets/${pool.id}`)}
-                        >
-                          详情
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="flat"
-                          color="danger"
-                          isDisabled={!canManagePools}
-                          className="rounded-full bg-apple-red/10 text-apple-red-light border border-apple-red/20 font-bold h-8 px-4"
-                          onPress={() => { setTargetPool(pool); setDeleteVisible(true) }}
-                        >
-                          删除
-                        </Button>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <ActionCell className="pr-2">
+                          <Button
+                            size="sm"
+                            variant="bordered"
+                            className="rounded-full border-white/10 text-apple-text-secondary hover:text-white hover:border-white/30 font-bold h-8 px-4"
+                            onPress={() => navigate(`/assets/${pool.id}`)}
+                          >
+                            详情
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="danger"
+                            isDisabled={!canManagePools}
+                            className="rounded-full bg-apple-red/10 text-apple-red-light border border-apple-red/20 font-bold h-8 px-4"
+                            onPress={() => { setTargetPool(pool); setDeleteVisible(true) }}
+                          >
+                            删除
+                          </Button>
+                        </ActionCell>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -357,7 +350,7 @@ export function AssetPoolsPage() {
               )}
             </div>
           )}
-        </div>
+        </TableFrame>
       )}
 
       {/* 底部溯源信息卡片 */}

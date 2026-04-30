@@ -16,12 +16,19 @@ import { useState } from 'react'
 import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 import { useReports } from '@/api/adapters/finding'
+import { TableFrame } from '@/components/table/TableFrame'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { StatusBadgeCell } from '@/components/table/cells/StatusBadgeCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 
-function formatDateTime(isoStr?: string) {
-  if (!isoStr) return '-'
-  const d = new Date(isoStr)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+function statusTone(status: string): 'neutral' | 'success' {
+  return status === 'generated' ? 'success' : 'neutral'
+}
+
+function buildScopeSummary(scopeType: string, scopeName: string): string {
+  return `@${scopeType}: ${scopeName || '-'}`
 }
 
 export function ReportsPage() {
@@ -81,7 +88,7 @@ export function ReportsPage() {
           </section>
 
           {/* 数据主体区 */}
-          <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
+          <TableFrame className="scrollbar-hide custom-scrollbar md:scrollbar-default">
             <Table
               aria-label="Report Analytics table"
               layout="fixed"
@@ -111,30 +118,19 @@ export function ReportsPage() {
                 {items.map((rpt) => (
                   <TableRow key={rpt.id}>
                     <TableCell>
-                      <span className="text-sm font-bold text-white tracking-tight truncate block">{rpt.name}</span>
+                      <TextCell value={rpt.name || '-'} limit={34} className="text-white" />
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-apple-text-secondary text-[10px] font-black uppercase tracking-wider">
-                        @{rpt.scope_type}: {rpt.scope_name}
-                      </span>
+                      <TextCell value={buildScopeSummary(rpt.scope_type, rpt.scope_name)} limit={32} className="text-apple-text-secondary" />
                     </TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${rpt.status === 'generated'
-                        ? 'border-apple-green/40 text-apple-green-light bg-apple-green/10'
-                        : 'border-white/20 text-apple-text-secondary bg-white/5'
-                        }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${rpt.status === 'generated' ? 'bg-apple-green-light' : 'bg-apple-text-tertiary'}`} />
-                        {rpt.status}
-                      </span>
+                      <StatusBadgeCell label={rpt.status} tone={statusTone(rpt.status)} />
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-apple-text-secondary font-mono tracking-tighter">{formatDateTime(rpt.created_at).split(' ')[0]}</span>
-                        <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60">{formatDateTime(rpt.created_at).split(' ')[1]}</span>
-                      </div>
+                      <TimeCell value={rpt.created_at} />
                     </TableCell>
                     <TableCell>
-                      <div className="flex justify-end pr-2">
+                      <ActionCell>
                         <Button
                           size="sm"
                           variant="bordered"
@@ -142,13 +138,13 @@ export function ReportsPage() {
                         >
                           下载
                         </Button>
-                      </div>
+                      </ActionCell>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </TableFrame>
 
           {/* 分页区 */}
           {total > 0 && (

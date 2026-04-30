@@ -38,6 +38,11 @@ import {
   type CreateUserPayload,
   type UserView,
 } from '@/api/adapters/user'
+import { TableFrame } from '@/components/table/TableFrame'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { StatusBadgeCell } from '@/components/table/cells/StatusBadgeCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
@@ -47,6 +52,15 @@ interface CreateUserDraft {
   displayName: string
   password: string
   roleCodes: string[]
+}
+
+function buildUserSummary(record: UserView) {
+  return record.displayName || record.username
+}
+
+function buildRoleSummary(record: UserView) {
+  if (!record.roles.length) return '-'
+  return record.roles.map((role) => role.name).join(', ')
 }
 
 /**
@@ -356,7 +370,7 @@ export function UserManagementPage() {
           <p className="font-bold">暂无有效载荷数据 (NULL_PAYLOAD)</p>
         </div>
       ) : (
-        <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
+        <TableFrame className="scrollbar-hide custom-scrollbar md:scrollbar-default">
           <Table
             aria-label="User identity table"
             layout="fixed"
@@ -383,47 +397,26 @@ export function UserManagementPage() {
               {filteredItems.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-base font-bold text-white tracking-tight leading-tight">{record.displayName}</span>
-                      <span className="text-[11px] text-apple-text-tertiary font-mono tracking-tighter uppercase opacity-60">{record.username}</span>
-                    </div>
+                    <TextCell value={buildUserSummary(record)} limit={30} className="text-white" />
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1.5">
-                      {record.roles.map((role) => (
-                        <span key={`${record.id}-${role.code}`} className="inline-flex items-center px-2 py-0.5 rounded-full bg-apple-blue/10 border border-apple-blue/30 text-apple-blue-light text-[10px] font-black uppercase tracking-wider">
-                          {role.name}
-                        </span>
-                      ))}
-                    </div>
+                    <TextCell value={buildRoleSummary(record)} limit={28} className="text-apple-blue-light" />
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${record.status === 'active'
-                      ? 'border-apple-green/40 text-apple-green-light bg-apple-green/10'
-                      : 'border-apple-red/40 text-apple-red-light bg-apple-red/10'
-                      }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${record.status === 'active' ? 'bg-apple-green-light' : 'bg-apple-red-light'}`} />
-                      {record.status === 'active' ? '在线' : '禁用'}
-                    </span>
+                    <StatusBadgeCell label={record.status === 'active' ? '在线' : '禁用'} tone={record.status === 'active' ? 'success' : 'danger'} />
                   </TableCell>
                   <TableCell>
-                    <span className={`text-[10px] font-black tracking-widest uppercase py-1 px-2 rounded-md ${record.isBuiltin ? 'text-apple-blue-light bg-white/5 border border-white/10' : 'text-apple-text-tertiary border border-transparent'
-                      }`}>
-                      {record.isBuiltin ? '核心预置' : '普通成员'}
-                    </span>
+                    <TextCell value={record.isBuiltin ? '核心预置' : '普通成员'} limit={12} className={record.isBuiltin ? 'text-apple-blue-light' : 'text-apple-text-tertiary'} />
                   </TableCell>
                   <TableCell>
                     {record.lastLoginAt ? (
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-apple-text-secondary">{formatDateTime(record.lastLoginAt)}</span>
-                        <span className="text-[10px] text-apple-text-tertiary uppercase tracking-tighter">会话同步</span>
-                      </div>
+                      <TimeCell value={record.lastLoginAt} />
                     ) : (
                       <span className="text-[11px] text-apple-text-tertiary opacity-40 italic">从未初始化</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center justify-end gap-2">
+                    <ActionCell>
                       <Button
                         size="sm"
                         variant="bordered"
@@ -468,7 +461,7 @@ export function UserManagementPage() {
                       >
                         权限
                       </Button>
-                    </div>
+                    </ActionCell>
                   </TableCell>
                 </TableRow>
               ))}
@@ -495,7 +488,7 @@ export function UserManagementPage() {
               />
             </div>
           )}
-        </div>
+        </TableFrame>
       )}
 
       {usersQuery.data && (

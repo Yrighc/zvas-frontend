@@ -21,14 +21,31 @@ import { useTasks, usePauseTask, useResumeTask, useStopTask, useDeleteTask, getT
 import { useAssetPools } from '@/api/adapters/asset'
 import { useTaskRoutes, getRouteActiveLabel, mapStageLabels } from '@/api/adapters/route'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
+import { TableFrame } from '@/components/table/TableFrame'
+import { ActionCell } from '@/components/table/cells/ActionCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 
-function formatDateTime(isoStr?: string) {
-  if (!isoStr) return '-'
-  return new Date(isoStr).toLocaleString()
+function buildTaskRouteSummary(
+  activeRouteLabel: string,
+  activeGroup: string,
+  blockedReason: string,
+  planLabels: string[],
+) {
+  if (blockedReason) {
+    return `${blockedReason}${activeRouteLabel ? ` · ${activeRouteLabel}` : ''}`
+  }
+  if (activeRouteLabel && activeGroup) {
+    return `${activeRouteLabel} · ${activeGroup}`
+  }
+  if (activeRouteLabel) {
+    return activeRouteLabel
+  }
+  return planLabels.length > 0 ? planLabels.join(' • ') : '—'
 }
 
 export function TasksPage() {
@@ -132,7 +149,7 @@ export function TasksPage() {
         </Button>
       </section>
 
-      <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-x-auto">
+      <TableFrame className="rounded-xl">
         <Table
           aria-label="Tasks table"
           layout="fixed"
@@ -163,6 +180,12 @@ export function TasksPage() {
               const isTerminal = isTerminalTaskStatus(task.status)
               const activeRouteLabel = task.active_route_code ? getRouteActiveLabel(routesData, task.active_route_code) : ''
               const planLabels = mapStageLabels(routesData, task.route_plan.length > 0 ? task.route_plan : task.stage_plan)
+              const routeSummary = buildTaskRouteSummary(
+                activeRouteLabel,
+                task.active_group ? getActiveGroupLabel(task.active_group) : '',
+                !isTerminal && task.blocked_reason ? getBlockedReasonLabel(task.blocked_reason) : '',
+                planLabels,
+              )
 
               return (
                 <TableRow
@@ -171,47 +194,34 @@ export function TasksPage() {
                   onClick={() => navigate(getTaskPreferredDetailPath(task))}
                 >
                   <TableCell>
-                    <span className="text-sm font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis block tracking-tight">{task.name || 'Untitled Task'}</span>
+                    <TextCell value={task.name || 'Untitled Task'} limit={26} className="text-white" />
                   </TableCell>
                   <TableCell>
                     <span className="text-[10px] bg-white/10 border border-white/10 text-apple-text-secondary px-2 py-0.5 rounded font-black font-mono uppercase tracking-widest leading-none">{getTemplateCodeLabel(task.template_code)}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs text-white font-bold truncate tracking-tight block" title={task.asset_pool_name}>{task.asset_pool_name || '-'}</span>
+                    <TextCell value={task.asset_pool_name || '-'} limit={24} className="text-white" />
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex items-center">
                       <Chip size="sm" variant="flat" color={statusInfo.color} classNames={{ base: 'border-0 font-black tracking-[0.1em] uppercase px-1.5 py-0.5 rounded-md' }}>
                         {statusInfo.label}
                       </Chip>
-                      {!isTerminal && activeRouteLabel && (
-                        <span className="text-[10px] text-apple-blue-light font-bold">{activeRouteLabel}</span>
-                      )}
-                      {!isTerminal && task.active_group && (
-                        <span className="text-[9px] text-apple-text-tertiary font-bold">{getActiveGroupLabel(task.active_group)}</span>
-                      )}
-                      {!isTerminal && task.blocked_reason && (
-                        <span className="text-[10px] text-apple-amber font-bold">{getBlockedReasonLabel(task.blocked_reason)}</span>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-[10px] truncate block w-full bg-white/5 border border-white/10 px-2 py-0.5 rounded uppercase tracking-wider text-apple-text-tertiary font-black opacity-80" title={planLabels.join(' • ')}>
-                      {planLabels.length > 0 ? planLabels.join(' • ') : '—'}
-                    </span>
+                    <TextCell value={routeSummary} limit={34} className="text-apple-text-tertiary" />
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs text-apple-text-tertiary truncate block font-medium underline underline-offset-4 decoration-white/10">{task.created_by || 'SYSTEM_DAEMON'}</span>
+                    <TextCell value={task.created_by || 'SYSTEM_DAEMON'} limit={18} className="text-apple-text-tertiary" />
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col items-start leading-tight">
-                      <span className="text-[11px] font-semibold text-apple-text-secondary font-mono tracking-tighter uppercase">{formatDateTime(task.updated_at || task.created_at).split(',')[0]}</span>
-                      <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60 uppercase">{formatDateTime(task.updated_at || task.created_at).split(',')[1]}</span>
-                    </div>
+                    <TimeCell value={task.updated_at || task.created_at} />
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2 pr-2" onClick={(event) => event.stopPropagation()}>
-                      <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5 mr-2">
+                    <div onClick={(event) => event.stopPropagation()}>
+                      <ActionCell className="pr-2">
+                        <div className="mr-2 flex items-center gap-1 rounded-lg bg-white/5 p-0.5">
                         {statusInfo.canPause && (
                           <Button aria-label="暂停任务" isIconOnly size="sm" variant="light" isDisabled={!canControlTask} className="h-7 w-7 min-w-0 text-apple-warning hover:bg-apple-warning/20" onPress={() => pauseTask.mutate(task.id)}>
                             <PauseIcon className="w-4 h-4" />
@@ -227,8 +237,8 @@ export function TasksPage() {
                             <StopIcon className="w-4 h-4" />
                           </Button>
                         )}
-                      </div>
-                      <Button
+                        </div>
+                        <Button
                         aria-label="删除任务"
                         isIconOnly
                         size="sm"
@@ -241,6 +251,7 @@ export function TasksPage() {
                       >
                         <TrashIcon className="w-4 h-4" />
                       </Button>
+                      </ActionCell>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -267,7 +278,7 @@ export function TasksPage() {
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
 
       <ConfirmModal
         isOpen={deleteVisible}

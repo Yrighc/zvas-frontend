@@ -3,14 +3,13 @@ import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagina
 import { DocumentPlusIcon, ArrowDownTrayIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 import { useAssetPoolInputs } from '@/api/adapters/asset'
+import { TableFrame } from '@/components/table/TableFrame'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { StatusBadgeCell } from '@/components/table/cells/StatusBadgeCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
 import { ManualInputModal } from './ManualInputModal'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
-
-function formatDateTime(value?: string) {
-  if (!value) return '-'
-  const d = new Date(value)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
 
 export function AssetPoolInputsTab({ poolId }: { poolId: string }) {
   const [page, setPage] = useState(1)
@@ -60,7 +59,7 @@ export function AssetPoolInputsTab({ poolId }: { poolId: string }) {
         </div>
       </div>
 
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default custom-scrollbar">
+      <TableFrame className="scrollbar-hide custom-scrollbar md:scrollbar-default">
         <Table 
           removeWrapper 
           aria-label="Input Records Table" 
@@ -93,33 +92,26 @@ export function AssetPoolInputsTab({ poolId }: { poolId: string }) {
             {items.map((it) => (
               <TableRow key={it.id}>
                 <TableCell>
-                  <span className="font-mono text-[13px] text-apple-blue-light font-black tracking-tight break-all drop-shadow-[0_0_8px_rgba(0,113,227,0.3)]">{it.raw_value}</span>
+                  <MonoCell value={it.raw_value} limit={44} className="text-apple-blue-light" />
                 </TableCell>
                 <TableCell>
-                  <span className="font-mono text-[13px] text-white font-bold break-all">{it.normalized_value}</span>
+                  <MonoCell value={it.normalized_value} limit={38} className="text-white" />
                 </TableCell>
                 <TableCell>
-                  <span className="text-[9px] border border-white/10 bg-white/5 text-apple-text-secondary px-2.5 py-1 rounded-full font-black tracking-[0.2em] uppercase">
-                    {it.parsed_type}
-                  </span>
+                  <StatusBadgeCell label={it.parsed_type || '-'} tone="neutral" />
                 </TableCell>
                 <TableCell>
-                  <span className="text-[9px] border border-apple-blue/20 bg-apple-blue/10 text-apple-blue-light px-2.5 py-1 rounded-full font-black tracking-[0.2em] uppercase">
-                    {it.ingest_type}
-                  </span>
+                  <StatusBadgeCell label={it.ingest_type || '-'} tone="info" />
                 </TableCell>
                 <TableCell>
-                  <span className="text-[11px] font-bold text-apple-text-secondary uppercase tracking-wider">{it.source_type}</span>
+                  <TextCell value={it.source_type || '-'} limit={18} className="text-apple-text-secondary" />
                 </TableCell>
                 <TableCell>
-                  <span className={`text-[9px] px-2.5 py-1 rounded-full font-black tracking-[0.2em] border uppercase ${it.status === 'processed' ? 'border-apple-green/20 bg-apple-green/10 text-apple-green-light' : 'border-white/10 bg-white/5 text-apple-text-tertiary'}`}>
-                    {it.status}
-                  </span>
+                  <StatusBadgeCell label={it.status || '-'} tone={it.status === 'processed' ? 'success' : 'neutral'} />
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[11px] font-semibold text-apple-text-secondary font-mono tracking-tighter uppercase">{formatDateTime(it.created_at).split(' ')[0]}</span>
-                    <span className="text-[11px] font-semibold text-apple-text-tertiary font-mono tracking-tighter opacity-60">{formatDateTime(it.created_at).split(' ')[1]}</span>
+                  <div className="flex justify-end">
+                    <TimeCell value={it.created_at} />
                   </div>
                 </TableCell>
               </TableRow>
@@ -146,10 +138,9 @@ export function AssetPoolInputsTab({ poolId }: { poolId: string }) {
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
 
       <ManualInputModal isOpen={manualVisible} onClose={() => setManualVisible(false)} defaultPoolId={poolId} />
     </div>
   )
 }
-
