@@ -42,18 +42,12 @@ import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
 
-function summarizeTags(tags?: string[]) {
-  if (!tags || tags.length === 0) return '-'
-  return tags.join(', ')
-}
-
 export function AssetPoolsPage() {
   const navigate = useNavigate()
   const currentUser = useAuthStore((state) => state.currentUser)
   const [page, setPage] = useState(1)
   const [pageSize] = useState(20)
   const [keyword, setKeyword] = useState('')
-  const [tagFilter, setTagFilter] = useState('')
   
   // Modals state
   const [createVisible, setCreateVisible] = useState(false)
@@ -70,7 +64,6 @@ export function AssetPoolsPage() {
     page,
     page_size: pageSize,
     keyword: keyword || undefined,
-    tag: tagFilter || undefined,
   })
 
   const items = poolsQuery.data?.data || []
@@ -131,25 +124,14 @@ export function AssetPoolsPage() {
 
       {/* 操作与搜索胶囊栏 */}
       <section className="flex flex-col md:flex-row items-center gap-4 w-full">
-        <div className="flex flex-col md:flex-row flex-1 w-full gap-4 relative">
+        <div className="flex flex-1 w-full relative">
           <Input
             isClearable
             value={keyword}
-            placeholder="搜寻资产池名称..."
+            placeholder="搜索目标名称..."
             onValueChange={(val) => { setKeyword(val); setPage(1) }}
             variant="flat"
             startContent={<MagnifyingGlassIcon className="w-5 h-5 text-apple-text-tertiary" />}
-            classNames={{
-              inputWrapper: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md",
-              input: "text-sm font-medium placeholder:text-apple-text-tertiary",
-            }}
-          />
-          <Input
-            isClearable
-            value={tagFilter}
-            placeholder="依照系统级 Tag 筛选 (如 external)..."
-            onValueChange={(val) => { setTagFilter(val); setPage(1) }}
-            variant="flat"
             classNames={{
               inputWrapper: "bg-apple-tertiary-bg/10 hover:bg-apple-tertiary-bg/20 transition-colors h-14 rounded-2xl border border-white/5 backdrop-blur-md",
               input: "text-sm font-medium placeholder:text-apple-text-tertiary",
@@ -246,20 +228,18 @@ export function AssetPoolsPage() {
             removeWrapper
             classNames={{
               ...APPLE_TABLE_CLASSES,
-              base: "p-4 min-w-[1240px]",
+              base: "p-4 min-w-[1100px]",
             }}
           >
             <TableHeader>
-              <TableColumn width={220} align="start">资产池单元</TableColumn>
-              <TableColumn width={160} align="start">边界定义</TableColumn>
-              <TableColumn width={160} align="start">汇编标签</TableColumn>
-              <TableColumn width={80} align="end">IP节点</TableColumn>
-              <TableColumn width={80} align="end">解析域名</TableColumn>
-              <TableColumn width={80} align="end">承载站点</TableColumn>
-              <TableColumn width={80} align="end">派发任务</TableColumn>
-              <TableColumn width={80} align="end">脆弱点</TableColumn>
-              <TableColumn width={140} align="end">上次编目</TableColumn>
-              <TableColumn width={160} align="end">流操作</TableColumn>
+              <TableColumn width={260} align="start">目标</TableColumn>
+              <TableColumn width={90} align="end">IP</TableColumn>
+              <TableColumn width={90} align="end">站点</TableColumn>
+              <TableColumn width={90} align="end">域名</TableColumn>
+              <TableColumn width={120} align="end">任务进程</TableColumn>
+              <TableColumn width={90} align="end">漏洞</TableColumn>
+              <TableColumn width={160} align="end">更新时间</TableColumn>
+              <TableColumn width={160} align="end">操作</TableColumn>
             </TableHeader>
             <TableBody
               emptyContent={<div className="h-40 flex items-center justify-center text-apple-text-tertiary font-bold">空图纸。核心系统需介入新建资产对象。</div>}
@@ -273,13 +253,7 @@ export function AssetPoolsPage() {
                       <TextCell value={pool.name || '-'} limit={24} className="text-white" />
                     </TableCell>
                     <TableCell>
-                      <TextCell value={pool.description || '-'} limit={30} className="text-apple-text-secondary" />
-                    </TableCell>
-                    <TableCell>
-                      <TextCell value={summarizeTags(pool.tags)} limit={26} className="text-apple-text-secondary" />
-                    </TableCell>
-                    <TableCell>
-                      <CountCell value={pool.asset_count} className="text-apple-blue-light" />
+                      <TextCell value="—" className="text-apple-blue-light/50" />
                     </TableCell>
                     <TableCell>
                       <TextCell value="—" className="text-apple-blue-light/50" />
