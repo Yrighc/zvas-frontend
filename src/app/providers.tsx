@@ -1,12 +1,21 @@
 import { HeroUIProvider } from '@heroui/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import type { PropsWithChildren } from 'react'
 
 import { getCurrentUser } from '@/api/adapters/auth'
 import { useAuthStore } from '@/store/auth'
 
 const THEME_KEY = 'zvas.console.theme'
+const AUTH_ME_STALE_TIME = 30_000
+const appQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+})
 
 // 在模块加载时初始化主题 class（@heroui/use-theme 读取 document.documentElement 的 class）
 function initTheme() {
@@ -26,22 +35,9 @@ initTheme()
  * 主题切换通过 @heroui/use-theme 的 useTheme() 在组件内完成。
  */
 export function AppProviders({ children }: PropsWithChildren) {
-  const queryClient = useMemo(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            refetchOnWindowFocus: false,
-            retry: 1,
-          },
-        },
-      }),
-    [],
-  )
-
   return (
     <HeroUIProvider>
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={appQueryClient}>
         <AuthBootstrap />
         {children}
       </QueryClientProvider>
@@ -66,7 +62,11 @@ function AuthBootstrap() {
 
       setHydrating(true)
       try {
-        const user = await getCurrentUser()
+        const user = await appQueryClient.fetchQuery({
+          queryKey: ['auth', 'me', token],
+          queryFn: getCurrentUser,
+          staleTime: AUTH_ME_STALE_TIME,
+        })
         if (!active) {
           return
         }

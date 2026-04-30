@@ -688,6 +688,7 @@ export function useAssetPoolDetail(id?: string) {
 export function useAssetPoolList(params: AssetPoolListParams) {
   return useQuery({
     queryKey: ['asset-pools', params],
+    staleTime: 30_000,
     queryFn: async () => {
       const res = await httpClient.get<{ data: any[]; pagination?: PaginationMeta }>('/asset-pools', { params })
       return {
