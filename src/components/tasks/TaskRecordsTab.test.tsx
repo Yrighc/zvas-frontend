@@ -98,12 +98,14 @@ describe("TaskRecordsTab", () => {
     const row = targetCell.closest("tr");
     expect(row).not.toBeNull();
 
-    const fullSummary =
-      "200 · Internal Admin Portal Dashboard With Very Long Title · https://example.internal/very/long/path";
-    const summary = within(row as HTMLTableRowElement).getByTitle(fullSummary);
+    const summary = within(row as HTMLTableRowElement).getByTitle(
+      "Internal Admin Portal Dashboard With Very Long Title",
+    );
     expect(summary.textContent).toBeTruthy();
-    expect(summary.textContent!.length).toBeLessThan(fullSummary.length);
-    expect(summary).toHaveTextContent("200 · Internal Admin Portal");
+    expect(summary.textContent!.length).toBeLessThan(
+      "Internal Admin Portal Dashboard With Very Long Title".length,
+    );
+    expect(summary).toHaveTextContent("Internal Admin Portal");
 
     expect(
       within(row as HTMLTableRowElement).getByRole("button", { name: "查看详情" }),

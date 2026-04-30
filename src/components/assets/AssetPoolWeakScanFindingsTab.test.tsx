@@ -95,7 +95,7 @@ describe('AssetPoolWeakScanFindingsTab', () => {
   it('renders the source task summary in the weak scan row', async () => {
     renderTab()
 
-    expect(await screen.findByText('弱点巡检 · task-weak-1')).toBeInTheDocument()
+    expect(await screen.findByText('弱点巡检')).toBeInTheDocument()
     expect(screen.getByText('登录页泄露')).toBeInTheDocument()
   })
 
@@ -103,7 +103,7 @@ describe('AssetPoolWeakScanFindingsTab', () => {
     const user = userEvent.setup()
     renderTab()
 
-    await user.click(await screen.findByText('弱点巡检 · task-weak-1'))
+    await user.click(await screen.findByText('弱点巡检'))
 
     expect(navigateMock).toHaveBeenCalledWith('/tasks/task-weak-1')
   })

@@ -141,19 +141,21 @@ function getHomepageIdentifySummary(item: TaskRecordVM) {
   const summary = parseHttpProbeSummary(summaryPayload);
   if (!summary) return getCompactSummary(item);
 
-  const parts = [
-    typeof summary.status_code === "number" && summary.status_code > 0
-      ? String(summary.status_code)
-      : "",
-    (summary.title || "").trim(),
-    (summary.site_url || item.target_key || "").trim(),
-  ].filter(Boolean);
-
-  if (parts.length === 0) {
-    return getCompactSummary(item);
+  const title = (summary.title || "").trim();
+  if (title) {
+    return title;
   }
 
-  return parts.join(" · ");
+  if (typeof summary.status_code === "number" && summary.status_code > 0) {
+    return `HTTP ${summary.status_code}`;
+  }
+
+  const probeLabel = getProbeStatusLabel(summary.probe_status);
+  if (probeLabel && probeLabel !== "-") {
+    return probeLabel;
+  }
+
+  return getCompactSummary(item);
 }
 
 function getMixedRecordSummary(item: TaskRecordVM) {

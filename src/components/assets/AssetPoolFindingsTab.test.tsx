@@ -88,7 +88,7 @@ describe('AssetPoolFindingsTab', () => {
   it('renders the source task summary in the table row', async () => {
     renderTab()
 
-    expect(await screen.findByText('周界扫描 · task-find-1')).toBeInTheDocument()
+    expect(await screen.findByText('周界扫描')).toBeInTheDocument()
     expect(screen.getByText('登录页暴露')).toBeInTheDocument()
   })
 
@@ -96,7 +96,7 @@ describe('AssetPoolFindingsTab', () => {
     const user = userEvent.setup()
     renderTab()
 
-    await user.click(await screen.findByText('周界扫描 · task-find-1'))
+    await user.click(await screen.findByText('周界扫描'))
 
     expect(navigateMock).toHaveBeenCalledWith('/tasks/task-find-1')
   })

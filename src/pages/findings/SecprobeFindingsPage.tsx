@@ -35,25 +35,8 @@ function firstNonEmptyText(...values: unknown[]): string {
   return ''
 }
 
-function buildTargetSummary(targetHost?: string, resolvedIP?: string): string {
-  const primary = firstNonEmptyText(targetHost, resolvedIP, '-')
-  if (resolvedIP && resolvedIP !== targetHost) {
-    return `${primary} · ${resolvedIP}`
-  }
-  return primary
-}
-
-function buildServiceSummary(service?: string, port?: number): string {
-  const label = service || '-'
-  return port && port > 0 ? `${label} · :${port}` : label
-}
-
 function buildTaskSummary(taskName?: string, taskID?: string): string {
-  const label = firstNonEmptyText(taskName, taskID, '-')
-  if (taskID && taskName && taskID !== taskName) {
-    return `${label} · ${taskID}`
-  }
-  return label
+  return firstNonEmptyText(taskName, taskID, '-')
 }
 
 export function SecprobeFindingsPage() {
@@ -163,11 +146,13 @@ export function SecprobeFindingsPage() {
           aria-label="Global secprobe findings table"
           layout="fixed"
           removeWrapper
-          classNames={{ ...APPLE_TABLE_CLASSES, base: 'p-4 min-w-[1280px]' }}
+          classNames={{ ...APPLE_TABLE_CLASSES, base: 'p-4 min-w-[1420px]' }}
         >
           <TableHeader>
             <TableColumn width={220}>目标主机</TableColumn>
+            <TableColumn width={150}>解析 IP</TableColumn>
             <TableColumn width={140}>服务</TableColumn>
+            <TableColumn width={100}>端口</TableColumn>
             <TableColumn width={140}>账号</TableColumn>
             <TableColumn width={120}>结果</TableColumn>
             <TableColumn width={220}>来源任务</TableColumn>
@@ -182,8 +167,10 @@ export function SecprobeFindingsPage() {
           >
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell><MonoCell value={buildTargetSummary(item.target_host, item.resolved_ip)} limit={32} className="text-apple-blue-light" /></TableCell>
-                <TableCell><TextCell value={buildServiceSummary(item.service, item.port)} limit={20} className="text-white" /></TableCell>
+                <TableCell><MonoCell value={item.target_host || '-'} limit={24} className="text-apple-blue-light" /></TableCell>
+                <TableCell><MonoCell value={item.resolved_ip || '-'} limit={18} className="text-apple-text-secondary" /></TableCell>
+                <TableCell><TextCell value={item.service || '-'} limit={16} className="text-white" /></TableCell>
+                <TableCell><MonoCell value={item.port && item.port > 0 ? String(item.port) : '-'} limit={8} className="text-apple-text-secondary" /></TableCell>
                 <TableCell><MonoCell value={item.username || '-'} limit={18} className="text-white" /></TableCell>
                 <TableCell><span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.18em] uppercase border ${item.success ? 'border-apple-red/40 text-apple-red-light bg-apple-red/10' : 'border-white/15 text-apple-text-secondary bg-white/5'}`}>{item.success ? '命中' : '未命中'}</span></TableCell>
                 <TableCell><TextCell value={buildTaskSummary(item.task_name, item.task_id)} limit={28} className="text-white" /></TableCell>

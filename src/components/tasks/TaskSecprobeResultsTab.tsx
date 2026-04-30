@@ -66,19 +66,6 @@ function firstNonEmptyText(...values: unknown[]): string {
   return ''
 }
 
-function buildTargetSummary(item: TaskSecprobeFindingVM): string {
-  const primary = firstNonEmptyText(item.target_host, item.resolved_ip, '-')
-  if (item.resolved_ip && item.resolved_ip !== item.target_host) {
-    return `${primary} · ${item.resolved_ip}`
-  }
-  return primary
-}
-
-function buildServiceSummary(item: TaskSecprobeFindingVM): string {
-  const service = item.service || '-'
-  return item.port > 0 ? `${service} · :${item.port}` : service
-}
-
 function renderSuccessChip(success: boolean) {
   return (
     <Chip
@@ -229,7 +216,7 @@ export function TaskSecprobeResultsTab({ taskId }: { taskId: string }) {
             <KeyIcon className="h-6 w-6 text-apple-blue-light drop-shadow-[0_0_8px_rgba(10,132,255,0.45)]" />
             <span>任务弱口令结果</span>
           </h3>
-          <p className="text-[13px] font-medium text-apple-text-tertiary">按 host + service 维度展示当前任务命中的 secprobe 结果，不再混入漏洞或弱点扫描列表。</p>
+          <p className="text-[13px] font-medium text-apple-text-tertiary">按目标主机、解析 IP、服务和端口拆列展示当前任务的 secprobe 结果，不再把多个主值塞进同一个单元格。</p>
         </div>
         <Button
           variant="flat"
@@ -322,13 +309,15 @@ export function TaskSecprobeResultsTab({ taskId }: { taskId: string }) {
           removeWrapper
           classNames={{
             ...APPLE_TABLE_CLASSES,
-            base: 'p-4 min-w-[1180px]',
+            base: 'p-4 min-w-[1320px]',
             tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
           }}
         >
           <TableHeader>
             <TableColumn width={220}>目标主机</TableColumn>
+            <TableColumn width={150}>解析 IP</TableColumn>
             <TableColumn width={140}>服务</TableColumn>
+            <TableColumn width={100}>端口</TableColumn>
             <TableColumn width={150}>账号</TableColumn>
             <TableColumn width={140}>密码</TableColumn>
             <TableColumn width={120}>结果</TableColumn>
@@ -344,10 +333,16 @@ export function TaskSecprobeResultsTab({ taskId }: { taskId: string }) {
             {items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <MonoCell value={buildTargetSummary(item)} limit={32} className="text-apple-blue-light" />
+                  <MonoCell value={item.target_host || '-'} limit={24} className="text-apple-blue-light" />
                 </TableCell>
                 <TableCell>
-                  <TextCell value={buildServiceSummary(item)} limit={20} className="text-white" />
+                  <MonoCell value={item.resolved_ip || '-'} limit={18} className="text-apple-text-secondary" />
+                </TableCell>
+                <TableCell>
+                  <TextCell value={item.service || '-'} limit={16} className="text-white" />
+                </TableCell>
+                <TableCell>
+                  <MonoCell value={item.port > 0 ? String(item.port) : '-'} limit={8} className="text-apple-text-secondary" />
                 </TableCell>
                 <TableCell><MonoCell value={item.username || '-'} limit={18} className="text-white" /></TableCell>
                 <TableCell><MonoCell value={item.password || '-'} limit={18} className="text-white" /></TableCell>

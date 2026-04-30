@@ -180,11 +180,7 @@ function formatWeakScanSourceLabel(source?: string): string {
 }
 
 function buildTaskSummary(item: AssetPoolWeakScanFindingVM): string {
-  const label = firstNonEmptyText(item.task_name, item.task_id, '-')
-  if (item.task_id && item.task_name && item.task_id !== item.task_name) {
-    return `${label} · ${item.task_id}`
-  }
-  return label
+  return firstNonEmptyText(item.task_name, item.task_id, '-')
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {

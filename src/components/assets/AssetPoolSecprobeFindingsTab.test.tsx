@@ -85,10 +85,12 @@ describe('AssetPoolSecprobeFindingsTab', () => {
   it('renders asset pool secprobe rows with source task and evidence', async () => {
     renderTab()
 
-    expect(await screen.findByText('rdp-1 · 198.51.100.8')).toBeInTheDocument()
-    expect(screen.getByText('rdp · :3389')).toBeInTheDocument()
+    expect(await screen.findByText('rdp-1')).toBeInTheDocument()
+    expect(screen.getByText('198.51.100.8')).toBeInTheDocument()
+    expect(screen.getByText('rdp')).toBeInTheDocument()
+    expect(screen.getByText('3389')).toBeInTheDocument()
     expect(screen.getByText('administrator')).toBeInTheDocument()
-    expect(screen.getByText('RDP 命中 · task-secprobe-1')).toBeInTheDocument()
+    expect(screen.getByText('RDP 命中')).toBeInTheDocument()
     expect(screen.getByText('RDP credential accepted')).toBeInTheDocument()
   })
 

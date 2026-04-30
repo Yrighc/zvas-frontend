@@ -74,8 +74,10 @@ describe('TaskSecprobeResultsTab', () => {
   it('renders secprobe rows with host service and credential fields', async () => {
     renderTab()
 
-    expect(await screen.findByText('gw-1 · 192.0.2.10')).toBeInTheDocument()
-    expect(screen.getByText('ssh · :22')).toBeInTheDocument()
+    expect(await screen.findByText('gw-1')).toBeInTheDocument()
+    expect(screen.getByText('192.0.2.10')).toBeInTheDocument()
+    expect(screen.getByText('ssh')).toBeInTheDocument()
+    expect(screen.getByText('22')).toBeInTheDocument()
     expect(screen.getAllByText('root')).toHaveLength(2)
     expect(screen.getByText('命中')).toBeInTheDocument()
   })

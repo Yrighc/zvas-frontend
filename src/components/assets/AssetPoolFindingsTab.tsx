@@ -156,11 +156,7 @@ function getMatchedLink(item: FindingSummaryView): string {
 }
 
 function getTaskSummary(item: FindingSummaryView): string {
-  const label = firstNonEmptyText(item.task_name, item.task_id, '-')
-  if (item.task_id && item.task_name && item.task_id !== item.task_name) {
-    return `${label} · ${item.task_id}`
-  }
-  return label
+  return firstNonEmptyText(item.task_name, item.task_id, '-')
 }
 
 function getDescription(item: FindingSummaryView): string {

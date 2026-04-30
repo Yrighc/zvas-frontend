@@ -36,20 +36,11 @@ function firstNonEmptyText(...values: unknown[]): string {
 }
 
 function buildRuleSummary(ruleName?: string, ruleID?: string, fallbackID?: string): string {
-  const label = firstNonEmptyText(ruleName, ruleID, fallbackID, '-')
-  const secondary = firstNonEmptyText(ruleID, fallbackID)
-  if (secondary && secondary !== label) {
-    return `${label} · ${secondary}`
-  }
-  return label
+  return firstNonEmptyText(ruleName, ruleID, fallbackID, '-')
 }
 
-function buildTaskSummary(taskName?: string, taskID?: string, assetPoolName?: string): string {
-  const label = firstNonEmptyText(taskName, taskID, '-')
-  if (assetPoolName && assetPoolName !== label) {
-    return `${label} · ${assetPoolName}`
-  }
-  return label
+function buildTaskSummary(taskName?: string, taskID?: string): string {
+  return firstNonEmptyText(taskName, taskID, '-')
 }
 
 function severityClass(severity: string) {
@@ -160,17 +151,19 @@ export function WeakScanFindingsPage() {
           removeWrapper
           classNames={{
             ...APPLE_TABLE_CLASSES,
-            base: 'p-4 min-w-[1200px]',
+            base: 'p-4 min-w-[1400px]',
             tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
           }}
         >
           <TableHeader>
+            <TableColumn width={180}>规则 ID</TableColumn>
             <TableColumn width={240}>规则名称</TableColumn>
             <TableColumn width={120}>等级</TableColumn>
             <TableColumn width={130}>状态</TableColumn>
             <TableColumn width={240}>目标</TableColumn>
             <TableColumn width={220}>影响地址</TableColumn>
             <TableColumn width={180}>来源任务</TableColumn>
+            <TableColumn width={200}>资产池</TableColumn>
             <TableColumn width={180}>最近命中时间</TableColumn>
             <TableColumn width={120} align="end">操作</TableColumn>
           </TableHeader>
@@ -181,6 +174,9 @@ export function WeakScanFindingsPage() {
           >
             {items.map((item) => (
               <TableRow key={item.id}>
+                <TableCell>
+                  <MonoCell value={item.rule_id || item.remote_vulnerability_id || item.finding_key || '-'} limit={22} className="text-apple-text-secondary" />
+                </TableCell>
                 <TableCell>
                   <TextCell value={buildRuleSummary(item.rule_name, item.rule_id, item.remote_vulnerability_id || item.finding_key)} limit={34} className="text-white" />
                 </TableCell>
@@ -199,7 +195,10 @@ export function WeakScanFindingsPage() {
                   <MonoCell value={item.affects_url || '-'} limit={34} />
                 </TableCell>
                 <TableCell>
-                  <TextCell value={buildTaskSummary(item.task_name, item.task_id, item.asset_pool_name)} limit={32} className="text-white" />
+                  <TextCell value={buildTaskSummary(item.task_name, item.task_id)} limit={32} className="text-white" />
+                </TableCell>
+                <TableCell>
+                  <TextCell value={item.asset_pool_name || '-'} limit={24} className="text-white" />
                 </TableCell>
                 <TableCell>
                   <TimeCell value={item.matched_at || item.updated_at} />

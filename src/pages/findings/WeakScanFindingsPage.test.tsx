@@ -111,8 +111,10 @@ describe('WeakScanFindingsPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: '全局弱点扫描结果' })).toBeInTheDocument()
-    expect(screen.getByText('登录页泄露 · rule-weak-1')).toBeInTheDocument()
-    expect(screen.getByText('Web 巡检 · 核心资产池')).toBeInTheDocument()
+    expect(screen.getByText('rule-weak-1')).toBeInTheDocument()
+    expect(screen.getByText('登录页泄露')).toBeInTheDocument()
+    expect(screen.getByText('Web 巡检')).toBeInTheDocument()
+    expect(screen.getAllByText('核心资产池').length).toBeGreaterThan(0)
     expect(screen.getByText('https://gw-1.example.com/login')).toBeInTheDocument()
   })
 

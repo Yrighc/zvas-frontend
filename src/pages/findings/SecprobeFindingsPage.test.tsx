@@ -101,9 +101,11 @@ describe('SecprobeFindingsPage', () => {
     renderPage()
 
     expect(await screen.findByRole('heading', { name: '全局弱口令结果' })).toBeInTheDocument()
-    expect(screen.getByText('gw-1 · 203.0.113.5')).toBeInTheDocument()
-    expect(screen.getByText('ssh · :22')).toBeInTheDocument()
-    expect(screen.getByText('SSH 巡检 · task-global-1')).toBeInTheDocument()
+    expect(screen.getByText('gw-1')).toBeInTheDocument()
+    expect(screen.getByText('203.0.113.5')).toBeInTheDocument()
+    expect(screen.getByText('ssh')).toBeInTheDocument()
+    expect(screen.getByText('22')).toBeInTheDocument()
+    expect(screen.getByText('SSH 巡检')).toBeInTheDocument()
     expect(screen.getAllByText('生产资产池').length).toBeGreaterThan(0)
   })
 
