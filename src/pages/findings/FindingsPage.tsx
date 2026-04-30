@@ -11,7 +11,6 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  Tooltip,
 } from '@heroui/react'
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState } from 'react'
@@ -19,22 +18,13 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAssetPools } from '@/api/adapters/asset'
 import { useFindings } from '@/api/adapters/finding'
-import { APPLE_TABLE_CLASSES } from '@/utils/theme'
+import { TableFrame } from '@/components/table/TableFrame'
+import { MonoCell } from '@/components/table/cells/MonoCell'
+import { TextCell } from '@/components/table/cells/TextCell'
+import { TimeCell } from '@/components/table/cells/TimeCell'
+import { TABLE_CLASS_NAMES } from '@/components/table/tableClassNames'
 
 const PAGE_SIZE = 20
-
-function formatDateTime(value?: string) {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
-}
-
-function truncateText(value: string, limit = 48) {
-  const text = value.trim()
-  if (!text) return '-'
-  return text.length > limit ? `${text.slice(0, limit)}...` : text
-}
 
 function severityClass(severity: string) {
   switch ((severity || '').toLowerCase()) {
@@ -135,15 +125,15 @@ export function FindingsPage() {
         </div>
       </section>
 
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto">
+      <TableFrame>
         <Table
           aria-label="Global findings table"
           layout="fixed"
           removeWrapper
           classNames={{
-            ...APPLE_TABLE_CLASSES,
+            ...TABLE_CLASS_NAMES,
             base: 'p-4 min-w-[1100px]',
-            tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
+            tr: `${TABLE_CLASS_NAMES.tr} cursor-default`,
           }}
         >
           <TableHeader>
@@ -165,10 +155,7 @@ export function FindingsPage() {
               return (
                 <TableRow key={item.finding_id}>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-sm font-semibold text-white">{item.title || '-'}</span>
-                      <span className="text-[11px] font-mono text-apple-text-tertiary">{truncateText(item.finding_id, 32)}</span>
-                    </div>
+                    <TextCell value={item.title || '-'} limit={48} className="font-semibold text-white" />
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.18em] uppercase border ${severityClass(item.severity)}`}>
@@ -176,21 +163,20 @@ export function FindingsPage() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Tooltip content={<div className="max-w-[420px] break-all text-xs">{target}</div>} classNames={{ content: 'border border-white/10 bg-apple-bg/95 px-3 py-2 text-white' }}>
-                      <span className="block truncate font-mono text-[12px] text-white">{target}</span>
-                    </Tooltip>
+                    <MonoCell value={target} limit={40} className="text-white" />
                   </TableCell>
                   <TableCell>
-                    <span className="block truncate font-mono text-[12px] text-apple-text-secondary">{item.rule_id || '-'}</span>
+                    <MonoCell value={item.rule_id || '-'} limit={28} />
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <span className="block truncate text-[12px] font-semibold text-white">{item.task_name || item.task_id || '-'}</span>
-                      <span className="block truncate text-[11px] text-apple-text-tertiary">{item.asset_pool_name || '-'}</span>
-                    </div>
+                    <TextCell
+                      value={[item.task_name || item.task_id || '-', item.asset_pool_name || '-'].join(' / ')}
+                      limit={42}
+                      className="font-semibold text-white"
+                    />
                   </TableCell>
                   <TableCell>
-                    <span className="text-[12px] font-mono text-apple-text-secondary">{formatDateTime(item.updated_at || item.created_at)}</span>
+                    <TimeCell value={item.updated_at || item.created_at} />
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end">
@@ -230,7 +216,7 @@ export function FindingsPage() {
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
     </div>
   )
 }

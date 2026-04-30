@@ -28,7 +28,14 @@ import {
   useAssetPoolAssets,
 } from "@/api/adapters/asset";
 import type { PoolAssetVM } from "@/api/adapters/asset";
-import { APPLE_TABLE_CLASSES } from "@/utils/theme";
+import { TableFrame } from "@/components/table/TableFrame";
+import { StatusBadgeCell } from "@/components/table/cells/StatusBadgeCell";
+import { TextCell } from "@/components/table/cells/TextCell";
+import { TimeCell } from "@/components/table/cells/TimeCell";
+import {
+  TABLE_CLASS_NAMES,
+  TABLE_TOOLTIP_CLASS_NAMES,
+} from "@/components/table/tableClassNames";
 
 function sourceLabel(sourceSummary: Record<string, unknown>) {
   const candidate = sourceSummary?.primary_source ?? sourceSummary?.source_type;
@@ -47,15 +54,6 @@ function firstNonEmptyText(...values: unknown[]): string {
     if (text) return text;
   }
   return "";
-}
-
-function formatDateTime(value?: string): string {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("zh-CN", {
-    hour12: false,
-  });
 }
 
 type ProbePayload = Record<string, unknown>;
@@ -91,68 +89,31 @@ function extractProbeDetail(item: PoolAssetVM) {
   };
 }
 
-function truncateText(value: string, limit = 32) {
-  const text = value.trim();
-  if (!text) return "-";
-  return text.length > limit ? `${text.slice(0, limit)}...` : text;
-}
-
 function fingerprintSummary(fingerprints: string[], limit = 2) {
   if (fingerprints.length === 0) return "";
   if (fingerprints.length <= limit) return fingerprints.join(", ");
   return `${fingerprints.slice(0, limit).join(", ")} +${fingerprints.length - limit}`;
 }
 
-function InlineTextCell({
-  value,
-  limit = 28,
-  mono = false,
-}: {
-  value: string;
-  limit?: number;
-  mono?: boolean;
-}) {
-  const text = value.trim();
-  if (!text)
-    return <span className="text-[12px] text-apple-text-tertiary">-</span>;
-  const content = (
-    <span
-      className={`${mono ? "font-mono" : ""} text-[12px] text-white font-medium block truncate`}
-    >
-      {truncateText(text, limit)}
-    </span>
-  );
-  return text.length > limit ? (
-    <Tooltip content={text}>{content}</Tooltip>
-  ) : (
-    content
-  );
-}
-
 function StatusBadge({ item }: { item: PoolAssetVM }) {
   const detail = extractProbeDetail(item);
   const status = detail.probeStatus;
   if (status === "alive") {
-    return (
-      <span className="inline-flex items-center rounded-full border border-apple-green/30 bg-apple-green/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-apple-green-light">
-        站点存活
-      </span>
-    );
+    return <StatusBadgeCell label="站点存活" tone="success" />;
   }
   if (status === "unreachable") {
     return (
-      <Tooltip content={detail.probeError || "无法确认细节"}>
-        <span className="inline-flex cursor-help items-center rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-apple-text-secondary">
-          站点不存活
+      <Tooltip
+        content={detail.probeError || "无法确认细节"}
+        classNames={TABLE_TOOLTIP_CLASS_NAMES}
+      >
+        <span className="inline-flex cursor-help">
+          <StatusBadgeCell label="站点不存活" tone="neutral" />
         </span>
       </Tooltip>
     );
   }
-  return (
-    <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
-      -
-    </span>
-  );
+  return <StatusBadgeCell label="-" tone="neutral" />;
 }
 
 function StatusCodeBadge({ code }: { code: number | null }) {
@@ -470,15 +431,15 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
         </div>
       </div>
 
-      <div className="custom-scrollbar overflow-x-auto rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl scrollbar-hide md:scrollbar-default">
+      <TableFrame className="custom-scrollbar scrollbar-hide md:scrollbar-default">
         <Table
           removeWrapper
           aria-label="Site Assets Table"
           layout="fixed"
           classNames={{
-            ...APPLE_TABLE_CLASSES,
+            ...TABLE_CLASS_NAMES,
             base: "min-w-[1240px] p-4",
-            tr: `${APPLE_TABLE_CLASSES.tr} cursor-default`,
+            tr: `${TABLE_CLASS_NAMES.tr} cursor-default`,
           }}
         >
           <TableHeader>
@@ -522,18 +483,21 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
                     <StatusCodeBadge code={detail.statusCode} />
                   </TableCell>
                   <TableCell>
-                    <InlineTextCell value={detail.title} limit={34} />
-                  </TableCell>
-                  <TableCell>
-                    <InlineTextCell
-                      value={fingerprintSummary(detail.fingerprints)}
-                      limit={26}
+                    <TextCell
+                      value={detail.title}
+                      limit={34}
+                      className="font-medium text-white"
                     />
                   </TableCell>
                   <TableCell>
-                    <span className="font-mono text-[12px] text-apple-text-secondary">
-                      {formatDateTime(it.created_at)}
-                    </span>
+                    <TextCell
+                      value={fingerprintSummary(detail.fingerprints)}
+                      limit={26}
+                      className="font-medium text-white"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TimeCell value={it.created_at} />
                   </TableCell>
                   <TableCell>
                     <Button
@@ -574,7 +538,7 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
 
       <SiteDetailDrawer
         item={selectedItem}

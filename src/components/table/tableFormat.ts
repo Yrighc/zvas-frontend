@@ -17,11 +17,11 @@ export function formatTableDateTime(value?: string): string {
   if (Number.isNaN(date.getTime())) return value;
 
   return [
-    date.getUTCFullYear(),
-    padDateTimePart(date.getUTCMonth() + 1),
-    padDateTimePart(date.getUTCDate()),
+    date.getFullYear(),
+    padDateTimePart(date.getMonth() + 1),
+    padDateTimePart(date.getDate()),
   ].join("-")
-    + ` ${padDateTimePart(date.getUTCHours())}:${padDateTimePart(date.getUTCMinutes())}:${padDateTimePart(date.getUTCSeconds())}`;
+    + ` ${padDateTimePart(date.getHours())}:${padDateTimePart(date.getMinutes())}:${padDateTimePart(date.getSeconds())}`;
 }
 
 export function formatTableCount(value?: number | null): string {

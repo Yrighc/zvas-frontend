@@ -93,6 +93,6 @@ describe("AssetPoolSiteTab", () => {
     expect(screen.getByRole("columnheader", { name: "Title" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "指纹" })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "发现时间" })).toBeInTheDocument();
-    expect(screen.getByText("nginx, jenkins")).toBeInTheDocument();
+    expect(screen.getByText("nginx, jenkins")).toHaveClass("truncate", "whitespace-nowrap");
   });
 });
