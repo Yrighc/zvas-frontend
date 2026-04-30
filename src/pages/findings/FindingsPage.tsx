@@ -155,7 +155,10 @@ export function FindingsPage() {
               return (
                 <TableRow key={item.finding_id}>
                   <TableCell>
-                    <TextCell value={item.title || '-'} limit={48} className="font-semibold text-white" />
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <TextCell value={item.title || '-'} limit={48} className="font-semibold text-white" />
+                      <MonoCell value={item.finding_id || '-'} limit={32} className="text-apple-text-tertiary" />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.18em] uppercase border ${severityClass(item.severity)}`}>
