@@ -17,7 +17,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
   const navigate = useNavigate()
   const createTask = useCreateTask()
 
-  const { data: templatesData, isPending: isLoadingTemplates } = useTaskTemplates({ page_size: 100 })
+  const { data: templatesData, isPending: isLoadingTemplates } = useTaskTemplates({ page_size: 100 }, { enabled: isOpen })
   const templates = useMemo(() => (templatesData?.data || []).filter((item) => item.is_enabled), [templatesData?.data])
   const hasAvailableTemplates = templates.length > 0
 
@@ -31,7 +31,7 @@ export function CreateTaskFromPoolModal({ poolId, poolName, isOpen, onClose }: P
     return templates[0].code
   }, [templateCode, templates])
 
-  const { data: tplDetail, isPending: isLoadingTpl } = useTaskTemplateDetail(selectedTemplateCode)
+  const { data: tplDetail, isPending: isLoadingTpl } = useTaskTemplateDetail(selectedTemplateCode, isOpen)
 
   const [portMode, setPortMode] = useState('')
   const [httpProbe, setHttpProbe] = useState(false)

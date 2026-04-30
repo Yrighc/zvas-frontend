@@ -16,7 +16,7 @@ export function ManualInputModal({ isOpen, onClose, defaultPoolId }: ManualInput
   const importMutation = useImportInputs()
   
   // 拉取资产池以供选择
-  const poolsQuery = useAssetPools({ page_size: 100 })
+  const poolsQuery = useAssetPools({ page_size: 100 }, { enabled: isOpen })
   const poolItems = poolsQuery.data?.data || []
 
   const handleSubmit = async () => {

@@ -144,7 +144,11 @@ export function getTaskTemplatePreviewSummary(template: Pick<TaskTemplateListIte
   return TEMPLATE_PREVIEW_SUMMARY_MAP[code] || template.preview_summary || ''
 }
 
-export function useTaskTemplates(params?: { keyword?: string; page?: number; page_size?: number }) {
+interface TaskTemplateQueryOptions {
+  enabled?: boolean
+}
+
+export function useTaskTemplates(params?: { keyword?: string; page?: number; page_size?: number }, options?: TaskTemplateQueryOptions) {
   return useQuery({
     queryKey: ['task-templates', params],
     queryFn: async () => {
@@ -157,17 +161,18 @@ export function useTaskTemplates(params?: { keyword?: string; page?: number; pag
         data: (res.data.data || []).map(mapToTaskTemplateListItemVM),
       }
     },
+    enabled: options?.enabled ?? true,
   })
 }
 
-export function useTaskTemplateDetail(code?: string) {
+export function useTaskTemplateDetail(code?: string, enabled = true) {
   return useQuery({
     queryKey: ['task-templates', code],
     queryFn: async (): Promise<TaskTemplateDetailVM> => {
       const res = await httpClient.get<{ data: any }>(`/task-templates/${code}`)
       return mapToTaskTemplateDetailVM(res.data.data)
     },
-    enabled: Boolean(code),
+    enabled: Boolean(code && enabled),
   })
 }
 

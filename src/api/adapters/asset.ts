@@ -205,6 +205,10 @@ export interface AssetPoolAssetListParams {
   order?: string
 }
 
+export interface AssetPoolListQueryOptions {
+  enabled?: boolean
+}
+
 export interface AssetPoolInputListResponse {
   data: PoolInputRecordVM[]
   pagination?: PaginationMeta
@@ -685,7 +689,7 @@ export function useAssetPoolDetail(id?: string) {
   })
 }
 
-export function useAssetPoolList(params: AssetPoolListParams) {
+export function useAssetPoolList(params: AssetPoolListParams, options?: AssetPoolListQueryOptions) {
   return useQuery({
     queryKey: ['asset-pools', params],
     staleTime: 30_000,
@@ -710,11 +714,12 @@ export function useAssetPoolList(params: AssetPoolListParams) {
         })),
       }
     },
+    enabled: options?.enabled ?? true,
   })
 }
 
-export function useAssetPools(params: AssetPoolListParams) {
-  return useAssetPoolList(params)
+export function useAssetPools(params: AssetPoolListParams, options?: AssetPoolListQueryOptions) {
+  return useAssetPoolList(params, options)
 }
 
 export function useCreateAssetPool() {
