@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import {
-  Button,
   Input,
   Pagination,
   Select,
@@ -13,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@heroui/react";
-import { EyeIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 import {
   getProbeStatusLabel,
@@ -159,86 +158,36 @@ function getHTTPProbeTableData(item: TaskRecordVM) {
   };
 }
 
-type SummaryRenderer = (item: TaskRecordVM) => React.ReactNode | null;
+function getHomepageIdentifySummary(item: TaskRecordVM) {
+  const summaryPayload = parseTaskRecordSummary(item);
+  const summary = parseHttpProbeSummary(summaryPayload);
+  if (!summary) return "";
 
-const SUMMARY_RENDERERS: Record<string, SummaryRenderer> = {
-  "http_probe/homepage_identify": (item) => {
-    let payload = null;
-    try {
-      if (
-        typeof item.result_summary === "string" &&
-        item.result_summary.startsWith("{")
-      ) {
-        payload = JSON.parse(item.result_summary);
-      } else {
-        payload = item.result_summary;
-      }
-    } catch {
-      // ignore
-    }
-    const sum = parseHttpProbeSummary(payload);
-    if (!sum) return null;
-    return (
-      <div className="flex flex-col gap-1 w-full overflow-hidden">
-        <div className="flex items-center gap-2 w-full">
-          <span
-            className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${sum.status_code && sum.status_code >= 200 && sum.status_code < 400
-              ? "bg-apple-green/20 text-apple-green-light"
-              : "bg-white/10 text-white/70"
-              }`}
-          >
-            {sum.status_code || "-"}
-          </span>
-          <span
-            className="text-[12px] truncate text-white font-medium"
-            title={sum.title}
-          >
-            {sum.title || "无标题"}
-          </span>
-        </div>
-        <span
-          className="text-[10px] text-apple-text-tertiary truncate font-mono"
-          title={sum.site_url}
-        >
-          {sum.site_url}
-        </span>
-      </div>
-    );
-  },
-  vul_scan: (item) => {
-    const summary = item.result_summary;
-    if (!summary) return null;
-    const isFound = typeof summary === "string" && summary.includes("发现");
-    const isSkipped = typeof summary === "string" && summary.includes("跳过");
-    const isClean = typeof summary === "string" && summary.includes("未发现");
-    return (
-      <div className="flex items-center gap-2 w-full overflow-hidden">
-        <span
-          className={`shrink-0 w-1.5 h-1.5 rounded-full ${isFound
-            ? "bg-apple-red"
-            : isSkipped
-              ? "bg-apple-amber"
-              : isClean
-                ? "bg-apple-green"
-                : "bg-white/30"
-            }`}
-        />
-        <span
-          className={`text-[12px] truncate font-medium ${isFound
-            ? "text-apple-red-light"
-            : isSkipped
-              ? "text-apple-amber"
-              : isClean
-                ? "text-apple-green-light"
-                : "text-apple-text-secondary"
-            }`}
-        >
-          {String(summary)}
-        </span>
-      </div>
-    );
-  },
-};
+  const parts = [
+    typeof summary.status_code === "number" && summary.status_code > 0
+      ? String(summary.status_code)
+      : "",
+    (summary.title || "").trim(),
+    (summary.site_url || item.target_key || "").trim(),
+  ].filter(Boolean);
+
+  return parts.join(" · ");
+}
+
+function getMixedRecordSummary(item: TaskRecordVM) {
+  if (item.task_type === "http_probe" && item.task_subtype === "homepage_identify") {
+    return getHomepageIdentifySummary(item);
+  }
+
+  const summary = (item.result_summary || "").trim();
+  if (!summary) {
+    if (item.status === "failed") return "执行失败";
+    if (item.status === "succeeded") return "已完成";
+    return "-";
+  }
+
+  return summary;
+}
 
 function renderResultSummary(item: TaskRecordVM) {
   if (isInProgressStatus(item.status)) {
@@ -251,15 +200,8 @@ function renderResultSummary(item: TaskRecordVM) {
     );
   }
 
-  const key = item.task_subtype
-    ? `${item.task_type}/${item.task_subtype}`
-    : item.task_type;
-  const renderer = SUMMARY_RENDERERS[key];
-  if (renderer) {
-    const result = renderer(item);
-    if (result) return result;
-  }
-  return <TextCell value={item.result_summary || "-"} limit={30} />;
+  const summaryText = getMixedRecordSummary(item);
+  return <TextCell value={summaryText} limit={32} />;
 }
 
 function renderStatus(item: TaskRecordVM) {
@@ -341,17 +283,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
   );
 
   const renderDetailAction = (item: TaskRecordVM) => (
-    <ActionCell>
-      <Button
-        size="sm"
-        variant="flat"
-        className="min-w-0 whitespace-nowrap rounded-xl bg-white/5 font-bold text-apple-blue-light hover:bg-white/10"
-        onPress={() => setSelectedRecord(item)}
-        startContent={<EyeIcon className="w-4 h-4" />}
-      >
-        详情
-      </Button>
-    </ActionCell>
+    <ActionCell label="查看详情" onPress={() => setSelectedRecord(item)} />
   );
 
   return (

@@ -10,7 +10,6 @@ import {
     Pagination,
 } from "@heroui/react";
 import {
-    EyeIcon,
     DocumentDuplicateIcon,
     ExclamationCircleIcon,
     CheckCircleIcon
@@ -113,18 +112,7 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                 );
             case "actions":
                 return (
-                    <ActionCell>
-                        <Button
-                            isIconOnly
-                            variant="light"
-                            size="sm"
-                            className="text-apple-text-tertiary hover:text-apple-text-primary h-8 w-8"
-                            onPress={() => onViewDetail(log)}
-                            aria-label="查看详情"
-                        >
-                            <EyeIcon className="w-4 h-4" />
-                        </Button>
-                    </ActionCell>
+                    <ActionCell label="查看详情" onPress={() => onViewDetail(log)} />
                 );
             default:
                 return null;

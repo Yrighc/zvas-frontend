@@ -44,10 +44,10 @@ describe("TaskRecordsTab", () => {
           {
             unit_id: "record-1",
             task_id: "task-1",
-            stage: "vuln_scan",
+            stage: "http_probe",
             topic: "topic-1",
-            task_type: "vuln_scan",
-            task_subtype: "",
+            task_type: "http_probe",
+            task_subtype: "homepage_identify",
             target_key: "https://example.internal/very/long/path",
             status: "succeeded",
             worker_id: "worker-alpha-very-long-name",
@@ -55,7 +55,12 @@ describe("TaskRecordsTab", () => {
             started_at: "2026-04-29T08:00:00Z",
             finished_at: "2026-04-29T08:00:03Z",
             duration_ms: 3200,
-            result_summary: "发现超长漏洞摘要内容，应该保持单行截断以避免行高变化",
+            result_summary: JSON.stringify({
+              site_url: "https://example.internal/very/long/path",
+              title: "Internal Admin Portal Dashboard With Very Long Title",
+              status_code: 200,
+              probe_status: "alive",
+            }),
             route_code: "route-1",
             desired_state: "succeeded",
           },
@@ -66,23 +71,25 @@ describe("TaskRecordsTab", () => {
     } as never);
   });
 
-  it("renders single-line summary and action cells for record rows", async () => {
+  it("renders shared single-line summary and action cells for mixed record rows", async () => {
     renderTab();
 
     expect(await screen.findByRole("columnheader", { name: "结果摘要" })).toBeInTheDocument();
 
-    const row = screen
-      .getByText("发现超长漏洞摘要内容，应该保持单行截断以避免行高变化")
-      .closest("tr");
+    const targetCell = screen.getByTitle("https://example.internal/very/long/path");
+    expect(targetCell).toHaveClass("truncate", "whitespace-nowrap");
+
+    const row = targetCell.closest("tr");
     expect(row).not.toBeNull();
 
+    const summary = within(row as HTMLTableRowElement).getByTitle(
+      "200 · Internal Admin Portal Dashboard With Very Long Title · https://example.internal/very/long/path",
+    );
+    expect(summary).toHaveClass("truncate", "whitespace-nowrap");
+    expect(summary).toHaveTextContent("200 · Internal Admin Portal Dash...");
+
     expect(
-      within(row as HTMLTableRowElement).getByText(
-        "发现超长漏洞摘要内容，应该保持单行截断以避免行高变化",
-      ),
-    ).toHaveClass("truncate", "whitespace-nowrap");
-    expect(
-      within(row as HTMLTableRowElement).getByRole("button", { name: "详情" }),
-    ).toHaveClass("whitespace-nowrap");
+      within(row as HTMLTableRowElement).getByRole("button", { name: "查看详情" }),
+    ).toHaveClass("rounded-full", "border-white/10");
   });
 });

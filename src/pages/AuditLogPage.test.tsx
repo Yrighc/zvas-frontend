@@ -87,6 +87,7 @@ describe('AuditLogPage', () => {
     });
 
     expect(screen.getByText('user.password.reset')).toHaveClass('truncate', 'whitespace-nowrap');
+    expect(screen.getByRole('button', { name: '查看详情' })).toHaveClass('rounded-full', 'border-white/10');
   });
 
   it('点击查看按钮应该打开详情抽屉', async () => {
@@ -95,7 +96,7 @@ describe('AuditLogPage', () => {
     renderPage();
 
     // 等待数据加载并渲染表格
-    const viewButton = await screen.findByRole('button', { name: /详情|查看/i, hidden: true });
+    const viewButton = await screen.findByRole('button', { name: '查看详情' });
     fireEvent.click(viewButton);
 
     // 等待抽屉内容出现
