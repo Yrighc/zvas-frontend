@@ -16,6 +16,10 @@ import {
     CheckCircleIcon
 } from "@heroicons/react/24/outline";
 import type { AuditLog } from "../../../api/types/audit.types";
+import { TableFrame } from "../../../components/table/TableFrame";
+import { ActionCell } from "../../../components/table/cells/ActionCell";
+import { TextCell } from "../../../components/table/cells/TextCell";
+import { TimeCell } from "../../../components/table/cells/TimeCell";
 import { APPLE_TABLE_CLASSES } from "../../../utils/theme";
 
 interface AuditTableProps {
@@ -37,9 +41,7 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
         switch (columnKey) {
             case "created_at":
                 return (
-                    <span className="text-apple-text-secondary text-[13px]">
-                        {formatDateTime(log.created_at)}
-                    </span>
+                    <TimeCell value={log.created_at} className="text-[13px]" />
                 );
             case "actor":
                 return (
@@ -50,11 +52,20 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                 );
             case "action":
                 return (
-                    <span className="font-mono text-[13px] text-apple-blue-light">{log.action}</span>
+                    <TextCell
+                        value={log.action}
+                        mono
+                        limit={24}
+                        className="text-[13px] text-apple-blue-light"
+                    />
                 );
             case "resource_type":
                 return (
-                    <span className="text-apple-text-secondary text-[13px]">{log.resource_type || "N/A"}</span>
+                    <TextCell
+                        value={log.resource_type || "N/A"}
+                        limit={14}
+                        className="text-[13px] text-apple-text-secondary"
+                    />
                 );
             case "risk_level":
                 return (
@@ -102,7 +113,7 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                 );
             case "actions":
                 return (
-                    <div className="flex justify-end">
+                    <ActionCell>
                         <Button
                             isIconOnly
                             variant="light"
@@ -113,7 +124,7 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                         >
                             <EyeIcon className="w-4 h-4" />
                         </Button>
-                    </div>
+                    </ActionCell>
                 );
             default:
                 return null;
@@ -121,7 +132,7 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
     };
 
     return (
-        <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto scrollbar-hide md:scrollbar-default">
+        <TableFrame className="scrollbar-hide md:scrollbar-default">
                 <Table
                     aria-label="审计日志表格"
                     layout="fixed"
@@ -178,7 +189,7 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                     }}
                 />
             </div>
-        </div>
+        </TableFrame>
     );
 };
 
@@ -187,16 +198,3 @@ const riskLabelMap: Record<string, string> = {
     medium: '中风险',
     high: '高风险',
 };
-
-function formatDateTime(value: string) {
-    const timestamp = Date.parse(value);
-    if (Number.isNaN(timestamp)) return value;
-    return new Intl.DateTimeFormat('zh-CN', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-    }).format(new Date(timestamp));
-}

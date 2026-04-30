@@ -23,6 +23,11 @@ import { getHttpProbeObservation, useTaskRecords } from "@/api/adapters/task";
 import type { TaskRecordVM } from "@/api/adapters/task";
 import { getRecordTypeLabel } from "@/api/adapters/route";
 import { TaskRecordDetailDrawer } from "@/components/tasks/TaskRecordDetailDrawer";
+import { TableFrame } from "@/components/table/TableFrame";
+import { ActionCell } from "@/components/table/cells/ActionCell";
+import { MonoCell } from "@/components/table/cells/MonoCell";
+import { TextCell } from "@/components/table/cells/TextCell";
+import { TimeCell } from "@/components/table/cells/TimeCell";
 import { APPLE_TABLE_CLASSES } from "@/utils/theme";
 
 type RecordTabKey =
@@ -57,11 +62,6 @@ const RECORD_TABS: Array<{
       description: "查看 host + service 弱口令探测状态与结果摘要",
     },
   ];
-
-function formatDateTime(value?: string) {
-  if (!value) return "-";
-  return new Date(value).toLocaleString();
-}
 
 function formatDuration(durationMs: number) {
   if (!durationMs) return "-";
@@ -243,9 +243,11 @@ const SUMMARY_RENDERERS: Record<string, SummaryRenderer> = {
 function renderResultSummary(item: TaskRecordVM) {
   if (isInProgressStatus(item.status)) {
     return (
-      <span className="truncate block w-full text-apple-blue-light font-medium">
-        {getInProgressSummary(item.status)}
-      </span>
+      <TextCell
+        value={getInProgressSummary(item.status)}
+        limit={30}
+        className="text-apple-blue-light font-medium"
+      />
     );
   }
 
@@ -257,9 +259,7 @@ function renderResultSummary(item: TaskRecordVM) {
     const result = renderer(item);
     if (result) return result;
   }
-  return (
-    <span className="truncate block w-full">{item.result_summary || "-"}</span>
-  );
+  return <TextCell value={item.result_summary || "-"} limit={30} />;
 }
 
 function renderStatus(item: TaskRecordVM) {
@@ -338,6 +338,20 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
       { key: "failed", label: "失败" },
     ],
     [],
+  );
+
+  const renderDetailAction = (item: TaskRecordVM) => (
+    <ActionCell>
+      <Button
+        size="sm"
+        variant="flat"
+        className="min-w-0 whitespace-nowrap rounded-xl bg-white/5 font-bold text-apple-blue-light hover:bg-white/10"
+        onPress={() => setSelectedRecord(item)}
+        startContent={<EyeIcon className="w-4 h-4" />}
+      >
+        详情
+      </Button>
+    </ActionCell>
   );
 
   return (
@@ -423,7 +437,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
         </Select>
       </div>
 
-      <div className="rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-3xl overflow-x-auto">
+      <TableFrame>
         <Table
           removeWrapper
           aria-label="Task Records"
@@ -522,9 +536,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                 return (
                   <TableRow key={item.unit_id}>
                     <TableCell>
-                      <span className="font-mono text-[12px] break-all text-apple-blue-light">
-                        {httpData.siteURL}
-                      </span>
+                      <MonoCell value={httpData.siteURL} limit={48} className="text-apple-blue-light" />
                     </TableCell>
                     <TableCell>{renderStatus(item)}</TableCell>
                     <TableCell>
@@ -546,12 +558,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                       )}
                     </TableCell>
                     <TableCell>
-                      <span
-                        className="block truncate text-[12px] text-white font-medium"
-                        title={httpData.title}
-                      >
-                        {httpData.title}
-                      </span>
+                      <TextCell value={httpData.title} limit={28} className="text-white font-medium" />
                     </TableCell>
                     <TableCell>
                       {typeof statusCode === "number" && statusCode > 0 ? (
@@ -566,19 +573,11 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>{formatDateTime(item.started_at)}</TableCell>
-                    <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                     <TableCell>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        className="min-w-0 rounded-xl bg-white/5 text-apple-blue-light hover:bg-white/10 font-bold"
-                        onPress={() => setSelectedRecord(item)}
-                        startContent={<EyeIcon className="w-4 h-4" />}
-                      >
-                        详情
-                      </Button>
+                      <TimeCell value={item.started_at} />
                     </TableCell>
+                    <TableCell>{formatDuration(item.duration_ms)}</TableCell>
+                    <TableCell>{renderDetailAction(item)}</TableCell>
                   </TableRow>
                 );
               }
@@ -587,32 +586,24 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                 return (
                   <TableRow key={item.unit_id}>
                     <TableCell>
-                      <span className="font-mono text-[12px] break-all text-apple-blue-light">
-                        {item.target_key}
-                      </span>
+                      <MonoCell value={item.target_key} limit={40} className="text-apple-blue-light" />
                     </TableCell>
                     <TableCell>{renderStatus(item)}</TableCell>
-                    <TableCell>{item.worker_id || "-"}</TableCell>
+                    <TableCell>
+                      <TextCell value={item.worker_id || "-"} limit={24} className="text-apple-text-secondary" />
+                    </TableCell>
                     <TableCell>{item.attempt}</TableCell>
-                    <TableCell>{formatDateTime(item.started_at)}</TableCell>
-                    <TableCell>{formatDateTime(item.finished_at)}</TableCell>
+                    <TableCell>
+                      <TimeCell value={item.started_at} />
+                    </TableCell>
+                    <TableCell>
+                      <TimeCell value={item.finished_at} />
+                    </TableCell>
                     <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                     <TableCell>
-                      <span className="block truncate w-full text-[12px] text-white">
-                        {getCompactVulScanSummary(item)}
-                      </span>
+                      <TextCell value={getCompactVulScanSummary(item)} limit={30} />
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        className="min-w-0 rounded-xl bg-white/5 text-apple-blue-light hover:bg-white/10 font-bold"
-                        onPress={() => setSelectedRecord(item)}
-                        startContent={<EyeIcon className="w-4 h-4" />}
-                      >
-                        详情
-                      </Button>
-                    </TableCell>
+                    <TableCell>{renderDetailAction(item)}</TableCell>
                   </TableRow>
                 );
               }
@@ -621,32 +612,24 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                 return (
                   <TableRow key={item.unit_id}>
                     <TableCell>
-                      <span className="font-mono text-[12px] break-all text-apple-blue-light">
-                        {item.target_key}
-                      </span>
+                      <MonoCell value={item.target_key} limit={40} className="text-apple-blue-light" />
                     </TableCell>
                     <TableCell>{renderStatus(item)}</TableCell>
-                    <TableCell>{item.worker_id || "-"}</TableCell>
+                    <TableCell>
+                      <TextCell value={item.worker_id || "-"} limit={24} className="text-apple-text-secondary" />
+                    </TableCell>
                     <TableCell>{item.attempt}</TableCell>
-                    <TableCell>{formatDateTime(item.started_at)}</TableCell>
-                    <TableCell>{formatDateTime(item.finished_at)}</TableCell>
+                    <TableCell>
+                      <TimeCell value={item.started_at} />
+                    </TableCell>
+                    <TableCell>
+                      <TimeCell value={item.finished_at} />
+                    </TableCell>
                     <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                     <TableCell>
-                      <span className="block truncate w-full text-[12px] text-white">
-                        {getCompactWeakScanSummary(item)}
-                      </span>
+                      <TextCell value={getCompactWeakScanSummary(item)} limit={30} />
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        className="min-w-0 rounded-xl bg-white/5 text-apple-blue-light hover:bg-white/10 font-bold"
-                        onPress={() => setSelectedRecord(item)}
-                        startContent={<EyeIcon className="w-4 h-4" />}
-                      >
-                        详情
-                      </Button>
-                    </TableCell>
+                    <TableCell>{renderDetailAction(item)}</TableCell>
                   </TableRow>
                 );
               }
@@ -655,32 +638,24 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                 return (
                   <TableRow key={item.unit_id}>
                     <TableCell>
-                      <span className="font-mono text-[12px] break-all text-apple-blue-light">
-                        {item.target_key}
-                      </span>
+                      <MonoCell value={item.target_key} limit={40} className="text-apple-blue-light" />
                     </TableCell>
                     <TableCell>{renderStatus(item)}</TableCell>
-                    <TableCell>{item.worker_id || "-"}</TableCell>
+                    <TableCell>
+                      <TextCell value={item.worker_id || "-"} limit={24} className="text-apple-text-secondary" />
+                    </TableCell>
                     <TableCell>{item.attempt}</TableCell>
-                    <TableCell>{formatDateTime(item.started_at)}</TableCell>
-                    <TableCell>{formatDateTime(item.finished_at)}</TableCell>
+                    <TableCell>
+                      <TimeCell value={item.started_at} />
+                    </TableCell>
+                    <TableCell>
+                      <TimeCell value={item.finished_at} />
+                    </TableCell>
                     <TableCell>{formatDuration(item.duration_ms)}</TableCell>
                     <TableCell>
-                      <span className="block truncate w-full text-[12px] text-white">
-                        {getCompactSecprobeSummary(item)}
-                      </span>
+                      <TextCell value={getCompactSecprobeSummary(item)} limit={30} />
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        className="min-w-0 rounded-xl bg-white/5 text-apple-blue-light hover:bg-white/10 font-bold"
-                        onPress={() => setSelectedRecord(item)}
-                        startContent={<EyeIcon className="w-4 h-4" />}
-                      >
-                        详情
-                      </Button>
-                    </TableCell>
+                    <TableCell>{renderDetailAction(item)}</TableCell>
                   </TableRow>
                 );
               }
@@ -695,27 +670,19 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <span className="font-mono text-[12px] break-all">
-                      {item.target_key}
-                    </span>
+                    <MonoCell value={item.target_key} limit={34} />
                   </TableCell>
                   <TableCell>{renderStatus(item)}</TableCell>
-                  <TableCell>{item.worker_id || "-"}</TableCell>
+                  <TableCell>
+                    <TextCell value={item.worker_id || "-"} limit={24} className="text-apple-text-secondary" />
+                  </TableCell>
                   <TableCell>{item.attempt}</TableCell>
                   <TableCell>{formatDuration(item.duration_ms)}</TableCell>
-                  <TableCell>{formatDateTime(item.started_at)}</TableCell>
-                  <TableCell>{renderResultSummary(item)}</TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      className="min-w-0 rounded-xl bg-white/5 text-apple-blue-light hover:bg-white/10 font-bold"
-                      onPress={() => setSelectedRecord(item)}
-                      startContent={<EyeIcon className="w-4 h-4" />}
-                    >
-                      详情
-                    </Button>
+                    <TimeCell value={item.started_at} />
                   </TableCell>
+                  <TableCell>{renderResultSummary(item)}</TableCell>
+                  <TableCell>{renderDetailAction(item)}</TableCell>
                 </TableRow>
               );
             })}
@@ -744,7 +711,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
             )}
           </div>
         )}
-      </div>
+      </TableFrame>
 
       <TaskRecordDetailDrawer
         isOpen={Boolean(selectedRecord)}
