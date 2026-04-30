@@ -253,13 +253,13 @@ export function AssetPoolsPage() {
                       <TextCell value={pool.name || '-'} limit={24} className="text-white" />
                     </TableCell>
                     <TableCell>
-                      <TextCell value="—" className="text-apple-blue-light/50" />
+                      <CountCell value={pool.ip_count ?? 0} className="text-apple-blue-light" />
                     </TableCell>
                     <TableCell>
-                      <TextCell value="—" className="text-apple-blue-light/50" />
+                      <CountCell value={pool.site_count ?? 0} className="text-apple-blue-light" />
                     </TableCell>
                     <TableCell>
-                      <TextCell value="—" className="text-apple-blue-light/50" />
+                      <CountCell value={pool.domain_count ?? 0} className="text-apple-blue-light" />
                     </TableCell>
                     <TableCell>
                       <CountCell value={pool.task_count ?? 0} />

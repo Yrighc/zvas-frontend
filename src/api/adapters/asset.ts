@@ -24,6 +24,9 @@ export interface AssetPoolListItemVM {
   description: string
   tags: string[]
   asset_count: number
+  ip_count: number
+  domain_count: number
+  site_count: number
   task_count: number
   finding_count: number
   created_at: string
@@ -35,6 +38,9 @@ export interface AssetPoolDetailVM extends AssetPoolListItemVM {
   scope_rule: AssetPoolScopeRule
   summary?: {
     asset_count: number
+    ip_count: number
+    domain_count: number
+    site_count: number
     task_count: number
     finding_count: number
   }
@@ -215,6 +221,9 @@ export interface PoolAssetListResponse {
 
 export interface AssetPoolSummaryVM {
   asset_count: number
+  ip_count: number
+  domain_count: number
+  site_count: number
   task_count: number
   finding_count: number
 }
@@ -651,6 +660,9 @@ export function useAssetPoolDetail(id?: string) {
         description: dto.description || '',
         tags: dto.tags || [],
         asset_count: dto.asset_count ?? dto.summary?.asset_count ?? 0,
+        ip_count: dto.ip_count ?? dto.summary?.ip_count ?? 0,
+        domain_count: dto.domain_count ?? dto.summary?.domain_count ?? 0,
+        site_count: dto.site_count ?? dto.summary?.site_count ?? 0,
         task_count: dto.task_count ?? dto.summary?.task_count ?? 0,
         finding_count: dto.finding_count ?? dto.summary?.finding_count ?? 0,
         created_at: dto.created_at || '',
@@ -659,6 +671,9 @@ export function useAssetPoolDetail(id?: string) {
         scope_rule: dto.scope_rule || {},
         summary: dto.summary ? {
           asset_count: dto.summary.asset_count ?? 0,
+          ip_count: dto.summary.ip_count ?? 0,
+          domain_count: dto.summary.domain_count ?? 0,
+          site_count: dto.summary.site_count ?? 0,
           task_count: dto.summary.task_count ?? 0,
           finding_count: dto.summary.finding_count ?? 0,
         } : undefined,
@@ -683,6 +698,9 @@ export function useAssetPoolList(params: AssetPoolListParams) {
           description: dto.description || '',
           tags: dto.tags || [],
           asset_count: dto.asset_count ?? 0,
+          ip_count: dto.ip_count ?? 0,
+          domain_count: dto.domain_count ?? 0,
+          site_count: dto.site_count ?? 0,
           task_count: dto.task_count ?? 0,
           finding_count: dto.finding_count ?? 0,
           created_at: dto.created_at || '',
