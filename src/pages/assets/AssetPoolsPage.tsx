@@ -8,13 +8,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Pagination,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  Card,
-  CardBody,
 } from '@heroui/react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -34,6 +31,7 @@ import { ManualInputModal } from '@/components/assets/ManualInputModal'
 import { FileImportModal } from '@/components/assets/FileImportModal'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { TableFrame } from '@/components/table/TableFrame'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { ActionCell } from '@/components/table/cells/ActionCell'
 import { CountCell } from '@/components/table/cells/CountCell'
 import { TextCell } from '@/components/table/cells/TextCell'
@@ -46,7 +44,7 @@ export function AssetPoolsPage() {
   const navigate = useNavigate()
   const currentUser = useAuthStore((state) => state.currentUser)
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [keyword, setKeyword] = useState('')
   
   // Modals state
@@ -303,44 +301,26 @@ export function AssetPoolsPage() {
           </Table>
           
           {total > 0 && (
-            <div className="px-6 py-6 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
-              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-                合规录入池总卷 <span className="text-white mx-1">{total}</span>
-              </p>
-              {totalPages > 1 && (
-                <Pagination
-                  total={totalPages}
-                  page={page}
-                  onChange={setPage}
-                  showControls
-                  classNames={{
-                    wrapper: "gap-2",
-                    item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[40px] h-10",
-                    cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white",
-                    prev: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
-                    next: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
-                  }}
-                />
+            <TablePaginationFooter
+              summary={(
+                <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                  合规录入池总卷 <span className="text-white mx-1">{total}</span>
+                </p>
               )}
-            </div>
+              page={page}
+              total={total}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPage(1)
+                setPageSize(nextPageSize)
+              }}
+              className="py-6"
+            />
           )}
         </TableFrame>
       )}
-
-      {/* 底部溯源信息卡片 */}
-      <Card className="bg-apple-tertiary-bg/5 border border-white/5 backdrop-blur-md rounded-[32px] mt-4 shadow-none">
-        <CardBody className="p-8">
-          <div className="grid grid-cols-[160px_1fr] gap-y-4 text-sm font-medium">
-            <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black">资产映射 (Mapping_Index)</div>
-            <div className="text-apple-text-tertiary uppercase text-[10px] tracking-tight opacity-50 font-mono">LIVE_NODE_SYNC_ACTIVE</div>
-            
-            <div className="text-apple-text-tertiary text-[10px] tracking-[0.2em] uppercase font-black mt-2">权能鉴权 (Auth_Level)</div>
-            <div className="text-apple-text-tertiary uppercase text-[10px] tracking-tight opacity-50 mt-2">
-              当前用户态具有完全浏览及操作权限
-            </div>
-          </div>
-        </CardBody>
-      </Card>
 
       <CreateAssetPoolModal 
         isOpen={createVisible} 

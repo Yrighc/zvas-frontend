@@ -17,7 +17,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Pagination,
   Alert,
 } from '@heroui/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -39,6 +38,7 @@ import {
   type UserView,
 } from '@/api/adapters/user'
 import { TableFrame } from '@/components/table/TableFrame'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { ActionCell } from '@/components/table/cells/ActionCell'
 import { StatusBadgeCell } from '@/components/table/cells/StatusBadgeCell'
 import { TextCell } from '@/components/table/cells/TextCell'
@@ -74,7 +74,7 @@ export function UserManagementPage() {
   const currentUser = useAuthStore((state) => state.currentUser)
 
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [keyword, setKeyword] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'disabled'>('all')
   const [createVisible, setCreateVisible] = useState(false)
@@ -469,24 +469,23 @@ export function UserManagementPage() {
           </Table>
 
           {usersQuery.data && (
-            <div className="px-6 py-6 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
-              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-                当前展示 <span className="text-white">{filteredItems.length}</span> / {usersQuery.data.pagination.total} 个身份主体
-              </p>
-              <Pagination
-                total={Math.ceil(usersQuery.data.pagination.total / usersQuery.data.pagination.pageSize)}
-                page={page}
-                onChange={(page) => setPage(page)}
-                showControls
-                classNames={{
-                  wrapper: "gap-2",
-                  item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[40px] h-10",
-                  cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30",
-                  prev: "bg-white/5 text-white/50 rounded-xl",
-                  next: "bg-white/5 text-white/50 rounded-xl",
-                }}
-              />
-            </div>
+            <TablePaginationFooter
+              summary={(
+                <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                  当前展示 <span className="text-white">{filteredItems.length}</span> / {usersQuery.data.pagination.total} 个身份主体
+                </p>
+              )}
+              page={page}
+              total={usersQuery.data.pagination.total}
+              totalPages={Math.ceil(usersQuery.data.pagination.total / usersQuery.data.pagination.pageSize)}
+              pageSize={pageSize}
+              onPageChange={(nextPage) => setPage(nextPage)}
+              onPageSizeChange={(nextPageSize) => {
+                setPage(1)
+                setPageSize(nextPageSize)
+              }}
+              className="py-6"
+            />
           )}
         </TableFrame>
       )}

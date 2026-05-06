@@ -4,7 +4,6 @@ import {
   Button,
   Chip,
   Input,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -19,12 +18,11 @@ import { ArrowPathIcon, KeyIcon, MagnifyingGlassIcon } from '@heroicons/react/24
 
 import { type AssetPoolSecprobeFindingVM, useAssetPoolSecprobeFindings } from '@/api/adapters/asset'
 import { ActionCell } from '@/components/table/cells/ActionCell'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
-
-const PAGE_SIZE = 20
 
 type SecprobeFilterState = {
   target: string
@@ -73,12 +71,13 @@ function renderSuccessChip(success: boolean) {
 export function AssetPoolSecprobeFindingsTab({ poolId }: { poolId: string }) {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [filters, setFilters] = useState<SecprobeFilterState>(EMPTY_FILTERS)
   const [draftFilters, setDraftFilters] = useState<SecprobeFilterState>(EMPTY_FILTERS)
 
   const queryParams = useMemo(() => ({
     page,
-    page_size: PAGE_SIZE,
+    page_size: pageSize,
     target: filters.target || undefined,
     task_id: filters.taskID || undefined,
     service: filters.service || undefined,
@@ -87,12 +86,12 @@ export function AssetPoolSecprobeFindingsTab({ poolId }: { poolId: string }) {
     keyword: filters.keyword || undefined,
     sort: 'matched_at',
     order: 'desc',
-  }), [filters, page])
+  }), [filters, page, pageSize])
 
   const { data, isPending, isError, refetch } = useAssetPoolSecprobeFindings(poolId, queryParams)
   const items = data?.data || []
   const total = data?.pagination?.total || 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   function handleApplyFilters() {
     setPage(1)
@@ -265,25 +264,22 @@ export function AssetPoolSecprobeFindingsTab({ poolId }: { poolId: string }) {
         )}
 
         {total > 0 && (
-          <div className="px-6 py-4 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
-            <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-              当前资产池弱口令结果 <span className="text-white">{total}</span>
-            </p>
-            {totalPages > 1 && (
-              <Pagination
-                total={totalPages}
-                page={page}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 h-10 min-w-[40px]',
-                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg',
-                  prev: 'bg-white/5',
-                  next: 'bg-white/5',
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                当前资产池弱口令结果 <span className="text-white">{total}</span>
+              </p>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </div>
     </div>

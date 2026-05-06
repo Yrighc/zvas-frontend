@@ -4,7 +4,6 @@ import {
   Button,
   Chip,
   Input,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -30,6 +29,7 @@ import {
 } from '@/api/adapters/task'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { ActionCell } from '@/components/table/cells/ActionCell'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
@@ -48,7 +48,6 @@ import {
   VULNERABILITY_SEVERITY_OPTIONS,
 } from '@/utils/vulnerability'
 
-const PAGE_SIZE = 20
 type FindingFilterState = {
   url: string
   pocID: string
@@ -168,6 +167,7 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
     || currentUser?.roles?.includes('admin')
     || hasPermission(currentUser?.permissions, PERMISSIONS.taskUpdate)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [draftFilters, setDraftFilters] = useState<FindingFilterState>(EMPTY_FILTERS)
   const [filters, setFilters] = useState<FindingFilterState>(EMPTY_FILTERS)
   const [editingItem, setEditingItem] = useState<TaskRecordVulnerabilityVM | null>(null)
@@ -177,18 +177,18 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
 
   const queryParams = useMemo(() => ({
     page,
-    page_size: PAGE_SIZE,
+    page_size: pageSize,
     url: filters.url || undefined,
     poc_id: filters.pocID || undefined,
     severity: filters.severity === 'all' ? undefined : filters.severity,
-  }), [filters, page])
+  }), [filters, page, pageSize])
 
   const { data, isPending, isError, refetch } = useTaskFindings(taskId, queryParams)
   const deleteFindingMutation = useDeleteTaskFinding()
 
   const items = data?.data || []
   const total = data?.pagination?.total || 0
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total])
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [pageSize, total])
   const hasActiveFilters = Boolean(filters.url || filters.pocID || filters.severity !== 'all')
   const severityFilterOptions = useMemo(
     () => [{ value: 'all', label: '所有级别' }, ...VULNERABILITY_SEVERITY_OPTIONS],
@@ -426,24 +426,22 @@ export function TaskFindingsTab({ taskId }: { taskId: string }) {
         </Table>
 
         {!isError && total > 0 ? (
-          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-6 py-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">漏洞记录 <span className="mx-1 text-white">{total}</span> 项</span>
-            {totalPages > 1 ? (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'h-8 min-w-[32px] rounded-xl border border-white/5 bg-white/5 text-[12px] font-bold text-apple-text-secondary transition-all hover:bg-white/10',
-                  cursor: 'rounded-xl bg-apple-blue font-black text-white shadow-lg shadow-apple-blue/30',
-                  prev: 'rounded-xl bg-white/5 text-white/50 hover:bg-white/10',
-                  next: 'rounded-xl bg-white/5 text-white/50 hover:bg-white/10',
-                }}
-              />
-            ) : null}
-          </div>
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+                漏洞记录 <span className="mx-1 text-white">{total}</span> 项
+              </span>
+            )}
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         ) : null}
       </div>
 

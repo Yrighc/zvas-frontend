@@ -8,8 +8,7 @@ import { AuditSummary } from './audit/components/AuditSummary';
 import { AuditFilter } from './audit/components/AuditFilter';
 import { AuditTable } from './audit/components/AuditTable';
 import { AuditDetailDrawer } from './audit/components/AuditDetailDrawer';
-
-const PAGE_SIZE = 20;
+import { DEFAULT_TABLE_PAGE_SIZE } from '../components/table/TablePaginationFooter';
 
 export function AuditLogPage() {
   const navigate = useNavigate();
@@ -19,6 +18,7 @@ export function AuditLogPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
 
   // 搜索/过滤器联动处理：修改时同步重置至第一页
   const handleSearchChange = (v: string) => { setSearchTerm(v); setPage(1); };
@@ -27,10 +27,10 @@ export function AuditLogPage() {
 
   // 服务端分页：将查询条件传给 API，queryKey 包含所有影响结果的参数
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ['audit-logs', page, PAGE_SIZE, searchTerm, riskFilter, resultFilter],
+    queryKey: ['audit-logs', page, pageSize, searchTerm, riskFilter, resultFilter],
     queryFn: () => getAuditLogs({
       page,
-      page_size: PAGE_SIZE,
+      page_size: pageSize,
       ...(searchTerm ? { keyword: searchTerm } : {}),
       ...(riskFilter !== 'all' ? { risk_level: riskFilter } : {}),
       ...(resultFilter !== 'all' ? { result: resultFilter } : {}),
@@ -53,7 +53,7 @@ export function AuditLogPage() {
 
   // 服务端已过滤，直接使用返回的分页元数据
   const serverTotal = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(serverTotal / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(serverTotal / pageSize));
 
   // 摘要数据基于当前页返回结果（粗略统计，服务端过滤场景下已满足需求）
   const summaryData = useMemo(() => ({
@@ -111,7 +111,12 @@ export function AuditLogPage() {
             page={page}
             totalPages={totalPages}
             totalCount={serverTotal}
+            pageSize={pageSize}
             onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1);
+              setPageSize(nextPageSize);
+            }}
           />
 
           {/* 底部溯源信息卡片 (iPhone 质感) */}

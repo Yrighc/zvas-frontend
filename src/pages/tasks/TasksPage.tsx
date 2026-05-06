@@ -10,7 +10,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Pagination,
   Chip,
 } from '@heroui/react'
 import { useState } from 'react'
@@ -22,6 +21,7 @@ import { useAssetPools } from '@/api/adapters/asset'
 import { useTaskRoutes, getRouteActiveLabel, mapStageLabels } from '@/api/adapters/route'
 import { PauseIcon, PlayIcon, StopIcon } from '@heroicons/react/24/solid'
 import { TableFrame } from '@/components/table/TableFrame'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { ActionCell } from '@/components/table/cells/ActionCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
@@ -54,7 +54,7 @@ export function TasksPage() {
   const [searchParams] = useSearchParams()
 
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [keyword, setKeyword] = useState('')
   const [poolFilter, setPoolFilter] = useState(searchParams.get('asset_pool_id') || 'all')
   const [templateFilter, setTemplateFilter] = useState('all')
@@ -82,8 +82,6 @@ export function TasksPage() {
 
   const items = tasksQuery.data?.data || []
   const total = tasksQuery.data?.pagination?.total || 0
-  const totalPages = Math.ceil(total / pageSize)
-
   return (
     <div className="flex flex-col gap-6 w-full text-apple-text-primary animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-20 p-4">
       <section className="flex flex-col md:flex-row items-center gap-4 w-full bg-white/[0.02] border border-white/5 p-4 rounded-xl">
@@ -260,23 +258,17 @@ export function TasksPage() {
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="px-6 py-4 flex flex-col md:flex-row justify-between items-center border-t border-white/5 text-sm">
-            <span className="text-apple-text-tertiary">筛选出 {total} 项作业指令</span>
-            {totalPages > 1 && (
-              <Pagination
-                total={totalPages}
-                page={page}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]',
-                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white',
-                  prev: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                  next: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                }}
-              />
-            )}
-          </div>
+          <TablePaginationFooter
+            summary={<span className="text-apple-text-tertiary">筛选出 {total} 项作业指令</span>}
+            page={page}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </TableFrame>
 

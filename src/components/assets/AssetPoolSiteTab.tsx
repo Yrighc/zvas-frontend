@@ -7,7 +7,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   Input,
-  Pagination,
   Skeleton,
   Table,
   TableBody,
@@ -29,6 +28,7 @@ import {
 } from "@/api/adapters/asset";
 import type { PoolAssetVM } from "@/api/adapters/asset";
 import { TableFrame } from "@/components/table/TableFrame";
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from "@/components/table/TablePaginationFooter";
 import { MonoCell } from "@/components/table/cells/MonoCell";
 import { StatusBadgeCell } from "@/components/table/cells/StatusBadgeCell";
 import { TextCell } from "@/components/table/cells/TextCell";
@@ -376,7 +376,7 @@ function SiteDetailDrawer({
 
 export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
   const [keyword, setKeyword] = useState("");
   const [selectedItem, setSelectedItem] = useState<PoolAssetVM | null>(null);
 
@@ -389,7 +389,7 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
 
   const items = data?.data || [];
   const total = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="mb-8 flex w-full animate-in fade-in duration-500 flex-col gap-6">
@@ -513,28 +513,22 @@ export function AssetPoolSiteTab({ poolId }: { poolId: string }) {
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-6 py-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
-              合计归集 <span className="mx-1 text-white">{total}</span>{" "}
-              项站点实体
-            </span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={setPage}
-                classNames={{
-                  wrapper: "gap-2",
-                  item: "min-w-[32px] h-8 rounded-xl border border-white/5 bg-white/5 text-[12px] font-bold text-apple-text-secondary transition-all hover:bg-white/10",
-                  cursor:
-                    "rounded-xl bg-apple-blue font-black text-white shadow-lg shadow-apple-blue/30",
-                  prev: "rounded-xl bg-white/5 text-white/50 hover:bg-white/10",
-                  next: "rounded-xl bg-white/5 text-white/50 hover:bg-white/10",
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+                合计归集 <span className="mx-1 text-white">{total}</span> 项站点实体
+              </span>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1);
+              setPageSize(nextPageSize);
+            }}
+          />
         )}
       </TableFrame>
 

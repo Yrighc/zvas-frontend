@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import {
   Button,
   Input,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -18,13 +17,12 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAssetPools } from '@/api/adapters/asset'
 import { useSecprobeFindings } from '@/api/adapters/finding'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { ActionCell } from '@/components/table/cells/ActionCell'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
-
-const PAGE_SIZE = 20
 
 function firstNonEmptyText(...values: unknown[]): string {
   for (const value of values) {
@@ -42,6 +40,7 @@ function buildTaskSummary(taskName?: string, taskID?: string): string {
 export function SecprobeFindingsPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [target, setTarget] = useState('')
   const [assetPoolID, setAssetPoolID] = useState('all')
   const [taskName, setTaskName] = useState('')
@@ -52,7 +51,7 @@ export function SecprobeFindingsPage() {
 
   const queryParams = useMemo(() => ({
     page,
-    page_size: PAGE_SIZE,
+    page_size: pageSize,
     target: target.trim() || undefined,
     asset_pool_id: assetPoolID === 'all' ? undefined : assetPoolID,
     task_name: taskName.trim() || undefined,
@@ -60,12 +59,12 @@ export function SecprobeFindingsPage() {
     success: success === 'all' ? undefined : success === 'true',
     sort: 'matched_at',
     order: 'desc',
-  }), [assetPoolID, page, service, success, target, taskName])
+  }), [assetPoolID, page, pageSize, service, success, target, taskName])
 
   const findingsQuery = useSecprobeFindings(queryParams)
   const items = findingsQuery.data?.data || []
   const total = findingsQuery.data?.pagination?.total || 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
     <div className="flex flex-col gap-8 w-full text-apple-text-primary animate-in fade-in duration-700 max-w-[1600px] mx-auto pb-20 p-4">
@@ -193,25 +192,22 @@ export function SecprobeFindingsPage() {
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="px-6 py-4 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
-            <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-              全局弱口令结果 <span className="text-white">{total}</span>
-            </p>
-            {totalPages > 1 && (
-              <Pagination
-                total={totalPages}
-                page={page}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 h-10 min-w-[40px]',
-                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg',
-                  prev: 'bg-white/5',
-                  next: 'bg-white/5',
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                全局弱口令结果 <span className="text-white">{total}</span>
+              </p>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </div>
     </div>

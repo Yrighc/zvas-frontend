@@ -6,7 +6,6 @@ import {
 import {
   Button,
   Input,
-  Pagination,
   Skeleton,
   Table,
   TableBody,
@@ -23,6 +22,7 @@ import {
   useAssetPoolAssets,
 } from "@/api/adapters/asset";
 import { TableFrame } from "@/components/table/TableFrame";
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from "@/components/table/TablePaginationFooter";
 import { ActionCell } from "@/components/table/cells/ActionCell";
 import { CountCell } from "@/components/table/cells/CountCell";
 import { MonoCell } from "@/components/table/cells/MonoCell";
@@ -185,7 +185,7 @@ function AssetPoolIpDetailBody({
 
 export function AssetPoolIpTab({ poolId }: { poolId: string }) {
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
   const [keyword, setKeyword] = useState("");
   const [selectedItem, setSelectedItem] = useState<PoolAssetVM | null>(null);
 
@@ -345,30 +345,27 @@ export function AssetPoolIpTab({ poolId }: { poolId: string }) {
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-6 py-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
-              合计归集 <span className="mx-1 text-white">{total}</span> 项 IP 资产
-            </span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={(nextPage) => {
-                  setPage(nextPage);
-                  setSelectedItem(null);
-                }}
-                classNames={{
-                  wrapper: "gap-2",
-                  item: "h-8 min-w-[32px] rounded-xl border border-white/5 bg-white/5 text-[12px] font-bold text-apple-text-secondary transition-all hover:bg-white/10",
-                  cursor:
-                    "rounded-xl bg-apple-blue font-black text-white shadow-lg shadow-apple-blue/30",
-                  prev: "rounded-xl bg-white/5 text-white/50 hover:bg-white/10",
-                  next: "rounded-xl bg-white/5 text-white/50 hover:bg-white/10",
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+                合计归集 <span className="mx-1 text-white">{total}</span> 项 IP 资产
+              </span>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              setSelectedItem(null);
+            }}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1);
+              setPageSize(nextPageSize);
+              setSelectedItem(null);
+            }}
+            className="py-5"
+          />
         )}
       </TableFrame>
 

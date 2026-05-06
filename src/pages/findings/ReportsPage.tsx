@@ -8,7 +8,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Pagination,
   Card,
   CardBody,
 } from '@heroui/react'
@@ -17,6 +16,7 @@ import { MagnifyingGlassIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 
 import { useReports } from '@/api/adapters/finding'
 import { TableFrame } from '@/components/table/TableFrame'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { ActionCell } from '@/components/table/cells/ActionCell'
 import { StatusBadgeCell } from '@/components/table/cells/StatusBadgeCell'
 import { TextCell } from '@/components/table/cells/TextCell'
@@ -33,7 +33,7 @@ function buildScopeSummary(scopeType: string, scopeName: string): string {
 
 export function ReportsPage() {
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [keyword, setKeyword] = useState('')
 
   const reportsQuery = useReports({
@@ -148,26 +148,23 @@ export function ReportsPage() {
 
           {/* 分页区 */}
           {total > 0 && (
-            <div className="px-6 py-6 flex flex-col md:flex-row gap-4 justify-between items-center bg-white/[0.01]">
-              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-                共溯源到 <span className="text-white mx-1">{total}</span> 份结构化报告
-              </p>
-              {totalPages > 1 && (
-                <Pagination
-                  total={totalPages}
-                  page={page}
-                  onChange={setPage}
-                  showControls
-                  classNames={{
-                    wrapper: "gap-2",
-                    item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[40px] h-10",
-                    cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white",
-                    prev: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
-                    next: "bg-white/5 text-white/50 rounded-xl hover:bg-white/10",
-                  }}
-                />
+            <TablePaginationFooter
+              summary={(
+                <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                  共溯源到 <span className="text-white mx-1">{total}</span> 份结构化报告
+                </p>
               )}
-            </div>
+              page={page}
+              total={total}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPage(1)
+                setPageSize(nextPageSize)
+              }}
+              className="py-6"
+            />
           )}
         </CardBody>
       </Card>

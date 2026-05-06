@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import {
   Button,
   ButtonGroup,
-  Pagination,
   Skeleton,
   Tab,
   Table,
@@ -23,6 +22,7 @@ import {
 } from "@/api/adapters/task";
 import { useUrlTabState } from "@/hooks/useUrlTabState";
 import { TableFrame } from "@/components/table/TableFrame";
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from "@/components/table/TablePaginationFooter";
 import { ActionCell } from "@/components/table/cells/ActionCell";
 import { CountCell } from "@/components/table/cells/CountCell";
 import { MonoCell } from "@/components/table/cells/MonoCell";
@@ -330,10 +330,10 @@ export function TaskAssetViewTab({ taskId }: { taskId?: string }) {
   });
   const [originFilter, setOriginFilter] = useState<"all" | "input" | "expanded">("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
   const [selectedAsset, setSelectedAsset] = useState<TaskSnapshotAssetVM | null>(
     null,
   );
-  const pageSize = 20;
 
   const query = useTaskSnapshotAssets(taskId, {
     page,
@@ -623,28 +623,26 @@ export function TaskAssetViewTab({ taskId }: { taskId?: string }) {
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-6 py-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
-              合计本次视图资产 <span className="mx-1 text-white">{total}</span> 项
-            </span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={(nextPage) => {
-                  setPage(nextPage);
-                  setSelectedAsset(null);
-                }}
-                classNames={{
-                  wrapper: "gap-2",
-                  item: "h-8 min-w-[32px] rounded-xl border border-white/5 bg-white/5 text-[12px] font-bold text-apple-text-secondary transition-all hover:bg-white/10",
-                  cursor:
-                    "rounded-xl bg-apple-blue font-black text-white shadow-lg shadow-apple-blue/30",
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+                合计本次视图资产 <span className="mx-1 text-white">{total}</span> 项
+              </span>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              setSelectedAsset(null);
+            }}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1);
+              setPageSize(nextPageSize);
+              setSelectedAsset(null);
+            }}
+          />
         )}
       </TableFrame>
 

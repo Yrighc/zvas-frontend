@@ -8,7 +8,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   Input,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -27,12 +26,11 @@ import {
 
 import { type TaskWeakScanFindingVM, useTaskWeakScanFindings } from '@/api/adapters/task'
 import { ActionCell } from '@/components/table/cells/ActionCell'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
-
-const PAGE_SIZE = 20
 
 type WeakScanFilterState = {
   url: string
@@ -229,24 +227,25 @@ function WeakScanDrawer({ item, onClose }: { item: TaskWeakScanFindingVM | null;
 
 export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [filters, setFilters] = useState<WeakScanFilterState>(EMPTY_FILTERS)
   const [draftFilters, setDraftFilters] = useState<WeakScanFilterState>(EMPTY_FILTERS)
   const [selectedItem, setSelectedItem] = useState<TaskWeakScanFindingVM | null>(null)
 
   const queryParams = useMemo(() => ({
     page,
-    page_size: PAGE_SIZE,
+    page_size: pageSize,
     url: filters.url || undefined,
     rule_id: filters.ruleID || undefined,
     severity: filters.severity === 'all' ? undefined : filters.severity,
     status: filters.status === 'all' ? undefined : filters.status,
-  }), [filters, page])
+  }), [filters, page, pageSize])
 
   const { data, isPending, isError, refetch } = useTaskWeakScanFindings(taskId, queryParams)
 
   const items = useMemo(() => data?.data ?? [], [data?.data])
   const total = data?.pagination?.total || 0
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total])
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [pageSize, total])
   const severitySummary = useMemo(() => {
     const summary = new Map<string, number>()
     for (const item of items) {
@@ -468,24 +467,22 @@ export function TaskWeakScanResultsTab({ taskId }: { taskId: string }) {
         </Table>
 
         {!isError && total > 0 && (
-          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-6 py-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">任务弱点扫描结果 <span className="mx-1 text-white">{total}</span> 条</span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'h-8 min-w-[32px] rounded-xl border border-white/5 bg-white/5 text-[12px] font-bold text-apple-text-secondary transition-all hover:bg-white/10',
-                  cursor: 'rounded-xl bg-apple-blue font-black text-white shadow-lg shadow-apple-blue/30',
-                  prev: 'rounded-xl bg-white/5 text-white/50 hover:bg-white/10',
-                  next: 'rounded-xl bg-white/5 text-white/50 hover:bg-white/10',
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+                任务弱点扫描结果 <span className="mx-1 text-white">{total}</span> 条
+              </span>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </div>
 

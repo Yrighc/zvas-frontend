@@ -182,6 +182,36 @@ describe('TasksPage', () => {
     expect(screen.queryByRole('button', { name: '监控' })).not.toBeInTheDocument()
   })
 
+  it('uses 10 rows by default and allows changing page size from the footer', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
+
+    expect(useTasks).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 10,
+      keyword: undefined,
+      asset_pool_id: undefined,
+      template_code: undefined,
+      status: undefined,
+    })
+
+    await user.selectOptions(screen.getByLabelText('每页条数'), '50')
+
+    expect(useTasks).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 50,
+      keyword: undefined,
+      asset_pool_id: undefined,
+      template_code: undefined,
+      status: undefined,
+    })
+  })
+
   it('prefers the secprobe tab when the task is a secprobe task', async () => {
     const user = userEvent.setup()
 

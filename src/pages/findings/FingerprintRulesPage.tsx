@@ -13,7 +13,6 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -51,9 +50,8 @@ import {
   type FingerprintRuleView,
 } from '@/api/adapters/fingerprint'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
-
-const PAGE_SIZE = 20
 
 type FilterStatus = 'all' | '1' | '0'
 type NoticeTone = 'success' | 'danger' | 'warning'
@@ -112,6 +110,7 @@ export function FingerprintRulesPage() {
   const queryClient = useQueryClient()
 
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [keyword, setKeyword] = useState('')
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
   const [notice, setNotice] = useState<{ type: NoticeTone; title: string; message: string } | null>(null)
@@ -125,15 +124,15 @@ export function FingerprintRulesPage() {
 
   const queryParams = useMemo(() => ({
     page,
-    page_size: PAGE_SIZE,
+    page_size: pageSize,
     keyword: keyword.trim() || undefined,
     status: statusFilter === 'all' ? undefined : Number(statusFilter),
-  }), [keyword, page, statusFilter])
+  }), [keyword, page, pageSize, statusFilter])
 
   const rulesQuery = useFingerprintRules(queryParams)
   const items = rulesQuery.data?.data || []
   const total = rulesQuery.data?.pagination?.total || 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const activeCount = items.filter((item) => item.status === 1).length
   const disabledCount = items.filter((item) => item.status !== 1).length
 
@@ -461,25 +460,22 @@ export function FingerprintRulesPage() {
         </Table>
 
         {total > 0 && (
-          <div className="flex flex-col items-center justify-between gap-4 border-t border-white/5 bg-white/[0.01] px-6 py-4 md:flex-row">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-apple-text-tertiary">
-              指纹规则总数 <span className="text-white">{total}</span>
-            </p>
-            {totalPages > 1 && (
-              <Pagination
-                total={totalPages}
-                page={page}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'h-10 min-w-[40px] rounded-xl border border-white/5 bg-white/5 font-bold text-apple-text-secondary',
-                  cursor: 'rounded-xl bg-apple-blue font-black shadow-lg',
-                  prev: 'bg-white/5',
-                  next: 'bg-white/5',
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-apple-text-tertiary">
+                指纹规则总数 <span className="text-white">{total}</span>
+              </p>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </div>
 

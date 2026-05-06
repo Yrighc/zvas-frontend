@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagination, Skeleton, Input, Button } from '@heroui/react'
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Skeleton, Input, Button } from '@heroui/react'
 import { MagnifyingGlassIcon, ArrowPathIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 
 import { useAssetPoolAssets, useAssetPoolAssetDetail, type PoolAssetVM } from '@/api/adapters/asset'
 import { TableFrame } from '@/components/table/TableFrame'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { CountCell } from '@/components/table/cells/CountCell'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { StatusBadgeCell } from '@/components/table/cells/StatusBadgeCell'
@@ -98,7 +99,7 @@ function ExpandedDomainRow({ poolId, item }: { poolId: string; item: PoolAssetVM
 
 export function AssetPoolDomainTab({ poolId }: { poolId: string }) {
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [keyword, setKeyword] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -207,24 +208,23 @@ export function AssetPoolDomainTab({ poolId }: { poolId: string }) {
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="flex justify-between items-center px-6 py-5 border-t border-white/5 bg-white/[0.01]">
-            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-text-tertiary">合计归集 <span className="text-white mx-1">{total}</span> 项域名资产</span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={(p) => { setPage(p); setExpandedId(null) }}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]',
-                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white',
-                  prev: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                  next: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                }}
-              />
-            )}
-          </div>
+          <TablePaginationFooter
+            summary={<span className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-text-tertiary">合计归集 <span className="text-white mx-1">{total}</span> 项域名资产</span>}
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={(nextPage) => {
+              setPage(nextPage)
+              setExpandedId(null)
+            }}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+              setExpandedId(null)
+            }}
+            className="py-5"
+          />
         )}
       </TableFrame>
     </div>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Chip, Pagination, Skeleton, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@heroui/react'
+import { Button, Chip, Skeleton, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@heroui/react'
 import {
   RocketLaunchIcon,
   BoltIcon,
@@ -15,6 +15,7 @@ import { usePauseTask, useResumeTask, useStopTask, useDeleteTask, getTaskStatusI
 import { useTaskRoutes, mapStageLabels, getRouteActiveLabel } from '@/api/adapters/route'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { TableFrame } from '@/components/table/TableFrame'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { ActionCell } from '@/components/table/cells/ActionCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
@@ -45,12 +46,13 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
   const currentUser = useAuthStore((state) => state.currentUser)
   const [createVisible, setCreateVisible] = useState(false)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [deleteVisible, setDeleteVisible] = useState(false)
   const [targetTask, setTargetTask] = useState<{ id: string; name: string } | null>(null)
 
   const { data, isLoading, isError, refetch } = useAssetPoolTasks(poolId, {
     page,
-    page_size: 10,
+    page_size: pageSize,
     sort: 'updated_at',
     order: 'desc',
   })
@@ -65,10 +67,10 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
 
   const items = data?.data || []
   const pagination = data?.pagination
+  const total = pagination?.total ?? items.length
   const totalPages = useMemo(() => {
-    if (!pagination?.total || !pagination?.page_size) return 1
-    return Math.max(1, Math.ceil(pagination.total / pagination.page_size))
-  }, [pagination])
+    return Math.max(1, Math.ceil(total / pageSize))
+  }, [pageSize, total])
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 w-full mb-8">
@@ -234,24 +236,22 @@ export function AssetPoolTasksTab({ poolId }: { poolId: string }) {
         </Table>
 
         {!isLoading && !isError && items.length > 0 && (
-          <div className="flex items-center justify-between bg-white/[0.01] px-6 py-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">合计任务流 <span className="mx-1 text-white">{pagination?.total ?? items.length}</span> 项</span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]',
-                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white',
-                  prev: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                  next: 'bg-white/5 text-white/50 rounded-xl hover:bg-white/10',
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+                合计任务流 <span className="mx-1 text-white">{total}</span> 项
+              </span>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </TableFrame>
 

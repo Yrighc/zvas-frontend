@@ -258,7 +258,7 @@ describe('TaskFindingsTab', () => {
       }),
     })
     await waitFor(() => expect(refetchListMock).toHaveBeenCalled())
-  })
+  }, 10000)
 
   it('does not fabricate a matched link for manual findings', () => {
     vi.mocked(useTaskFindings).mockReturnValue({

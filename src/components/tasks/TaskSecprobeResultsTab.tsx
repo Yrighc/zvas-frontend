@@ -8,7 +8,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   Input,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -27,12 +26,11 @@ import {
 
 import { type TaskSecprobeFindingVM, useTaskSecprobeFindings } from '@/api/adapters/task'
 import { ActionCell } from '@/components/table/cells/ActionCell'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
-
-const PAGE_SIZE = 20
 
 type SecprobeFilterState = {
   target: string
@@ -166,24 +164,25 @@ function SecprobeDrawer({ item, onClose }: { item: TaskSecprobeFindingVM | null;
 
 export function TaskSecprobeResultsTab({ taskId }: { taskId: string }) {
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [filters, setFilters] = useState<SecprobeFilterState>(EMPTY_FILTERS)
   const [draftFilters, setDraftFilters] = useState<SecprobeFilterState>(EMPTY_FILTERS)
   const [selectedItem, setSelectedItem] = useState<TaskSecprobeFindingVM | null>(null)
 
   const queryParams = useMemo(() => ({
     page,
-    page_size: PAGE_SIZE,
+    page_size: pageSize,
     target: filters.target || undefined,
     service: filters.service || undefined,
     probe_kind: filters.probeKind || undefined,
     success: filters.success === 'all' ? undefined : filters.success === 'true',
     keyword: filters.keyword || undefined,
-  }), [filters, page])
+  }), [filters, page, pageSize])
 
   const { data, isPending, isError, refetch } = useTaskSecprobeFindings(taskId, queryParams)
   const items = useMemo(() => data?.data ?? [], [data?.data])
   const total = data?.pagination?.total || 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   function handleApplyFilters() {
     setPage(1)
@@ -364,25 +363,22 @@ export function TaskSecprobeResultsTab({ taskId }: { taskId: string }) {
         )}
 
         {total > 0 && (
-          <div className="px-6 py-4 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
-            <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-              当前弱口令结果 <span className="text-white">{total}</span>
-            </p>
-            {totalPages > 1 && (
-              <Pagination
-                total={totalPages}
-                page={page}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 h-10 min-w-[40px]',
-                  cursor: 'bg-apple-blue font-black rounded-xl shadow-lg',
-                  prev: 'bg-white/5',
-                  next: 'bg-white/5',
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                当前弱口令结果 <span className="text-white">{total}</span>
+              </p>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </div>
 

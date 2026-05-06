@@ -7,7 +7,6 @@ import {
     TableCell,
     Chip,
     Button,
-    Pagination,
 } from "@heroui/react";
 import {
     DocumentDuplicateIcon,
@@ -16,6 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import type { AuditLog } from "../../../api/types/audit.types";
 import { TableFrame } from "../../../components/table/TableFrame";
+import { TablePaginationFooter } from "../../../components/table/TablePaginationFooter";
 import { ActionCell } from "../../../components/table/cells/ActionCell";
 import { TextCell } from "../../../components/table/cells/TextCell";
 import { TimeCell } from "../../../components/table/cells/TimeCell";
@@ -28,10 +28,12 @@ interface AuditTableProps {
     page: number;
     totalPages: number;
     totalCount: number;
+    pageSize: number;
     onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
 }
 
-export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, totalCount, onPageChange }: AuditTableProps) => {
+export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, totalCount, pageSize, onPageChange, onPageSizeChange }: AuditTableProps) => {
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
     };
@@ -158,25 +160,20 @@ export const AuditTable = ({ data, isLoading, onViewDetail, page, totalPages, to
                 </TableBody>
             </Table>
 
-            {/* 分页栏 */}
-            <div className="px-6 py-6 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5 bg-white/[0.01]">
-                <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
-                    当前展示 <span className="text-white">{data.length}</span> / {totalCount} 条审计记录
-                </p>
-                <Pagination
-                    total={totalPages}
-                    page={page}
-                    onChange={onPageChange}
-                    showControls
-                    classNames={{
-                        wrapper: "gap-2",
-                        item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[40px] h-10",
-                        cursor: "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30",
-                        prev: "bg-white/5 text-white/50 rounded-xl",
-                        next: "bg-white/5 text-white/50 rounded-xl",
-                    }}
-                />
-            </div>
+            <TablePaginationFooter
+                summary={(
+                    <p className="text-[11px] text-apple-text-tertiary font-bold uppercase tracking-[0.2em]">
+                        当前展示 <span className="text-white">{data.length}</span> / {totalCount} 条审计记录
+                    </p>
+                )}
+                page={page}
+                total={totalCount}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                onPageChange={onPageChange}
+                onPageSizeChange={onPageSizeChange}
+                className="py-6"
+            />
         </TableFrame>
     );
 };

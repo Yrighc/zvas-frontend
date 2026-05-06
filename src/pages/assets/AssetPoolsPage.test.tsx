@@ -47,13 +47,10 @@ describe('AssetPoolsPage', () => {
       currentUser: {
         id: 'user-admin',
         username: 'admin',
-        displayName: 'Admin',
+        name: 'Admin',
         role: 'admin',
         roles: ['admin'],
         permissions: ['asset:search', 'asset:update', 'asset:import'],
-        lastLoginAt: '',
-        createdAt: '',
-        updatedAt: '',
       },
     })
 

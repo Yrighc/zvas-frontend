@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   Input,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -23,6 +22,7 @@ import type { TaskRecordVM } from "@/api/adapters/task";
 import { getRecordTypeLabel } from "@/api/adapters/route";
 import { TaskRecordDetailDrawer } from "@/components/tasks/TaskRecordDetailDrawer";
 import { TableFrame } from "@/components/table/TableFrame";
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from "@/components/table/TablePaginationFooter";
 import { ActionCell } from "@/components/table/cells/ActionCell";
 import { MonoCell } from "@/components/table/cells/MonoCell";
 import { TextCell } from "@/components/table/cells/TextCell";
@@ -230,7 +230,7 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
   const [selectedRecord, setSelectedRecord] = useState<TaskRecordVM | null>(
     null,
   );
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
 
   const query = useTaskRecords(taskId, {
     page,
@@ -599,27 +599,23 @@ export function TaskRecordsTab({ taskId }: { taskId?: string }) {
           </TableBody>
         </Table>
         {total > 0 && (
-          <div className="flex justify-between items-center px-6 py-5 border-t border-white/5 bg-white/[0.01]">
-            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-text-tertiary">
-              {RECORD_TABS.find((tab) => tab.key === recordTab)?.label ||
-                "当前记录"}
-              <span className="text-white mx-1">{total}</span>条
-            </span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={setPage}
-                classNames={{
-                  wrapper: "gap-2",
-                  item: "bg-white/5 text-apple-text-secondary font-bold rounded-xl border border-white/5 hover:bg-white/10 transition-all min-w-[32px] h-8 text-[12px]",
-                  cursor:
-                    "bg-apple-blue font-black rounded-xl shadow-lg shadow-apple-blue/30 text-white",
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] uppercase font-black tracking-[0.2em] text-apple-text-tertiary">
+                {RECORD_TABS.find((tab) => tab.key === recordTab)?.label || "当前记录"}
+                <span className="text-white mx-1">{total}</span>条
+              </span>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1);
+              setPageSize(nextPageSize);
+            }}
+          />
         )}
       </TableFrame>
 

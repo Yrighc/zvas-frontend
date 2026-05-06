@@ -9,7 +9,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   Input,
-  Pagination,
   Select,
   SelectItem,
   Skeleton,
@@ -31,6 +30,7 @@ import { type SetURLSearchParams, useNavigate, useSearchParams } from 'react-rou
 
 import { deleteAssetPoolFinding, type FindingSummaryView, useAssetPoolFindings } from '@/api/adapters/asset'
 import { ActionCell } from '@/components/table/cells/ActionCell'
+import { DEFAULT_TABLE_PAGE_SIZE, TablePaginationFooter } from '@/components/table/TablePaginationFooter'
 import { MonoCell } from '@/components/table/cells/MonoCell'
 import { TextCell } from '@/components/table/cells/TextCell'
 import { TimeCell } from '@/components/table/cells/TimeCell'
@@ -39,8 +39,6 @@ import { useAuthStore } from '@/store/auth'
 import { APPLE_TABLE_CLASSES } from '@/utils/theme'
 import { ConfirmModal } from '@/components/common/ConfirmModal'
 import { PERMISSIONS, hasPermission } from '@/utils/permissions'
-
-const PAGE_SIZE = 20
 
 type FindingFilterState = {
   url: string
@@ -323,6 +321,7 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
   const navigate = useNavigate()
   const currentUser = useAuthStore((state) => state.currentUser)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE)
   const [draftFilters, setDraftFilters] = useState<FindingFilterState>(urlFilters)
   const [selectedItem, setSelectedItem] = useState<FindingSummaryView | null>(null)
   const [pendingDeleteItem, setPendingDeleteItem] = useState<FindingSummaryView | null>(null)
@@ -330,17 +329,17 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
 
   const queryParams = useMemo(() => ({
     page,
-    page_size: PAGE_SIZE,
+    page_size: pageSize,
     url: urlFilters.url || undefined,
     poc_id: urlFilters.pocID || undefined,
     severity: urlFilters.severity === 'all' ? undefined : urlFilters.severity,
-  }), [page, urlFilters])
+  }), [page, pageSize, urlFilters])
 
   const { data, isPending, isError, refetch } = useAssetPoolFindings(poolId, queryParams)
 
   const items = data?.data || []
   const total = data?.pagination?.total || 0
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / PAGE_SIZE)), [total])
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [pageSize, total])
   const hasActiveFilters = Boolean(urlFilters.url || urlFilters.pocID || urlFilters.severity !== 'all')
   const canDeleteFinding = hasPermission(currentUser?.permissions, PERMISSIONS.assetUpdate)
 
@@ -556,24 +555,22 @@ function AssetPoolFindingsTabContent({ poolId, searchParams, setSearchParams, ur
         </Table>
 
         {!isError && total > 0 && (
-          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-6 py-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">累计漏洞 <span className="mx-1 text-white">{total}</span> 条</span>
-            {totalPages > 1 && (
-              <Pagination
-                size="sm"
-                page={page}
-                total={totalPages}
-                onChange={setPage}
-                classNames={{
-                  wrapper: 'gap-2',
-                  item: 'h-8 min-w-[32px] rounded-xl border border-white/5 bg-white/5 text-[12px] font-bold text-apple-text-secondary transition-all hover:bg-white/10',
-                  cursor: 'rounded-xl bg-apple-blue font-black text-white shadow-lg shadow-apple-blue/30',
-                  prev: 'rounded-xl bg-white/5 text-white/50 hover:bg-white/10',
-                  next: 'rounded-xl bg-white/5 text-white/50 hover:bg-white/10',
-                }}
-              />
+          <TablePaginationFooter
+            summary={(
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-apple-text-tertiary">
+                累计漏洞 <span className="mx-1 text-white">{total}</span> 条
+              </span>
             )}
-          </div>
+            page={page}
+            total={total}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPage(1)
+              setPageSize(nextPageSize)
+            }}
+          />
         )}
       </div>
 
